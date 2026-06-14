@@ -1,0 +1,84 @@
+.login-card {
+  text-align: center;
+  padding: 60rpx 24rpx;
+}
+
+.login-tip {
+  display: block;
+  margin-bottom: 24rpx;
+  color: #666;
+}
+
+.profile-header {
+  gap: 24rpx;
+  margin-bottom: 24rpx;
+}
+
+.profile-info {
+  flex: 1;
+}
+
+.username {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 600;
+}
+
+.account-line {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 24rpx;
+  color: #999;
+}
+
+.bio {
+  display: block;
+  margin-top: 8rpx;
+  color: #666;
+  font-size: 24rpx;
+}
+
+.name-line {
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 4rpx;
+}
+
+.badge {
+  font-size: 20rpx;
+  padding: 4rpx 12rpx;
+  background: #fff0f6;
+  color: #eb2f96;
+  border-radius: 8rpx;
+}
+
+.profile-link {
+  display: block;
+  color: #eb2f96;
+  font-size: 24rpx;
+  margin: 8rpx 0;
+}
+
+.balance-row {
+  padding-top: 20rpx;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.menu-item {
+  padding: 28rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.menu-item:last-child {
+  border-bottom: none;
+}
+
+.arrow {
+  color: #ccc;
+  font-size: 36rpx;
+}
+
+.logout-btn {
+  margin-top: 40rpx;
+  width: 100%;
+}

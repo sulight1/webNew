@@ -1,0 +1,58 @@
+.top-actions {
+  gap: 16rpx;
+  margin-bottom: 20rpx;
+}
+
+.flex1 {
+  flex: 1;
+}
+
+.form-card input,
+.form-card textarea {
+  width: 100%;
+  background: #f5f5f5;
+  border-radius: 12rpx;
+  padding: 16rpx;
+  margin-bottom: 16rpx;
+  box-sizing: border-box;
+}
+
+.skill-header {
+  gap: 16rpx;
+  margin-bottom: 12rpx;
+}
+
+.skill-title {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.meta {
+  margin: 16rpx 0;
+}
+
+.action-btn {
+  width: 100%;
+}
+
+.modal-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  width: 80%;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.exchange-item {
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}

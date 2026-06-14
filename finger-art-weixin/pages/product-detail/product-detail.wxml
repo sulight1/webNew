@@ -1,0 +1,38 @@
+<view class="container" wx:if="{{product}}">
+  <swiper class="banner" indicator-dots autoplay circular>
+    <swiper-item>
+      <image class="banner-img" src="{{product.image}}" mode="aspectFill" />
+    </swiper-item>
+    <swiper-item wx:for="{{product.detailImagesList}}" wx:key="*this">
+      <image class="banner-img" src="{{item}}" mode="aspectFill" />
+    </swiper-item>
+  </swiper>
+
+  <view class="card">
+    <text class="title">{{product.title}}</text>
+    <text class="text-price price">¥{{product.price}}</text>
+    <view class="tags flex-row">
+      <text class="tag">{{product.type === 'READY_MADE' ? '成品' : '可定制'}}</text>
+      <text class="tag" wx:if="{{product.categoryLabel}}">{{product.categoryLabel}}</text>
+    </view>
+    <view class="creator flex-between" bindtap="goArtisan">
+      <text>{{product.creator}}</text>
+      <button class="btn-outline mini-btn" catchtap="onFollow">{{isFollowing ? '已关注' : '+ 关注'}}</button>
+    </view>
+    <text class="desc">{{product.description || '暂无描述'}}</text>
+  </view>
+
+  <view class="section-title">猜你喜欢</view>
+  <scroll-view scroll-x class="similar-scroll">
+    <view class="similar-item" wx:for="{{similar}}" wx:key="id" data-id="{{item.id}}" bindtap="goSimilar">
+      <image src="{{item.image}}" mode="aspectFill" />
+      <text>¥{{item.price}}</text>
+    </view>
+  </scroll-view>
+
+  <view class="bottom-bar safe-bottom flex-row">
+    <view class="like-btn {{isLiked ? 'liked' : ''}}" bindtap="onLike">{{isLiked ? '❤️' : '🤍'}} {{product.likes || 0}}</view>
+    <button class="btn-primary buy-btn" bindtap="onBuy">立即购买</button>
+  </view>
+</view>
+<view wx:elif="{{loading}}" class="empty">加载中...</view>

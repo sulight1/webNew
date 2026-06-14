@@ -1,0 +1,15 @@
+<view class="container login-page">
+  <view class="card">
+    <view class="title">{{mode === 'login' ? '欢迎回来' : '注册账号'}}</view>
+    <input class="input" type="number" placeholder="数字账号（6-20位）" data-field="account" bindinput="onInput" value="{{account}}" maxlength="20" />
+    <input class="input" password placeholder="密码" data-field="password" bindinput="onInput" value="{{password}}" />
+    <input wx:if="{{mode === 'register'}}" class="input" password placeholder="确认密码" data-field="confirmPassword" bindinput="onInput" value="{{confirmPassword}}" />
+    <button class="btn-primary" loading="{{loading}}" bindtap="submit">
+      {{mode === 'login' ? '登录' : '注册'}}
+    </button>
+    <view class="switch" bindtap="switchMode">
+      {{mode === 'login' ? '没有账号？去注册' : '已有账号？去登录'}}
+    </view>
+    <view wx:if="{{mode === 'register'}}" class="tip">注册后系统将随机分配昵称，可在个人中心修改</view>
+  </view>
+</view>

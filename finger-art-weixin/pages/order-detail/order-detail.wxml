@@ -1,0 +1,43 @@
+<view class="container" wx:if="{{order}}">
+  <view class="card">
+    <view class="flex-between">
+      <text class="title">订单 #{{order.id}}</text>
+      <text class="tag">{{order.statusLabel}}</text>
+    </view>
+    <text class="text-muted">{{order.productTitle}}</text>
+    <view class="price-row flex-between">
+      <text>商品金额</text>
+      <text class="text-price">¥{{order.price}}</text>
+    </view>
+    <view class="flex-between" wx:if="{{order.depositAmount}}">
+      <text class="text-muted">定金</text>
+      <text>¥{{order.depositAmount}}</text>
+    </view>
+    <view class="flex-between" wx:if="{{order.balanceAmount}}">
+      <text class="text-muted">尾款</text>
+      <text>¥{{order.balanceAmount}}</text>
+    </view>
+    <text class="text-muted">买家：{{order.buyerName}} · 卖家：{{order.artisanName}}</text>
+  </view>
+
+  <view class="card" wx:if="{{milestones.length}}">
+    <view class="section-title">进度记录</view>
+    <view wx:for="{{milestones}}" wx:key="id" class="milestone">
+      <text>{{item.stageLabel || item.note}}</text>
+      <text class="text-muted">{{item.createdAt}}</text>
+    </view>
+  </view>
+
+  <view class="actions card">
+    <button wx:if="{{isBuyer && order.status === 'PENDING_PAY'}}" class="btn-primary" bindtap="doPayDeposit">支付{{isReadyMade ? '全款' : '定金'}}</button>
+    <button wx:if="{{isBuyer && order.status === 'PENDING_BALANCE'}}" class="btn-primary" bindtap="doPayBalance">支付尾款</button>
+    <button wx:if="{{isBuyer && order.status === 'PENDING_ACCEPT'}}" class="btn-primary" bindtap="doConfirmReceipt">确认收货</button>
+    <button wx:if="{{isSeller && order.status === 'PENDING_CONFIRM'}}" class="btn-primary" bindtap="doConfirm">确认接单</button>
+    <button wx:if="{{isSeller && order.status === 'PENDING_SHIP'}}" class="btn-primary" data-status="PENDING_ACCEPT" bindtap="doStatus">标记已发货</button>
+    <button wx:if="{{isSeller && !isReadyMade && (order.status === 'PRODUCING' || order.status === 'HALF_FINISHED_CONFIRM')}}" class="btn-outline" data-status="PENDING_SHIP" bindtap="doStatus">标记待发货</button>
+    <button wx:if="{{isBuyer && order.cancelRequestStatus !== 'PENDING' && order.status !== 'CANCELLED' && order.status !== 'COMPLETED'}}" class="btn-outline" bindtap="doRequestCancel">申请取消</button>
+    <button wx:if="{{isSeller && order.cancelRequestStatus === 'PENDING'}}" class="btn-primary" bindtap="doApproveCancel">同意取消</button>
+    <button wx:if="{{isSeller && order.cancelRequestStatus === 'PENDING'}}" class="btn-outline" bindtap="doRejectCancel">拒绝取消</button>
+  </view>
+</view>
+<view wx:elif="{{loading}}" class="empty">加载中...</view>

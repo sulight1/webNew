@@ -1,0 +1,105 @@
+.hero {
+  background: linear-gradient(135deg, #fff0f6, #f9f0ff);
+}
+
+.hero-title {
+  font-size: 44rpx;
+  font-weight: 700;
+  color: #eb2f96;
+}
+
+.hero-sub {
+  color: #666;
+  margin: 12rpx 0 24rpx;
+}
+
+.hero-stats {
+  justify-content: space-around;
+  margin-bottom: 24rpx;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-num {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #722ed1;
+}
+
+.stat-label {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.hero-actions {
+  gap: 20rpx;
+}
+
+.hero-actions button {
+  flex: 1;
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20rpx;
+  margin-bottom: 32rpx;
+}
+
+.product-card {
+  background: #fff;
+  border-radius: 16rpx;
+  overflow: hidden;
+}
+
+.product-img {
+  width: 100%;
+  height: 280rpx;
+  background: #f0f0f0;
+}
+
+.product-info {
+  padding: 16rpx;
+}
+
+.product-title {
+  display: block;
+  font-size: 26rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.artisan-scroll {
+  white-space: nowrap;
+  margin-bottom: 24rpx;
+}
+
+.artisan-card {
+  display: inline-block;
+  width: 180rpx;
+  text-align: center;
+  margin-right: 20rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 20rpx;
+}
+
+.avatar-placeholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff0f6;
+  color: #eb2f96;
+  font-size: 40rpx;
+  font-weight: 600;
+}
+
+.artisan-name {
+  display: block;
+  font-size: 26rpx;
+  margin-top: 12rpx;
+}

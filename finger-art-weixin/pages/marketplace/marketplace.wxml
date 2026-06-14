@@ -1,0 +1,47 @@
+<view class="container">
+  <view class="search-bar card flex-row">
+    <input
+      class="search-input"
+      placeholder="搜索作品"
+      value="{{keyword}}"
+      bindinput="onKeywordInput"
+      confirm-type="search"
+      bindconfirm="onSearch"
+    />
+    <button class="btn-primary search-btn" bindtap="onSearch">搜索</button>
+  </view>
+
+  <scroll-view scroll-x class="category-scroll">
+    <view
+      wx:for="{{categories}}"
+      wx:key="key"
+      class="category-chip {{activeCategory === item.key ? 'active' : ''}}"
+      data-key="{{item.key}}"
+      bindtap="onCategoryTap"
+    >
+      {{item.emoji}} {{item.label}}
+    </view>
+  </scroll-view>
+
+  <view wx:if="{{loading}}" class="empty">加载中...</view>
+  <view wx:elif="{{products.length === 0}}" class="empty">暂无作品</view>
+  <view class="product-list" wx:else>
+    <view
+      class="product-item card"
+      wx:for="{{products}}"
+      wx:key="id"
+      data-id="{{item.id}}"
+      bindtap="goDetail"
+    >
+      <image class="thumb" src="{{item.image}}" mode="aspectFill" />
+      <view class="info">
+        <text class="title">{{item.title}}</text>
+        <text class="text-muted">{{item.creator}}</text>
+        <view class="flex-between">
+          <text class="text-price">¥{{item.price}}</text>
+          <text class="tag">{{item.type === 'READY_MADE' ? '成品' : '可定制'}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

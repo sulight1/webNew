@@ -1,0 +1,20 @@
+<view class="container">
+  <view class="tabs flex-row">
+    <view class="tab {{tab === 'buyer' ? 'active' : ''}}" data-tab="buyer" bindtap="onTabChange">我买到的</view>
+    <view class="tab {{tab === 'seller' ? 'active' : ''}}" data-tab="seller" bindtap="onTabChange">我卖出的</view>
+  </view>
+
+  <view wx:if="{{loading}}" class="empty">加载中...</view>
+  <view wx:elif="{{orders.length === 0}}" class="empty">暂无订单</view>
+  <view class="card order-item" wx:for="{{orders}}" wx:key="id" data-id="{{item.id}}" bindtap="goDetail">
+    <view class="flex-between">
+      <text>订单 #{{item.id}}</text>
+      <text class="tag">{{item.statusLabel}}</text>
+    </view>
+    <text class="text-muted">{{item.productTitle || '定制订单'}}</text>
+    <view class="flex-between">
+      <text class="text-price">¥{{item.price}}</text>
+      <text class="text-muted">{{item.createTime}}</text>
+    </view>
+  </view>
+</view>

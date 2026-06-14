@@ -1,0 +1,23 @@
+.balance-card {
+  text-align: center;
+  padding: 40rpx;
+}
+
+.balance {
+  display: block;
+  font-size: 56rpx;
+  font-weight: 700;
+  color: #eb2f96;
+  margin: 12rpx 0;
+}
+
+.input {
+  background: #f5f5f5;
+  border-radius: 12rpx;
+  padding: 20rpx;
+  margin-bottom: 20rpx;
+}
+
+.tx-item {
+  margin-bottom: 16rpx;
+}

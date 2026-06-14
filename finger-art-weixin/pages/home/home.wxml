@@ -1,0 +1,59 @@
+<view class="container">
+  <view class="hero card">
+    <view class="hero-title">指尖造物</view>
+    <view class="hero-sub">发现手作之美，连接匠人与爱好者</view>
+    <view class="hero-stats flex-row">
+      <view class="stat-item">
+        <text class="stat-num">{{stats.productCount || 0}}</text>
+        <text class="stat-label">作品</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-num">{{stats.artisanCount || 0}}</text>
+        <text class="stat-label">匠人</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-num">{{stats.orderCount || 0}}</text>
+        <text class="stat-label">开放需求</text>
+      </view>
+    </view>
+    <view class="hero-actions flex-row">
+      <button class="btn-primary" bindtap="goMarketplace">逛市集</button>
+      <button class="btn-outline" bindtap="goCustomRequest">发布需求</button>
+    </view>
+  </view>
+
+  <view class="section-title">热门作品</view>
+  <view wx:if="{{loading}}" class="empty">加载中...</view>
+  <view wx:elif="{{hotProducts.length === 0}}" class="empty">暂无作品</view>
+  <view class="product-grid" wx:else>
+    <view
+      class="product-card"
+      wx:for="{{hotProducts}}"
+      wx:key="id"
+      data-id="{{item.id}}"
+      bindtap="goProduct"
+    >
+      <image class="product-img" src="{{item.image}}" mode="aspectFill" />
+      <view class="product-info">
+        <text class="product-title">{{item.title}}</text>
+        <text class="text-price">¥{{item.price}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="section-title">优秀匠人</view>
+  <scroll-view scroll-x class="artisan-scroll">
+    <view
+      class="artisan-card"
+      wx:for="{{artisans}}"
+      wx:key="id"
+      data-id="{{item.id}}"
+      bindtap="goArtisan"
+    >
+      <image class="avatar-lg" src="{{item.avatar}}" mode="aspectFill" wx:if="{{item.avatar}}" />
+      <view class="avatar-lg avatar-placeholder" wx:else>{{item.username[0] || '匠'}}</view>
+      <text class="artisan-name">{{item.username}}</text>
+      <text class="text-muted">信用 {{item.creditScore || 100}}</text>
+    </view>
+  </scroll-view>
+</view>

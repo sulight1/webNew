@@ -1,0 +1,9 @@
+# 本地密钥（勿提交 Git）。复制本文件为 application-local.properties 后填入真实 Key。
+# 获取：https://bailian.console.aliyun.com/ → API-KEY 管理
+ai.image.dashscope.api-key=sk-在这里粘贴你的密钥
+
+# 生产环境 JWT 密钥（至少 32 字符，务必修改）
+# auth.jwt.secret=your-production-jwt-secret-min-32-chars
+
+# 生产环境前端域名
+# app.cors.allowed-origins=https://your-domain.com

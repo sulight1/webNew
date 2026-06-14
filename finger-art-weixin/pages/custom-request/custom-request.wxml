@@ -1,0 +1,39 @@
+<view class="container">
+  <view class="tabs flex-row">
+    <view class="tab {{tab === 'all' ? 'active' : ''}}" data-tab="all" bindtap="onTabChange">全部</view>
+    <view class="tab {{tab === 'open' ? 'active' : ''}}" data-tab="open" bindtap="onTabChange">待揭榜</view>
+    <view class="tab {{tab === 'mine' ? 'active' : ''}}" data-tab="mine" bindtap="onTabChange">我的</view>
+  </view>
+
+  <button class="btn-primary publish-btn" bindtap="goPublish">+ 发布定制需求</button>
+
+  <view wx:if="{{loading}}" class="empty">加载中...</view>
+  <view wx:elif="{{list.length === 0}}" class="empty">暂无需求</view>
+  <view wx:else>
+    <view class="card" wx:for="{{list}}" wx:key="id">
+      <view class="flex-between">
+        <text class="req-title">{{item.title}}</text>
+        <text class="tag">{{item.status}}</text>
+      </view>
+      <text class="text-muted">{{item.description}}</text>
+      <view class="flex-between meta">
+        <text class="text-price">预算 ¥{{item.budget}}</text>
+        <text class="text-muted">{{item.buyerName || '买家'}}</text>
+      </view>
+      <view class="actions flex-row">
+        <button
+          wx:if="{{item.status === 'OPEN'}}"
+          class="btn-outline action-btn"
+          data-id="{{item.id}}"
+          bindtap="onBid"
+        >揭榜报价</button>
+        <button
+          wx:if="{{item.status === 'OPEN' || item.status === 'BIDDING'}}"
+          class="btn-primary action-btn"
+          data-id="{{item.id}}"
+          bindtap="showBids"
+        >查看报价</button>
+      </view>
+    </view>
+  </view>
+</view>

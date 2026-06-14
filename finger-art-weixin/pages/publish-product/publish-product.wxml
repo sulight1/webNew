@@ -1,0 +1,31 @@
+<view class="container">
+  <view class="card">
+    <view class="cover-upload" bindtap="chooseImage">
+      <image wx:if="{{imageUrl}}" src="{{imageUrl}}" mode="aspectFill" />
+      <text wx:else>+ 上传封面</text>
+    </view>
+    <input placeholder="作品标题" data-field="title" bindinput="onInput" value="{{form.title}}" />
+    <input placeholder="价格" type="digit" data-field="price" bindinput="onInput" value="{{form.price}}" />
+    <view wx:if="{{form.type === 'READY_MADE'}}" class="stock-row">
+      <text class="stock-label">库存数量</text>
+      <input
+        class="stock-input"
+        type="number"
+        placeholder="请输入库存"
+        data-field="stock"
+        bindinput="onInput"
+        value="{{form.stock}}"
+      />
+      <text class="stock-tip">成品可售数量，范围 1-99</text>
+    </view>
+    <textarea placeholder="作品描述" data-field="description" bindinput="onInput" value="{{form.description}}" />
+    <picker range="{{categories}}" range-key="label" value="{{categoryIndex}}" bindchange="onCategoryChange">
+      <view class="picker">分类：{{categories[categoryIndex].label}}</view>
+    </picker>
+    <radio-group bindchange="onTypeChange">
+      <label><radio value="READY_MADE" checked="{{form.type === 'READY_MADE'}}" />成品</label>
+      <label><radio value="CUSTOMIZABLE" checked="{{form.type === 'CUSTOMIZABLE'}}" />可定制</label>
+    </radio-group>
+    <button class="btn-primary" bindtap="submit">提交审核</button>
+  </view>
+</view>

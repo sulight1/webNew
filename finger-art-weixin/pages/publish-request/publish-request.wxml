@@ -1,0 +1,17 @@
+<view class="container">
+  <view class="card">
+    <view class="cover-upload" bindtap="chooseImage">
+      <image wx:if="{{imageUrl}}" src="{{imageUrl}}" mode="aspectFill" />
+      <text wx:else>+ 参考图（选填）</text>
+    </view>
+    <input placeholder="需求标题" data-field="title" bindinput="onInput" value="{{form.title}}" />
+    <textarea placeholder="详细描述" data-field="description" bindinput="onInput" value="{{form.description}}" />
+    <picker range="{{categories}}" range-key="label" value="{{categoryIndex}}" bindchange="onCategoryChange">
+      <view class="picker">分类：{{categories[categoryIndex].label}}</view>
+    </picker>
+    <input placeholder="预算最低" type="digit" data-field="budgetMin" bindinput="onInput" value="{{form.budgetMin}}" />
+    <input placeholder="预算最高" type="digit" data-field="budgetMax" bindinput="onInput" value="{{form.budgetMax}}" />
+    <input placeholder="截止日期（选填）" data-field="deadline" bindinput="onInput" value="{{form.deadline}}" />
+    <button class="btn-primary" bindtap="submit">发布需求</button>
+  </view>
+</view>

@@ -1,0 +1,11 @@
+<view class="container">
+  <view wx:if="{{loading}}" class="empty">加载中...</view>
+  <view wx:elif="{{messages.length === 0}}" class="empty">暂无消息</view>
+  <view class="card msg-item" wx:for="{{messages}}" wx:key="id">
+    <view class="flex-between">
+      <text class="sender">{{item.senderName || '用户'}}</text>
+      <text class="text-muted">{{item.createTime}}</text>
+    </view>
+    <text>{{item.content}}</text>
+  </view>
+</view>

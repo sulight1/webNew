@@ -1,0 +1,7 @@
+.msg-item {
+  margin-bottom: 16rpx;
+}
+
+.sender {
+  font-weight: 600;
+}

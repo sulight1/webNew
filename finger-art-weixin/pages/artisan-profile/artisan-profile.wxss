@@ -1,0 +1,39 @@
+.profile-header {
+  text-align: center;
+}
+
+.name {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 600;
+  margin-top: 16rpx;
+}
+
+.bio {
+  display: block;
+  color: #666;
+  margin: 12rpx 0 20rpx;
+}
+
+.follow-btn {
+  width: 60%;
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20rpx;
+}
+
+.product-card image {
+  width: 100%;
+  height: 240rpx;
+  border-radius: 12rpx;
+  background: #f0f0f0;
+}
+
+.product-card text {
+  display: block;
+  font-size: 24rpx;
+  margin-top: 8rpx;
+}

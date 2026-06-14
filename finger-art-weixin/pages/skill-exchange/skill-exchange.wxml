@@ -1,0 +1,43 @@
+<view class="container">
+  <view class="top-actions flex-row">
+    <button class="btn-primary flex1" bindtap="toggleForm">{{showForm ? '取消' : '+ 发布技能'}}</button>
+    <button class="btn-outline flex1" bindtap="showMyExchanges">我的交换</button>
+  </view>
+
+  <view class="card form-card" wx:if="{{showForm}}">
+    <input placeholder="技能标题" data-field="title" bindinput="onInput" value="{{form.title}}" />
+    <textarea placeholder="技能描述" data-field="description" bindinput="onInput" value="{{form.description}}" />
+    <input placeholder="分类（如钩织）" data-field="category" bindinput="onInput" value="{{form.category}}" />
+    <input placeholder="造物币费用" type="number" data-field="zaowuBiCost" bindinput="onInput" value="{{form.zaowuBiCost}}" />
+    <button class="btn-primary" bindtap="submitForm">提交审核</button>
+  </view>
+
+  <view wx:if="{{loading}}" class="empty">加载中...</view>
+  <view wx:elif="{{skills.length === 0}}" class="empty">暂无技能</view>
+  <view class="card" wx:for="{{skills}}" wx:key="id">
+    <view class="flex-row skill-header" data-userid="{{item.userId}}" bindtap="goUserProfile">
+      <image class="avatar" src="{{item.avatar}}" mode="aspectFill" />
+      <view>
+        <text class="skill-title">{{item.title}}</text>
+        <text class="text-muted">{{item.username}} · {{item.category}}</text>
+      </view>
+    </view>
+    <text class="text-muted">{{item.description}}</text>
+    <view class="flex-between meta">
+      <text class="text-price">{{item.zaowuBiCost}} 造物币</text>
+      <text class="text-muted">信用 {{item.credit || 100}}</text>
+    </view>
+    <button class="btn-outline action-btn" data-id="{{item.id}}" bindtap="onExchange">申请交换</button>
+  </view>
+
+  <view class="modal-mask" wx:if="{{showExchanges}}" bindtap="hideExchanges">
+    <view class="modal card" catchtap="">
+      <view class="section-title">我的交换记录</view>
+      <view wx:if="{{exchanges.length === 0}}" class="empty">暂无记录</view>
+      <view wx:for="{{exchanges}}" wx:key="id" class="exchange-item">
+        <text>{{item.description || '技能交换'}}</text>
+        <text class="tag">{{item.status}}</text>
+      </view>
+    </view>
+  </view>
+</view>

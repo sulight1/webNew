@@ -1,0 +1,20 @@
+<view class="container" wx:if="{{profile}}">
+  <view class="card profile-header">
+    <image class="avatar-lg" src="{{profile.avatar}}" mode="aspectFill" />
+    <text class="name">{{profile.username}}</text>
+    <text class="text-muted">信用 {{profile.creditScore || 100}} · 评分 {{profile.rating || 5}}</text>
+    <text class="bio">{{profile.bio || '暂无简介'}}</text>
+    <button class="btn-primary follow-btn" bindtap="toggleFollow">{{isFollowing ? '已关注' : '+ 关注'}}</button>
+  </view>
+
+  <view class="section-title">Ta 的作品</view>
+  <view wx:if="{{products.length === 0}}" class="empty">暂无作品</view>
+  <view class="product-grid">
+    <view class="product-card" wx:for="{{products}}" wx:key="id" data-id="{{item.id}}" bindtap="goProduct">
+      <image src="{{item.image}}" mode="aspectFill" />
+      <text>{{item.title}}</text>
+      <text class="text-price">¥{{item.price}}</text>
+    </view>
+  </view>
+</view>
+<view wx:elif="{{loading}}" class="empty">加载中...</view>

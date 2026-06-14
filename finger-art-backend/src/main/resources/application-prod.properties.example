@@ -1,0 +1,9 @@
+# 生产环境配置示例。复制为 application-prod.properties 或通过环境变量注入。
+# 启动：java -jar app.jar --spring.profiles.active=prod
+
+# 必填：至少 32 字符的随机密钥
+auth.jwt.secret=${JWT_SECRET}
+auth.jwt.enforce=true
+
+# 前端站点 Origin（多个域名用逗号分隔时需改为 YAML 或自定义解析；单域名示例）
+app.cors.allowed-origins=https://your-domain.com

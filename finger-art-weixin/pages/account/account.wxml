@@ -1,0 +1,41 @@
+<view class="container">
+  <view wx:if="{{!user}}" class="card login-card">
+    <text class="login-tip">登录后享受完整服务</text>
+    <button class="btn-primary" bindtap="goLogin">登录 / 注册</button>
+  </view>
+
+  <view wx:else class="card profile-card">
+    <view class="flex-row profile-header">
+      <image class="avatar-lg" src="{{user.avatar || ''}}" mode="aspectFill" bindtap="chooseAvatar" />
+      <view class="profile-info">
+        <view class="flex-row name-line">
+          <text class="username">{{user.username}}</text>
+          <text class="badge" wx:if="{{user.role === 'ARTISAN'}}">认证手作达人</text>
+        </view>
+        <text class="account-line" wx:if="{{user.account}}">账号 {{user.account}}</text>
+        <text class="text-muted">信用 {{user.creditScore || 100}} · 评分 {{user.rating || 5}}</text>
+        <text class="profile-link" bindtap="goPublicProfile">公开主页 ›</text>
+        <text class="bio" bindtap="editProfile">{{user.bio || '点击编辑简介'}}</text>
+      </view>
+    </view>
+    <view class="balance-row flex-between" data-url="/pages/wallet/wallet" bindtap="onMenuTap">
+      <text>造物币余额</text>
+      <text class="text-price">¥{{user.zaowuBiBalance || 0}} ›</text>
+    </view>
+  </view>
+
+  <view class="card menu-list" wx:if="{{user}}">
+    <view
+      class="menu-item flex-between"
+      wx:for="{{menuItems}}"
+      wx:key="key"
+      data-url="{{item.url}}"
+      bindtap="onMenuTap"
+    >
+      <text>{{item.title}}</text>
+      <text class="arrow">›</text>
+    </view>
+  </view>
+
+  <button wx:if="{{user}}" class="btn-outline logout-btn" bindtap="logout">退出登录</button>
+</view>

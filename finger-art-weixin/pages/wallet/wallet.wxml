@@ -1,0 +1,23 @@
+<view class="container">
+  <view class="card balance-card">
+    <text class="text-muted">造物币余额</text>
+    <text class="balance">¥{{user.zaowuBiBalance || 0}}</text>
+    <text class="text-muted">冻结 ¥{{user.frozenBalance || 0}}</text>
+  </view>
+
+  <view class="card">
+    <view class="section-title">充值</view>
+    <input class="input" type="digit" placeholder="输入金额" value="{{amount}}" bindinput="onAmountInput" />
+    <button class="btn-primary" bindtap="recharge">模拟充值</button>
+  </view>
+
+  <view class="section-title">交易记录</view>
+  <view wx:if="{{transactions.length === 0}}" class="empty">暂无记录</view>
+  <view class="card tx-item" wx:for="{{transactions}}" wx:key="id">
+    <view class="flex-between">
+      <text>{{item.type || item.remark || '交易'}}</text>
+      <text class="{{item.amount >= 0 ? 'text-price' : ''}}">{{item.amount >= 0 ? '+' : ''}}{{item.amount}}</text>
+    </view>
+    <text class="text-muted">{{item.createdAt}}</text>
+  </view>
+</view>

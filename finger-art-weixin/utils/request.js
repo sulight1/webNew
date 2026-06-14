@@ -1,0 +1,76 @@
+const { API_BASE } = require('./config');
+const auth = require('./auth');
+
+function buildQuery(params) {
+  if (!params) return '';
+  const parts = Object.keys(params)
+    .filter((k) => params[k] !== undefined && params[k] !== null && params[k] !== '')
+    .map((k) => `${encodeURIComponent(k)}=${encodeURIComponent(params[k])}`);
+  return parts.length ? `?${parts.join('&')}` : '';
+}
+
+function request(options) {
+  const { url, method = 'GET', data, params, skipAuthRedirect } = options;
+  const header = { 'Content-Type': 'application/json', ...(options.header || {}) };
+  const token = auth.getToken();
+  if (token) header.Authorization = `Bearer ${token}`;
+
+  return new Promise((resolve, reject) => {
+    wx.request({
+      url: API_BASE + url + buildQuery(params),
+      method,
+      data,
+      header,
+      success(res) {
+        const body = res.data;
+        if (body && body.code === 200) {
+          resolve(body.data);
+          return;
+        }
+        if (body && body.code === 401) {
+          auth.clearAuth();
+          if (!skipAuthRedirect) {
+            wx.showToast({ title: body.message || '请先登录', icon: 'none' });
+          }
+          reject(new Error(body.message || '请先登录'));
+          return;
+        }
+        reject(new Error((body && body.message) || '请求失败'));
+      },
+      fail(err) {
+        reject(new Error(err.errMsg || '网络错误'));
+      },
+    });
+  });
+}
+
+function uploadFile(filePath) {
+  const token = auth.getToken();
+  return new Promise((resolve, reject) => {
+    wx.uploadFile({
+      url: `${API_BASE}/files/upload`,
+      filePath,
+      name: 'file',
+      header: token ? { Authorization: `Bearer ${token}` } : {},
+      success(res) {
+        try {
+          const body = JSON.parse(res.data);
+          if (body.code === 200) resolve(body.data);
+          else reject(new Error(body.message || '上传失败'));
+        } catch {
+          reject(new Error('上传失败'));
+        }
+      },
+      fail: reject,
+    });
+  });
+}
+
+module.exports = {
+  get: (url, params, opt) => request({ url, method: 'GET', params, ...opt }),
+  post: (url, data, opt) => request({ url, method: 'POST', data, ...opt }),
+  put: (url, data, opt) => request({ url, method: 'PUT', data, ...opt }),
+  patch: (url, data, opt) => request({ url, method: 'PATCH', data, ...opt }),
+  del: (url, opt) => request({ url, method: 'DELETE', ...opt }),
+  uploadFile,
+};
