@@ -2,6 +2,7 @@ package com.example.fingerartbackend.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDateTime;
 
 @Entity
@@ -20,6 +21,7 @@ public class Message {
     @Column(columnDefinition = "text")
     private String content;
 
+    @JsonProperty("isRead")
     private boolean isRead = false;
 
     private LocalDateTime createTime;

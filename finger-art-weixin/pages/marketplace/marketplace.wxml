@@ -1,47 +1,88 @@
 <view class="container">
-  <view class="search-bar card flex-row">
-    <input
-      class="search-input"
-      placeholder="搜索作品"
-      value="{{keyword}}"
-      bindinput="onKeywordInput"
-      confirm-type="search"
-      bindconfirm="onSearch"
-    />
-    <button class="btn-primary search-btn" bindtap="onSearch">搜索</button>
+  <view class="page-hero">
+    <text class="page-hero-title">造物市集</text>
+    <view class="hero-search-row">
+      <input
+        class="hero-search-input"
+        placeholder="搜索作品、匠人..."
+        value="{{keyword}}"
+        bindinput="onKeywordInput"
+        confirm-type="search"
+        bindconfirm="onSearch"
+      />
+      <button class="btn-primary hero-search-btn" bindtap="onSearch">搜索</button>
+    </view>
   </view>
 
-  <scroll-view scroll-x class="category-scroll">
-    <view
-      wx:for="{{categories}}"
-      wx:key="key"
-      class="category-chip {{activeCategory === item.key ? 'active' : ''}}"
-      data-key="{{item.key}}"
-      bindtap="onCategoryTap"
-    >
-      {{item.emoji}} {{item.label}}
+  <view class="list-toolbar">
+    <view wx:if="{{listRefreshing}}" class="list-refresh-bar">
+      <text>加载中…</text>
     </view>
-  </scroll-view>
+    <text class="list-count">共 {{displayTotal}} 件作品</text>
+    <view class="list-toolbar-head">
+      <picker mode="selector" range="{{categoryLabels}}" value="{{categoryIndex}}" bindchange="onCategoryPick">
+        <view class="toolbar-picker {{activeCategory !== 'all' ? 'active' : ''}}">
+          {{categoryLabels[categoryIndex]}} ▾
+        </view>
+      </picker>
+      <view class="sort-tabs">
+        <view
+          wx:for="{{sortTabs}}"
+          wx:key="value"
+          class="sort-tab {{sortBy === item.value ? 'active' : ''}}"
+          data-value="{{item.value}}"
+          bindtap="onSortTap"
+        >{{item.label}}</view>
+      </view>
+    </view>
+  </view>
 
-  <view wx:if="{{loading}}" class="empty">加载中...</view>
-  <view wx:elif="{{products.length === 0}}" class="empty">暂无作品</view>
-  <view class="product-list" wx:else>
+  <view wx:if="{{showSkeleton}}" class="feed-grid">
+    <view wx:for="{{skeletonItems}}" wx:key="*this" class="skeleton-card">
+      <view class="skeleton-cover"></view>
+      <view class="skeleton-line"></view>
+      <view class="skeleton-line short"></view>
+    </view>
+  </view>
+
+  <view wx:elif="{{showEmpty}}" class="empty-guide">
+    <text class="empty-guide-title">{{keyword ? '未找到匹配作品' : '暂无作品'}}</text>
+    <button wx:if="{{keyword}}" class="btn-outline" bindtap="clearSearch">清空搜索</button>
+  </view>
+
+  <view wx:else class="feed-grid {{listRefreshing ? 'list-dimmed' : ''}}">
     <view
-      class="product-item card"
-      wx:for="{{products}}"
+      class="feed-card"
+      wx:for="{{displayProducts}}"
       wx:key="id"
       data-id="{{item.id}}"
       bindtap="goDetail"
     >
-      <image class="thumb" src="{{item.image}}" mode="aspectFill" />
-      <view class="info">
-        <text class="title">{{item.title}}</text>
-        <text class="text-muted">{{item.creator}}</text>
-        <view class="flex-between">
+      <view class="feed-cover">
+        <image src="{{item.image}}" mode="aspectFill" lazy-load />
+        <view class="feed-cover-badges">
+          <text class="feed-cover-tag">{{item.typeLabel}}</text>
+        </view>
+      </view>
+      <view class="feed-body">
+        <text class="feed-title">{{item.title}}</text>
+        <view class="feed-meta">
+          <image class="avatar" src="{{item.creatorAvatar || ''}}" mode="aspectFill" />
+          <text class="feed-sub">{{item.creator}}</text>
+        </view>
+        <view class="feed-price-row">
           <text class="text-price">¥{{item.price}}</text>
-          <text class="tag">{{item.type === 'READY_MADE' ? '成品' : '可定制'}}</text>
         </view>
       </view>
     </view>
+  </view>
+
+  <view wx:if="{{hasMore && !showSkeleton && !showEmpty}}" class="load-more-wrap">
+    <button class="btn-outline load-more-btn" bindtap="loadMore">加载更多</button>
+  </view>
+
+  <view class="cart-fab" bindtap="goCart">
+    <text class="cart-fab-icon">🛒</text>
+    <view wx:if="{{cartCount > 0}}" class="cart-fab-badge">{{cartCount > 99 ? '99+' : cartCount}}</view>
   </view>
 </view>

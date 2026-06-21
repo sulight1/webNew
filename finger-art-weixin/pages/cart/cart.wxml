@@ -1,0 +1,45 @@
+<view class="container">
+  <view class="page-head flex-between">
+    <view>
+      <text class="page-title">购物车</text>
+      <text class="text-muted">共 {{totalCount}} 件商品</text>
+    </view>
+    <text wx:if="{{items.length}}" class="clear-btn" bindtap="onClear">清空</text>
+  </view>
+
+  <view wx:if="{{items.length === 0}}" class="empty-guide">
+    <text class="empty-guide-title">购物车还是空的</text>
+    <text class="text-muted">去市集逛逛，发现心仪手作吧</text>
+    <button class="btn-primary empty-btn" bindtap="goMarketplace">去逛市集</button>
+  </view>
+
+  <view wx:else>
+    <view class="card cart-item" wx:for="{{items}}" wx:key="productId">
+      <image class="cart-thumb" src="{{item.image}}" mode="aspectFill" data-id="{{item.productId}}" bindtap="goProduct" />
+      <view class="cart-body">
+        <text class="cart-title" data-id="{{item.productId}}" bindtap="goProduct">{{item.title}}</text>
+        <text class="text-muted">手作人：{{item.creator}}</text>
+        <text class="text-muted">单价 ¥{{item.price}}</text>
+        <view class="flex-between cart-actions">
+          <view class="qty-stepper flex-row">
+            <view class="qty-btn" data-id="{{item.productId}}" data-qty="{{item.quantity}}" bindtap="onMinus">−</view>
+            <text class="qty-num">{{item.quantity}}</text>
+            <view class="qty-btn" data-id="{{item.productId}}" data-qty="{{item.quantity}}" data-stock="{{item.stock}}" bindtap="onPlus">+</view>
+          </view>
+          <text class="text-price">¥{{item.subtotal}}</text>
+        </view>
+        <view class="cart-btns flex-row">
+          <button class="btn-outline mini" data-id="{{item.productId}}" bindtap="onRemove">删除</button>
+          <button class="btn-primary mini checkout-btn" data-id="{{item.productId}}" data-qty="{{item.quantity}}" bindtap="goCheckout">去结算</button>
+        </view>
+      </view>
+    </view>
+
+    <view class="card cart-footer">
+      <view class="flex-between">
+        <text>合计</text>
+        <text class="text-price footer-total">¥{{totalAmount}}</text>
+      </view>
+    </view>
+  </view>
+</view>

@@ -1,54 +1,226 @@
 const { customRequestApi } = require('../../services/api');
 const auth = require('../../utils/auth');
+const { formatImageUrl } = require('../../utils/format');
+const { getCraftCoverImage, DEFAULT_CRAFT_COVER } = require('../../utils/craftCoverImages');
+const {
+  CATEGORY_FILTER_OPTIONS,
+  REQUEST_SORT_TABS,
+  getRequestStatusLabel,
+} = require('../../constants/requestCategories');
+
+const PAGE_SIZE = 12;
+
+function mapRequestItem(item) {
+  const status = item.status || 'OPEN';
+  let statusClass = 'ended';
+  if (status === 'OPEN') statusClass = 'open';
+  else if (status === 'MATCHED') statusClass = 'matched';
+  const coverImage = item.referenceImage
+    ? formatImageUrl(item.referenceImage)
+    : getCraftCoverImage(item.category);
+  const user = auth.getUser();
+  const buyerId = item.buyer ? item.buyer.id : item.buyerId;
+  return {
+    id: item.id,
+    title: item.title,
+    category: item.category,
+    description: item.description,
+    budgetMin: item.budgetMin,
+    budgetMax: item.budgetMax,
+    deadline: item.deadline,
+    deadlineText: item.deadline ? ('期望 ' + item.deadline) : '工期待定',
+    status: item.status,
+    referenceImage: item.referenceImage,
+    buyer: item.buyer,
+    buyerName: item.buyer ? item.buyer.username : (item.buyerName || ''),
+    buyerId,
+    coverImage,
+    statusLabel: getRequestStatusLabel(status),
+    statusClass,
+    isOwn: user && buyerId === user.id,
+  };
+}
 
 Page({
   data: {
+    scopeTabs: [
+      { key: 'hall', label: '需求大厅' },
+      { key: 'mine', label: '我的需求' },
+    ],
+    scope: 'hall',
+    sortTabs: REQUEST_SORT_TABS,
+    requestSort: 'latest',
+    categoryLabels: CATEGORY_FILTER_OPTIONS.map((c) => c.label),
+    categoryValues: CATEGORY_FILTER_OPTIONS.map((c) => c.value),
+    categoryIndex: 0,
+    filterCategory: 'all',
+    keyword: '',
     list: [],
-    loading: false,
-    tab: 'all',
+    total: 0,
+    currentPage: 1,
+    hasMore: false,
+    loadingMore: false,
+    showSkeleton: false,
+    listRefreshing: false,
+    showEmpty: false,
+    hasLoadedOnce: false,
+    hasActiveFilters: false,
+    emptyText: '还没有定制需求',
+    skeletonItems: [1, 2, 3, 4, 5, 6],
+    showDetail: false,
+    detailItem: null,
   },
 
   onShow() {
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
       this.getTabBar().setData({ selected: 2 });
     }
-    this.loadList();
+    this.loadList(true);
   },
 
   onPullDownRefresh() {
-    this.loadList().finally(() => wx.stopPullDownRefresh());
+    const done = () => wx.stopPullDownRefresh();
+    this.loadList(true).then(done).catch(done);
   },
 
-  onTabChange(e) {
-    this.setData({ tab: e.currentTarget.dataset.tab });
-    this.loadList();
+  onReachBottom() {
+    if (this.data.scope === 'mine' || !this.data.hasMore || this.data.loadingMore) return;
+    this.loadMore();
   },
 
-  async loadList() {
-    this.setData({ loading: true });
+  onKeywordInput(e) {
+    this.setData({ keyword: e.detail.value });
+  },
+
+  onSearch() {
+    this.loadList(true);
+  },
+
+  onScopeChange(e) {
+    this.setData({ scope: e.currentTarget.dataset.key });
+    this.loadList(true);
+  },
+
+  onCategoryPick(e) {
+    const index = Number(e.detail.value);
+    this.setData({
+      categoryIndex: index,
+      filterCategory: this.data.categoryValues[index],
+    });
+    this.loadList(true);
+  },
+
+  onSortTap(e) {
+    this.setData({ requestSort: e.currentTarget.dataset.value });
+    this.loadList(true);
+  },
+
+  clearFilters() {
+    this.setData({ keyword: '', filterCategory: 'all', categoryIndex: 0 });
+    this.loadList(true);
+  },
+
+  onCoverError(e) {
+    const index = e.currentTarget.dataset.index;
+    const key = `list[${index}].coverImage`;
+    this.setData({ [key]: DEFAULT_CRAFT_COVER });
+  },
+
+  async loadList(resetPage) {
+    const firstLoad = !this.data.hasLoadedOnce;
+    this.setData({
+      showSkeleton: firstLoad,
+      listRefreshing: !firstLoad && resetPage !== false,
+    });
+    const hasActiveFilters = this.data.filterCategory !== 'all' || !!this.data.keyword.trim();
     try {
-      const user = auth.getUser();
-      let list = await customRequestApi.list();
-      list = (list || []).map((item) => ({
-        ...item,
-        buyerName: item.buyer ? item.buyer.username : '',
-        buyerId: item.buyer ? item.buyer.id : null,
-        budget: item.budgetMin != null && item.budgetMax != null
-          ? `${item.budgetMin}-${item.budgetMax}`
-          : (item.budgetMin || item.budgetMax || ''),
-      }));
-      if (this.data.tab === 'mine' && user) {
-        list = list.filter((item) => item.buyerId === user.id);
-      } else if (this.data.tab === 'open') {
-        list = list.filter((item) => item.status === 'OPEN');
+      if (this.data.scope === 'mine') {
+        await this.loadMineList();
+      } else {
+        await this.loadHallList(resetPage !== false);
       }
-      this.setData({ list });
+      this.setData({
+        hasActiveFilters,
+        emptyText: hasActiveFilters ? '未找到匹配需求' : '还没有定制需求，来发布第一个吧',
+      });
     } catch (e) {
       wx.showToast({ title: e.message || '加载失败', icon: 'none' });
+      this.setData({ list: [], total: 0, showEmpty: true });
     } finally {
-      this.setData({ loading: false });
+      this.setData({
+        showSkeleton: false,
+        listRefreshing: false,
+        hasLoadedOnce: true,
+      });
     }
   },
+
+  async loadMineList() {
+    const user = auth.getUser();
+    if (!user) {
+      this.setData({ list: [], total: 0, showEmpty: true, hasMore: false });
+      return;
+    }
+    let raw = await customRequestApi.list();
+    const list = (raw || [])
+      .filter((item) => {
+        const buyerId = item.buyer ? item.buyer.id : item.buyerId;
+        return buyerId === user.id;
+      })
+      .map(mapRequestItem);
+    this.setData({
+      list,
+      total: list.length,
+      showEmpty: list.length === 0,
+      hasMore: false,
+    });
+  },
+
+  async loadHallList(resetPage) {
+    const page = resetPage ? 1 : this.data.currentPage;
+    const res = await customRequestApi.search({
+      status: 'OPEN',
+      category: this.data.filterCategory === 'all' ? undefined : this.data.filterCategory,
+      keyword: this.data.keyword.trim() || undefined,
+      sort: this.data.requestSort,
+      page,
+      size: PAGE_SIZE,
+    });
+    // 兼容旧接口返回数组
+    const rawItems = Array.isArray(res) ? res : (res.items || []);
+    const total = Array.isArray(res) ? rawItems.length : (res.total ?? rawItems.length);
+    const items = rawItems.map(mapRequestItem);
+    const list = resetPage ? items : this.data.list.concat(items);
+    this.setData({
+      list,
+      total,
+      currentPage: page,
+      showEmpty: total === 0,
+      hasMore: list.length < total,
+    });
+  },
+
+  async loadMore() {
+    if (this.data.scope === 'mine' || !this.data.hasMore) return;
+    this.setData({ loadingMore: true, currentPage: this.data.currentPage + 1 });
+    try {
+      await this.loadHallList(false);
+    } finally {
+      this.setData({ loadingMore: false });
+    }
+  },
+
+  openDetail(e) {
+    const item = this.data.list[e.currentTarget.dataset.index];
+    if (!item) return;
+    this.setData({ showDetail: true, detailItem: item });
+  },
+
+  closeDetail() {
+    this.setData({ showDetail: false, detailItem: null });
+  },
+
+  stopPropagation() {},
 
   goPublish() {
     if (!auth.isLoggedIn()) {
@@ -56,6 +228,20 @@ Page({
       return;
     }
     wx.navigateTo({ url: '/pages/publish-request/publish-request' });
+  },
+
+  onBidFromDetail() {
+    const item = this.data.detailItem;
+    if (!item) return;
+    this.closeDetail();
+    this.onBid({ currentTarget: { dataset: { id: item.id } } });
+  },
+
+  showBidsFromDetail() {
+    const item = this.data.detailItem;
+    if (!item) return;
+    this.closeDetail();
+    this.showBids({ currentTarget: { dataset: { id: item.id } } });
   },
 
   async onBid(e) {
@@ -74,7 +260,7 @@ Page({
           const user = auth.getUser();
           await customRequestApi.submitBid(id, user.id, res.content || '小程序揭榜');
           wx.showToast({ title: '报价成功', icon: 'success' });
-          this.loadList();
+          this.loadList(true);
         } catch (err) {
           wx.showToast({ title: err.message || '报价失败', icon: 'none' });
         }
@@ -82,13 +268,12 @@ Page({
     });
   },
 
-  async onSelectBid(e) {
-    const { id, bidId } = e.currentTarget.dataset;
+  async onSelectBid(id, bidId) {
     const user = auth.getUser();
     try {
       await customRequestApi.selectBid(id, user.id, bidId);
       wx.showToast({ title: '已选定匠人', icon: 'success' });
-      this.loadList();
+      this.loadList(true);
     } catch (err) {
       wx.showToast({ title: err.message || '操作失败', icon: 'none' });
     }
@@ -107,7 +292,7 @@ Page({
         wx.showToast({ title: '暂无报价', icon: 'none' });
         return;
       }
-      const itemList = bids.map((b) => `${b.artisanName || '匠人'}: ${b.message || '报价'}`);
+      const itemList = bids.map((b) => `${b.artisanUsername || b.artisanName || '匠人'}: ${b.message || '报价'}`);
       wx.showActionSheet({
         itemList,
         success: (res) => {
@@ -115,11 +300,9 @@ Page({
           if (bid) {
             wx.showModal({
               title: '确认选定',
-              content: `选定 ${bid.artisanName || '匠人'}？`,
+              content: `选定 ${bid.artisanUsername || bid.artisanName || '匠人'}？`,
               success: (r) => {
-                if (r.confirm) {
-                  this.onSelectBid({ currentTarget: { dataset: { id, bidId: bid.id } } });
-                }
+                if (r.confirm) this.onSelectBid(id, bid.id);
               },
             });
           }

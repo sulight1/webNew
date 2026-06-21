@@ -14,10 +14,11 @@ public interface OrderService {
     List<CustomOrder> getAllOrders(String status);
     CustomOrder getOrder(Long id);
     CustomOrder confirmOrder(Long orderId, Long artisanId);
-    CustomOrder payDeposit(Long orderId, Long buyerId);
+    CustomOrder payDeposit(Long orderId, Long buyerId, String paymentChannel);
     CustomOrder payBalance(Long orderId, Long buyerId);
     CustomOrder confirmReceipt(Long orderId, Long buyerId);
     CustomOrder updateStatus(Long orderId, String status, Long operatorId, String operatorName);
+    CustomOrder shipOrder(Long orderId, Long artisanId, String shippingCompany, String trackingNumber, String operatorName);
     CustomOrder addMilestone(Long orderId, Map<String, String> payload, Long operatorId, String operatorName);
     List<OrderMilestone> getMilestones(Long orderId);
     List<EscrowTransaction> getEscrowTransactions(Long orderId);

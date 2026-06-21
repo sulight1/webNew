@@ -5,6 +5,10 @@
       <text class="tag">{{order.statusLabel}}</text>
     </view>
     <text class="text-muted">{{order.productTitle}}</text>
+    <view class="price-row flex-between" wx:if="{{order.quantity > 1}}">
+      <text>购买数量</text>
+      <text>× {{order.quantity}}</text>
+    </view>
     <view class="price-row flex-between">
       <text>商品金额</text>
       <text class="text-price">¥{{order.price}}</text>
@@ -20,6 +24,56 @@
     <text class="text-muted">买家：{{order.buyerName}} · 卖家：{{order.artisanName}}</text>
   </view>
 
+  <view class="requirements-alert card" wx:if="{{isSeller && order.status === 'PENDING_CONFIRM'}}">
+    <view class="section-title">买家定制说明</view>
+    <text class="requirements-text">{{order.requirements || '买家未填写详细描述，建议先联系买家确认'}}</text>
+  </view>
+
+  <view class="card requirements-card" wx:elif="{{order.requirements || !isReadyMade}}">
+    <view class="section-title">买家定制需求</view>
+    <text class="requirements-text">{{order.requirements || '买家未填写详细描述'}}</text>
+  </view>
+
+  <view class="card" wx:if="{{order.shippingAddress}}">
+    <view class="section-title">收货地址</view>
+    <view class="flex-between">
+      <text class="text-muted">收货人</text>
+      <text>{{order.shippingName}} {{order.shippingPhone}}</text>
+    </view>
+    <view class="address-detail">{{order.shippingAddress}}</view>
+  </view>
+
+  <view class="card" wx:if="{{order.trackingNumber}}">
+    <view class="section-title">物流信息</view>
+    <view class="flex-between">
+      <text class="text-muted">物流公司</text>
+      <text>{{order.shippingCompany}}</text>
+    </view>
+    <view class="flex-between">
+      <text class="text-muted">快递单号</text>
+      <text>{{order.trackingNumber}}</text>
+    </view>
+    <view class="flex-between" wx:if="{{order.shippedAt}}">
+      <text class="text-muted">发货时间</text>
+      <text>{{order.shippedAt}}</text>
+    </view>
+    <view class="logistics-actions">
+      <button class="btn-outline logistics-btn" size="mini" bindtap="copyTrackingNumber">复制单号</button>
+      <button class="btn-primary logistics-btn" size="mini" loading="{{logisticsLoading}}" bindtap="loadLogistics">
+        {{logistics ? '刷新物流' : '查询物流'}}
+      </button>
+      <button wx:if="{{logistics.fallbackUrl}}" class="btn-outline logistics-btn" size="mini" bindtap="openKuaidi100">快递100查询</button>
+    </view>
+    <text wx:if="{{logistics.hint}}" class="logistics-hint">{{logistics.hint}}</text>
+    <view wx:if="{{logistics.statusText}}" class="logistics-status">当前状态：{{logistics.statusText}}</view>
+    <view wx:if="{{logistics.tracks.length}}" class="logistics-tracks">
+      <view wx:for="{{logistics.tracks}}" wx:key="index" class="logistics-track">
+        <text class="logistics-time">{{item.time}}</text>
+        <text class="logistics-context">{{item.context}}</text>
+      </view>
+    </view>
+  </view>
+
   <view class="card" wx:if="{{milestones.length}}">
     <view class="section-title">进度记录</view>
     <view wx:for="{{milestones}}" wx:key="id" class="milestone">
@@ -33,11 +87,28 @@
     <button wx:if="{{isBuyer && order.status === 'PENDING_BALANCE'}}" class="btn-primary" bindtap="doPayBalance">支付尾款</button>
     <button wx:if="{{isBuyer && order.status === 'PENDING_ACCEPT'}}" class="btn-primary" bindtap="doConfirmReceipt">确认收货</button>
     <button wx:if="{{isSeller && order.status === 'PENDING_CONFIRM'}}" class="btn-primary" bindtap="doConfirm">确认接单</button>
-    <button wx:if="{{isSeller && order.status === 'PENDING_SHIP'}}" class="btn-primary" data-status="PENDING_ACCEPT" bindtap="doStatus">标记已发货</button>
+    <button wx:if="{{isSeller && order.status === 'PENDING_SHIP'}}" class="btn-primary" bindtap="openShipForm">填写物流发货</button>
     <button wx:if="{{isSeller && !isReadyMade && (order.status === 'PRODUCING' || order.status === 'HALF_FINISHED_CONFIRM')}}" class="btn-outline" data-status="PENDING_SHIP" bindtap="doStatus">标记待发货</button>
     <button wx:if="{{isBuyer && order.cancelRequestStatus !== 'PENDING' && order.status !== 'CANCELLED' && order.status !== 'COMPLETED'}}" class="btn-outline" bindtap="doRequestCancel">申请取消</button>
     <button wx:if="{{isSeller && order.cancelRequestStatus === 'PENDING'}}" class="btn-primary" bindtap="doApproveCancel">同意取消</button>
     <button wx:if="{{isSeller && order.cancelRequestStatus === 'PENDING'}}" class="btn-outline" bindtap="doRejectCancel">拒绝取消</button>
+  </view>
+
+  <view class="ship-mask" wx:if="{{showShipForm}}" bindtap="closeShipForm">
+    <view class="ship-panel" catchtap="stopPropagation">
+      <view class="section-title">填写物流信息</view>
+      <view class="ship-address" wx:if="{{order.shippingAddress}}">
+        <text class="ship-address-label">发往</text>
+        <text>{{order.shippingName}} {{order.shippingPhone}}</text>
+        <text class="ship-address-detail">{{order.shippingAddress}}</text>
+      </view>
+      <input class="ship-input" placeholder="物流公司，如顺丰速运" value="{{shipCompany}}" bindinput="onShipCompanyInput" />
+      <input class="ship-input" placeholder="快递单号" value="{{shipTrackingNo}}" bindinput="onShipTrackingInput" />
+      <view class="ship-actions">
+        <button class="btn-outline" bindtap="closeShipForm">取消</button>
+        <button class="btn-primary" bindtap="submitShip">确认发货</button>
+      </view>
+    </view>
   </view>
 </view>
 <view wx:elif="{{loading}}" class="empty">加载中...</view>

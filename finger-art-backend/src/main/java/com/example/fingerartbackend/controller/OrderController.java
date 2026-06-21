@@ -1,9 +1,13 @@
 package com.example.fingerartbackend.controller;
 
+import com.example.fingerartbackend.auth.AuthContext;
 import com.example.fingerartbackend.common.Result;
+import com.example.fingerartbackend.dto.LogisticsTraceResult;
 import com.example.fingerartbackend.entity.CustomOrder;
 import com.example.fingerartbackend.entity.EscrowTransaction;
 import com.example.fingerartbackend.entity.OrderMilestone;
+import com.example.fingerartbackend.service.AdminAuditService;
+import com.example.fingerartbackend.service.LogisticsService;
 import com.example.fingerartbackend.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +22,12 @@ public class OrderController {
 
     @Autowired
     private OrderService orderService;
+
+    @Autowired
+    private AdminAuditService adminAuditService;
+
+    @Autowired
+    private LogisticsService logisticsService;
 
     @PostMapping
     public Result<CustomOrder> createOrder(@RequestBody CustomOrder order) {
@@ -74,9 +84,13 @@ public class OrderController {
     }
 
     @PostMapping("/{id}/pay-deposit")
-    public Result<CustomOrder> payDeposit(@PathVariable Long id, @RequestBody Map<String, Long> body) {
+    public Result<CustomOrder> payDeposit(@PathVariable Long id, @RequestBody Map<String, Object> body) {
         try {
-            return Result.success(orderService.payDeposit(id, body.get("buyerId")));
+            Long buyerId = Long.valueOf(body.get("buyerId").toString());
+            String paymentChannel = body.get("paymentChannel") != null
+                    ? body.get("paymentChannel").toString()
+                    : "ZAOWU_COIN";
+            return Result.success(orderService.payDeposit(id, buyerId, paymentChannel));
         } catch (Exception e) {
             return Result.error(e.getMessage());
         }
@@ -95,6 +109,19 @@ public class OrderController {
     public Result<CustomOrder> confirmReceipt(@PathVariable Long id, @RequestBody Map<String, Long> body) {
         try {
             return Result.success(orderService.confirmReceipt(id, body.get("buyerId")));
+        } catch (Exception e) {
+            return Result.error(e.getMessage());
+        }
+    }
+
+    @PostMapping("/{id}/ship")
+    public Result<CustomOrder> shipOrder(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+        try {
+            Long artisanId = Long.valueOf(body.get("artisanId").toString());
+            String shippingCompany = body.get("shippingCompany") != null ? body.get("shippingCompany").toString() : null;
+            String trackingNumber = body.get("trackingNumber") != null ? body.get("trackingNumber").toString() : null;
+            String operatorName = body.get("operatorName") != null ? body.get("operatorName").toString() : null;
+            return Result.success(orderService.shipOrder(id, artisanId, shippingCompany, trackingNumber, operatorName));
         } catch (Exception e) {
             return Result.error(e.getMessage());
         }
@@ -134,6 +161,15 @@ public class OrderController {
         }
     }
 
+    @GetMapping("/{id}/logistics")
+    public Result<LogisticsTraceResult> getOrderLogistics(@PathVariable Long id) {
+        try {
+            return Result.success(logisticsService.queryOrderLogistics(id, AuthContext.getUserId()));
+        } catch (Exception e) {
+            return Result.error(e.getMessage());
+        }
+    }
+
     @GetMapping("/{id}/escrow")
     public Result<List<EscrowTransaction>> getEscrow(@PathVariable Long id) {
         try {
@@ -157,7 +193,10 @@ public class OrderController {
     @PostMapping("/{id}/resolve-dispute")
     public Result<CustomOrder> resolveDispute(@PathVariable Long id, @RequestParam boolean releaseToArtisan) {
         try {
-            return Result.success(orderService.resolveDispute(id, releaseToArtisan));
+            CustomOrder order = orderService.resolveDispute(id, releaseToArtisan);
+            adminAuditService.log("RESOLVE_DISPUTE", "ORDER", id,
+                    (releaseToArtisan ? "纠纷放款给达人" : "纠纷退款给买家") + "，订单 " + order.getProductTitle());
+            return Result.success(order);
         } catch (Exception e) {
             return Result.error(e.getMessage());
         }

@@ -1,0 +1,21 @@
+<view class="container">
+  <view wx:if="{{loading}}" class="empty">加载中...</view>
+  <view wx:elif="{{favorites.length === 0}}" class="empty">还没有收藏作品，去市集逛逛吧</view>
+  <view class="product-list" wx:else>
+    <view class="product-item card" wx:for="{{favorites}}" wx:key="id">
+      <view class="item-main" data-id="{{item.id}}" bindtap="goDetail">
+        <image class="thumb" src="{{item.image}}" mode="aspectFill" />
+        <view class="info">
+          <text class="title">{{item.title}}</text>
+          <text class="text-muted">{{item.creator}}</text>
+          <view class="flex-between">
+            <text class="text-price">¥{{item.price}}</text>
+            <text class="tag unavailable" wx:if="{{item.unavailable}}">已下架</text>
+            <text class="tag" wx:else>{{item.type === 'READY_MADE' ? '成品' : '可定制'}}</text>
+          </view>
+        </view>
+      </view>
+      <button class="unfav-btn" data-id="{{item.id}}" catchtap="onUnfavorite">取消收藏</button>
+    </view>
+  </view>
+</view>

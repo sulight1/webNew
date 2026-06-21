@@ -102,7 +102,10 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                     Map<String, Object> m = new HashMap<>();
                     m.put("id", p.getId());
                     m.put("title", p.getTitle());
-                    m.put("likes", p.getLikes());
+                    m.put("image", p.getImage());
+                    m.put("price", p.getPrice());
+                    m.put("likes", p.getLikes() != null ? p.getLikes() : 0);
+                    m.put("status", p.getStatus());
                     m.put("exposureBoost", p.getExposureBoost());
                     return m;
                 })

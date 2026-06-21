@@ -21,8 +21,8 @@ Page({
     try {
       const app = getApp();
       const userId = app.globalData.user && app.globalData.user.id;
-      const [platform, products, artisans] = await Promise.all([
-        statsApi.platform().catch(() => ({})),
+      const [summary, products, artisans] = await Promise.all([
+        statsApi.summary().catch(() => ({})),
         productApi.getProducts({ scope: 'approved' }).catch(() => []),
         userApi.getTopArtisans(6, userId).catch(() => []),
       ]);
@@ -35,8 +35,8 @@ Page({
       this.setData({
         stats: {
           productCount: approved.length,
-          artisanCount: platform.artisanCount || 0,
-          orderCount: platform.openRequests || 0,
+          artisanCount: summary.artisanCount || 0,
+          orderCount: summary.activeRequests || 0,
         },
         hotProducts: hot,
         artisans: artisanList,
@@ -54,6 +54,10 @@ Page({
 
   goCustomRequest() {
     wx.switchTab({ url: '/pages/custom-request/custom-request' });
+  },
+
+  goInspirationGacha() {
+    wx.navigateTo({ url: '/pages/inspiration-gacha/inspiration-gacha' });
   },
 
   goProduct(e) {

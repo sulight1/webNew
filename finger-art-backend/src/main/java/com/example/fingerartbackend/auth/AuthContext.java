@@ -22,7 +22,7 @@ public final class AuthContext {
 
     public static boolean isAdmin() {
         AuthUser user = CURRENT.get();
-        return user != null && "ADMIN".equals(user.role());
+        return user != null && "ADMIN".equals(user.role()) && user.adminSession();
     }
 
     public static void clear() {

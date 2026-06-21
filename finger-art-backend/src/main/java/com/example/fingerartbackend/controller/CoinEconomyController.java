@@ -1,5 +1,6 @@
 package com.example.fingerartbackend.controller;
 
+import com.example.fingerartbackend.auth.AuthContext;
 import com.example.fingerartbackend.common.Result;
 import com.example.fingerartbackend.entity.Product;
 import com.example.fingerartbackend.service.CoinEconomyService;
@@ -21,27 +22,54 @@ public class CoinEconomyController {
     private SensitiveWordService sensitiveWordService;
 
     @PostMapping("/check-in")
-    public Result<Map<String, Object>> checkIn(@RequestParam Long userId) {
-        return Result.success(coinEconomyService.checkIn(userId));
+    public Result<Map<String, Object>> checkIn(@RequestParam(required = false) Long userId) {
+        try {
+            return Result.success(coinEconomyService.checkIn(resolveUserId(userId)));
+        } catch (Exception e) {
+            return Result.error(e.getMessage());
+        }
     }
 
     @GetMapping("/tasks")
-    public Result<List<Map<String, Object>>> tasks(@RequestParam Long userId) {
-        return Result.success(coinEconomyService.getTaskStatus(userId));
+    public Result<List<Map<String, Object>>> tasks(@RequestParam(required = false) Long userId) {
+        try {
+            return Result.success(coinEconomyService.getTaskStatus(resolveUserId(userId)));
+        } catch (Exception e) {
+            return Result.error(e.getMessage());
+        }
     }
 
     @PostMapping("/tasks/claim")
     public Result<Map<String, Object>> claimTask(@RequestBody Map<String, Object> body) {
-        Long userId = Long.valueOf(body.get("userId").toString());
-        String taskCode = body.get("taskCode").toString();
-        return Result.success(coinEconomyService.claimDailyTask(userId, taskCode));
+        try {
+            Long userId = body.get("userId") != null ? Long.valueOf(body.get("userId").toString()) : null;
+            String taskCode = body.get("taskCode").toString();
+            return Result.success(coinEconomyService.claimDailyTask(resolveUserId(userId), taskCode));
+        } catch (Exception e) {
+            return Result.error(e.getMessage());
+        }
     }
 
     @PostMapping("/boost-product")
     public Result<Product> boostProduct(@RequestBody Map<String, Object> body) {
-        Long userId = Long.valueOf(body.get("userId").toString());
-        Long productId = Long.valueOf(body.get("productId").toString());
-        return Result.success(coinEconomyService.boostProductExposure(userId, productId));
+        try {
+            Long userId = body.get("userId") != null ? Long.valueOf(body.get("userId").toString()) : null;
+            Long productId = Long.valueOf(body.get("productId").toString());
+            return Result.success(coinEconomyService.boostProductExposure(resolveUserId(userId), productId));
+        } catch (Exception e) {
+            return Result.error(e.getMessage());
+        }
+    }
+
+    private Long resolveUserId(Long userId) {
+        Long authUserId = AuthContext.getUserId();
+        if (authUserId == null) {
+            throw new RuntimeException("请先登录");
+        }
+        if (userId != null && !userId.equals(authUserId)) {
+            throw new RuntimeException("无权操作其他账号");
+        }
+        return authUserId;
     }
 
     @GetMapping("/sensitive-words")

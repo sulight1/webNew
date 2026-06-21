@@ -1,0 +1,46 @@
+<view class="page">
+  <view wx:if="{{items.length === 0}}" class="empty">
+    <text class="empty-emoji">📒</text>
+    <text class="empty-title">灵感本还是空的</text>
+    <text class="empty-sub">去扭蛋机收藏灵感吧</text>
+    <button class="btn-primary" bindtap="goGacha">去扭蛋</button>
+  </view>
+
+  <view wx:else class="list">
+    <view class="list-head flex-between">
+      <text>共 {{items.length}} 条灵感</text>
+      <text class="clear-link" bindtap="clearAll">清空</text>
+    </view>
+    <view class="card" wx:for="{{items}}" wx:key="id">
+      <view class="card-tags">
+        <text class="tag">{{item.styleLabel}}</text>
+        <text class="tag craft">{{item.categoryEmoji}} {{item.categoryLabel}}</text>
+      </view>
+      <text class="copy">「{{item.copy}}」</text>
+      <view class="palette-row">
+        <view
+          wx:for="{{item.colors}}"
+          wx:for-item="color"
+          wx:key="hex"
+          class="dot"
+          style="background: {{color.hex}};"
+        ></view>
+        <text class="palette">{{item.paletteName}}</text>
+      </view>
+      <image
+        wx:if="{{item.imagePreview}}"
+        class="thumb"
+        src="{{item.imagePreview}}"
+        mode="aspectFill"
+        data-url="{{item.imagePreview}}"
+        bindtap="previewImage"
+      />
+      <view class="card-actions">
+        <button size="mini" class="act" data-item="{{item}}" bindtap="useProduct">发作品</button>
+        <button size="mini" class="act" data-item="{{item}}" bindtap="useRequest">发需求</button>
+        <button size="mini" class="act ghost" data-id="{{item.id}}" bindtap="removeItem">删除</button>
+      </view>
+      <text class="time">{{item.savedAtText}}</text>
+    </view>
+  </view>
+</view>

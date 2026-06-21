@@ -20,3 +20,18 @@
 .order-item {
   margin-bottom: 16rpx;
 }
+
+.qty-text {
+  font-size: 24rpx;
+  color: #8c8c8c;
+  font-weight: 500;
+}
+
+.order-req {
+  display: block;
+  margin-top: 8rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 24rpx;
+}

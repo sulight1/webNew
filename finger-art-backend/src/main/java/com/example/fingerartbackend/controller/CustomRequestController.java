@@ -1,11 +1,13 @@
 package com.example.fingerartbackend.controller;
 
 import com.example.fingerartbackend.common.Result;
+import com.example.fingerartbackend.dto.CustomRequestPageResult;
 import com.example.fingerartbackend.entity.CustomRequest;
 import com.example.fingerartbackend.entity.User;
 import com.example.fingerartbackend.mapper.CustomRequestMapper;
 import com.example.fingerartbackend.mapper.UserMapper;
 import com.example.fingerartbackend.service.CustomRequestBidService;
+import com.example.fingerartbackend.service.CustomRequestService;
 import com.example.fingerartbackend.service.DemandMatchService;
 import com.example.fingerartbackend.dto.CustomRequestBidView;
 import com.example.fingerartbackend.dto.SelectBidResult;
@@ -32,9 +34,28 @@ public class CustomRequestController {
     @Autowired
     private CustomRequestBidService bidService;
 
+    @Autowired
+    private CustomRequestService customRequestService;
+
     @GetMapping
-    public Result<List<CustomRequest>> findAll() {
-        return Result.success(requestMapper.findAll());
+    public Result<?> findAll(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(required = false, defaultValue = "OPEN") String status,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false, defaultValue = "latest") String sort) {
+        if (page == null || size == null) {
+            return Result.success(requestMapper.findAll());
+        }
+        return Result.success(customRequestService.search(status, category, keyword, sort, page, size));
+    }
+
+    @GetMapping("/{id}")
+    public Result<CustomRequest> findById(@PathVariable Long id) {
+        return requestMapper.findById(id)
+                .map(Result::success)
+                .orElseGet(() -> Result.error("需求不存在"));
     }
 
     @GetMapping("/bids/by-artisan/{artisanId}")

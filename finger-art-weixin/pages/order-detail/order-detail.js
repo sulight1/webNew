@@ -1,6 +1,7 @@
 const { orderApi } = require('../../services/api');
 const auth = require('../../utils/auth');
 const { orderStatusText } = require('../../utils/format');
+const { copyText, openFallbackUrl } = require('../../utils/logistics');
 
 Page({
   data: {
@@ -10,6 +11,11 @@ Page({
     isBuyer: false,
     isSeller: false,
     isReadyMade: false,
+    showShipForm: false,
+    shipCompany: '',
+    shipTrackingNo: '',
+    logistics: null,
+    logisticsLoading: false,
   },
 
   onLoad(options) {
@@ -34,7 +40,11 @@ Page({
         isSeller: user && user.id === order.artisanId,
         isReadyMade,
         loading: false,
+        logistics: null,
       });
+      if (order.trackingNumber) {
+        this.loadLogistics(true);
+      }
     } catch (e) {
       wx.showToast({ title: e.message || '加载失败', icon: 'none' });
       this.setData({ loading: false });
@@ -44,7 +54,7 @@ Page({
   async doPayDeposit() {
     const user = auth.getUser();
     try {
-      await orderApi.payDeposit(this.orderId, user.id);
+      await orderApi.payDeposit(this.orderId, user.id, 'MOCK_WECHAT');
       wx.showToast({ title: '支付成功', icon: 'success' });
       this.loadOrder();
     } catch (e) {
@@ -83,6 +93,43 @@ Page({
       this.loadOrder();
     } catch (err) {
       wx.showToast({ title: err.message || '操作失败', icon: 'none' });
+    }
+  },
+
+  openShipForm() {
+    this.setData({ showShipForm: true, shipCompany: '', shipTrackingNo: '' });
+  },
+
+  closeShipForm() {
+    this.setData({ showShipForm: false });
+  },
+
+  onShipCompanyInput(e) {
+    this.setData({ shipCompany: e.detail.value });
+  },
+
+  onShipTrackingInput(e) {
+    this.setData({ shipTrackingNo: e.detail.value });
+  },
+
+  async submitShip() {
+    const { shipCompany, shipTrackingNo } = this.data;
+    if (!shipCompany.trim()) {
+      wx.showToast({ title: '请填写物流公司', icon: 'none' });
+      return;
+    }
+    if (!shipTrackingNo.trim()) {
+      wx.showToast({ title: '请填写快递单号', icon: 'none' });
+      return;
+    }
+    const user = auth.getUser();
+    try {
+      await orderApi.shipOrder(this.orderId, user.id, shipCompany.trim(), shipTrackingNo.trim(), user.username);
+      wx.showToast({ title: '已发货', icon: 'success' });
+      this.setData({ showShipForm: false });
+      this.loadOrder();
+    } catch (e) {
+      wx.showToast({ title: e.message || '发货失败', icon: 'none' });
     }
   },
 
@@ -137,4 +184,35 @@ Page({
       wx.showToast({ title: e.message || '操作失败', icon: 'none' });
     }
   },
+
+  copyTrackingNumber() {
+    const no = this.data.order && this.data.order.trackingNumber;
+    copyText(no, '单号已复制');
+  },
+
+  async loadLogistics(silent) {
+    if (!this.orderId) return;
+    const quiet = silent === true;
+    this.setData({ logisticsLoading: true });
+    try {
+      const logistics = await orderApi.getLogistics(this.orderId);
+      this.setData({ logistics });
+      if (!quiet && logistics && logistics.apiAvailable && logistics.tracks && logistics.tracks.length) {
+        wx.showToast({ title: '物流已更新', icon: 'success' });
+      }
+    } catch (e) {
+      if (!quiet) {
+        wx.showToast({ title: e.message || '查询失败', icon: 'none' });
+      }
+    } finally {
+      this.setData({ logisticsLoading: false });
+    }
+  },
+
+  openKuaidi100() {
+    const url = this.data.logistics && this.data.logistics.fallbackUrl;
+    openFallbackUrl(url);
+  },
+
+  stopPropagation() {},
 });

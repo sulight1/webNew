@@ -9,6 +9,8 @@ import java.util.List;
 public interface CustomOrderMapper extends JpaRepository<CustomOrder, Long> {
     List<CustomOrder> findByArtisanId(Long artisanId);
     List<CustomOrder> findByBuyerId(Long buyerId);
+    List<CustomOrder> findByBuyerIdOrderByCreateTimeDesc(Long buyerId);
+    List<CustomOrder> findByBuyerIdAndProductIdAndStatusOrderByCreateTimeDesc(Long buyerId, Long productId, String status);
     List<CustomOrder> findByStatusOrderByCreateTimeDesc(String status);
     long countByStatus(String status);
 }

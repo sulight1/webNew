@@ -10,6 +10,9 @@ import java.util.Optional;
 @Repository
 public interface ReviewMapper extends JpaRepository<Review, Long> {
     List<Review> findByToUserIdOrderByCreatedAtDesc(Long toUserId);
+
+    List<Review> findByProductIdOrderByCreatedAtDesc(Long productId);
+
     Optional<Review> findByOrderIdAndFromUserId(Long orderId, Long fromUserId);
     Optional<Review> findByExchangeIdAndFromUserId(Long exchangeId, Long fromUserId);
     boolean existsByOrderIdAndFromUserId(Long orderId, Long fromUserId);

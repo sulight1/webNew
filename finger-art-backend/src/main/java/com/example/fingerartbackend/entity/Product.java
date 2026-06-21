@@ -57,4 +57,9 @@ public class Product {
     @Transient
     @JsonProperty("liked")
     private Boolean liked;
+
+    /** 当前用户是否已收藏（非持久化） */
+    @Transient
+    @JsonProperty("favorited")
+    private Boolean favorited;
 }

@@ -6,9 +6,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
+
+import com.example.fingerartbackend.service.UserPunishmentService;
 
 import java.util.regex.Pattern;
 
@@ -19,6 +22,10 @@ public class AuthInterceptor implements HandlerInterceptor {
 
     @Autowired
     private AuthProperties authProperties;
+
+    @Autowired
+    @Lazy
+    private UserPunishmentService userPunishmentService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -46,8 +53,13 @@ public class AuthInterceptor implements HandlerInterceptor {
             return false;
         }
 
-        if (requiresAdmin(method, path) && !"ADMIN".equals(user.role())) {
+        if (requiresAdmin(method, path) && !isPrivilegedAdmin(user)) {
             writeJson(response, HttpServletResponse.SC_FORBIDDEN, Result.error(403, "需要管理员权限"));
+            return false;
+        }
+
+        if (!isPrivilegedAdmin(user) && userPunishmentService.isAccountBanned(user.id())) {
+            writeJson(response, HttpServletResponse.SC_FORBIDDEN, Result.error(403, "账号已被封禁，如有疑问请联系平台"));
             return false;
         }
 
@@ -58,7 +70,8 @@ public class AuthInterceptor implements HandlerInterceptor {
         if (path.startsWith("/uploads/")) {
             return true;
         }
-        if ("POST".equals(method) && ("/users/login".equals(path) || "/users/register".equals(path)
+        if ("POST".equals(method) && ("/users/login".equals(path) || "/users/login/totp".equals(path)
+                || "/users/register".equals(path)
                 || "/users/password-reset-request".equals(path))) {
             return true;
         }
@@ -66,7 +79,7 @@ public class AuthInterceptor implements HandlerInterceptor {
             if ("/products".equals(path) || path.startsWith("/products/")) {
                 return true;
             }
-            if ("/custom-requests".equals(path)) {
+            if ("/custom-requests".equals(path) || path.matches("^/custom-requests/\\d+$")) {
                 return true;
             }
             if ("/skills".equals(path) || path.startsWith("/skills/")) {
@@ -94,8 +107,15 @@ public class AuthInterceptor implements HandlerInterceptor {
                     || path.matches("^/forum/posts/\\d+/replies$")) {
                 return true;
             }
+            if (path.matches("^/reviews/product/\\d+$")) {
+                return true;
+            }
         }
         return false;
+    }
+
+    private boolean isPrivilegedAdmin(AuthUser user) {
+        return user != null && "ADMIN".equals(user.role()) && user.adminSession();
     }
 
     private boolean requiresAdmin(String method, String path) {
@@ -108,10 +128,17 @@ public class AuthInterceptor implements HandlerInterceptor {
         if ("DELETE".equals(method) && path.matches("^/users/\\d+$")) {
             return true;
         }
+        if (path.matches("^/users/\\d+/punishments.*")) {
+            return true;
+        }
         if ("GET".equals(method) && "/stats/platform".equals(path)) {
             return true;
         }
         if (path.startsWith("/reports")) {
+            // 普通用户可提交举报；列表、统计、处理仍仅管理员
+            if ("POST".equals(method) && "/reports".equals(path)) {
+                return false;
+            }
             return true;
         }
         if ("POST".equals(method) && "/users/add-coins".equals(path)) {
@@ -121,6 +148,21 @@ public class AuthInterceptor implements HandlerInterceptor {
             return true;
         }
         if (path.startsWith("/forum/admin")) {
+            return true;
+        }
+        if (path.startsWith("/admin/")) {
+            return true;
+        }
+        if ("POST".equals(method) && path.matches("^/products/\\d+/audit$")) {
+            return true;
+        }
+        if ("POST".equals(method) && "/products/batch-audit".equals(path)) {
+            return true;
+        }
+        if ("PATCH".equals(method) && path.matches("^/skills/\\d+/audit$")) {
+            return true;
+        }
+        if ("POST".equals(method) && path.matches("^/orders/\\d+/resolve-dispute$")) {
             return true;
         }
         return false;

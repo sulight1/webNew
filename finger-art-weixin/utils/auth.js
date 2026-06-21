@@ -9,7 +9,7 @@ function getUser() {
   try {
     const raw = wx.getStorageSync(USER_KEY);
     return raw ? JSON.parse(raw) : null;
-  } catch {
+  } catch (e) {
     return null;
   }
 }

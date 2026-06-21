@@ -1,5 +1,9 @@
-const { API_BASE } = require('./config');
+const config = require('./config');
 const auth = require('./auth');
+
+function getApiBase() {
+  return config.resolveApiBase();
+}
 
 function buildQuery(params) {
   if (!params) return '';
@@ -17,7 +21,7 @@ function request(options) {
 
   return new Promise((resolve, reject) => {
     wx.request({
-      url: API_BASE + url + buildQuery(params),
+      url: getApiBase() + url + buildQuery(params),
       method,
       data,
       header,
@@ -28,8 +32,8 @@ function request(options) {
           return;
         }
         if (body && body.code === 401) {
-          auth.clearAuth();
           if (!skipAuthRedirect) {
+            auth.clearAuth();
             wx.showToast({ title: body.message || '请先登录', icon: 'none' });
           }
           reject(new Error(body.message || '请先登录'));
@@ -38,7 +42,17 @@ function request(options) {
         reject(new Error((body && body.message) || '请求失败'));
       },
       fail(err) {
-        reject(new Error(err.errMsg || '网络错误'));
+        const raw = err.errMsg || '网络错误';
+        let message = raw;
+        try {
+          const platform = wx.getSystemInfoSync().platform;
+          if (platform !== 'devtools' && /fail|timeout|connect/i.test(raw)) {
+            message = `${raw}。真机请确认：同一 WiFi、config.js 中 DEV_LAN_IP、防火墙已放行 3000 端口`;
+          }
+        } catch (e) {
+          // ignore
+        }
+        reject(new Error(message));
       },
     });
   });
@@ -48,7 +62,7 @@ function uploadFile(filePath) {
   const token = auth.getToken();
   return new Promise((resolve, reject) => {
     wx.uploadFile({
-      url: `${API_BASE}/files/upload`,
+      url: `${getApiBase()}/files/upload`,
       filePath,
       name: 'file',
       header: token ? { Authorization: `Bearer ${token}` } : {},
@@ -57,7 +71,7 @@ function uploadFile(filePath) {
           const body = JSON.parse(res.data);
           if (body.code === 200) resolve(body.data);
           else reject(new Error(body.message || '上传失败'));
-        } catch {
+        } catch (e) {
           reject(new Error('上传失败'));
         }
       },

@@ -2,8 +2,10 @@ package com.example.fingerartbackend.controller;
 
 import com.example.fingerartbackend.auth.AuthContext;
 import com.example.fingerartbackend.common.Result;
+import com.example.fingerartbackend.dto.FavoriteToggleResult;
 import com.example.fingerartbackend.dto.LikeToggleResult;
 import com.example.fingerartbackend.entity.Product;
+import com.example.fingerartbackend.service.AdminAuditService;
 import com.example.fingerartbackend.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +19,9 @@ public class ProductController {
 
     @Autowired
     private ProductService productService;
+
+    @Autowired
+    private AdminAuditService adminAuditService;
 
     @GetMapping
     public Result<List<Product>> getProducts(
@@ -56,6 +61,19 @@ public class ProductController {
         return Result.success(productService.getHotProducts(limit, AuthContext.getUserId()));
     }
 
+    @GetMapping("/favorites")
+    public Result<List<Product>> getFavoriteProducts() {
+        try {
+            Long userId = AuthContext.getUserId();
+            if (userId == null) {
+                return Result.error(401, "请先登录");
+            }
+            return Result.success(productService.getFavoriteProducts(userId));
+        } catch (Exception e) {
+            return Result.error(e.getMessage());
+        }
+    }
+
     @GetMapping("/init")
     public Result<Product> initData() {
         return Result.success(productService.createInitialProduct());
@@ -86,24 +104,48 @@ public class ProductController {
         return Result.success(productService.toggleLikeProduct(id, AuthContext.getUserId()));
     }
 
+    @PostMapping("/{id}/favorite")
+    public Result<FavoriteToggleResult> favoriteProduct(@PathVariable Long id) {
+        try {
+            Long userId = AuthContext.getUserId();
+            if (userId == null) {
+                return Result.error(401, "请先登录");
+            }
+            return Result.success(productService.toggleFavoriteProduct(id, userId));
+        } catch (Exception e) {
+            return Result.error(e.getMessage());
+        }
+    }
+
     @PostMapping("/{id}/audit")
     public Result<Product> auditProduct(@PathVariable Long id, @RequestParam String status) {
-        return Result.success(productService.auditProduct(id, status));
+        Product product = productService.auditProduct(id, status);
+        adminAuditService.log("AUDIT_PRODUCT", "PRODUCT", id,
+                "审核作品「" + product.getTitle() + "」为 " + status);
+        return Result.success(product);
     }
 
     @PostMapping("/batch-audit")
     public Result<Integer> batchAuditProducts(@RequestBody java.util.Map<String, Object> body) {
         @SuppressWarnings("unchecked")
         java.util.List<Long> ids = ((java.util.List<?>) body.get("ids")).stream()
-                .map(id -> Long.valueOf(id.toString()))
+                .map(item -> Long.valueOf(item.toString()))
                 .collect(java.util.stream.Collectors.toList());
         String status = body.get("status").toString();
-        return Result.success(productService.batchAuditProducts(ids, status));
+        int count = productService.batchAuditProducts(ids, status);
+        adminAuditService.log("BATCH_AUDIT_PRODUCT", "PRODUCT", null,
+                "批量审核 " + count + " 件作品为 " + status + "，ID=" + ids);
+        return Result.success(count);
     }
 
     @DeleteMapping("/{id}")
     public Result<String> deleteProduct(@PathVariable Long id) {
+        Product product = productService.getProductById(id, AuthContext.getUserId());
         productService.deleteProduct(id);
+        if (AuthContext.isAdmin()) {
+            adminAuditService.log("DELETE_PRODUCT", "PRODUCT", id,
+                    "删除作品「" + product.getTitle() + "」");
+        }
         return Result.success("商品删除成功");
     }
 

@@ -17,4 +17,10 @@ public class AuthProperties {
 
     /** Token 有效期（毫秒），默认 7 天 */
     private long expirationMs = 7L * 24 * 60 * 60 * 1000;
+
+    /** 管理员 Token 有效期（毫秒），默认 2 小时 */
+    private long adminExpirationMs = 2L * 60 * 60 * 1000;
+
+    /** 管理员 TOTP 预认证 Token 有效期（毫秒），默认 5 分钟 */
+    private long preAuthExpirationMs = 5L * 60 * 1000;
 }

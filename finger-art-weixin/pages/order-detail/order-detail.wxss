@@ -10,6 +10,36 @@
   border-bottom: 1rpx solid #f0f0f0;
 }
 
+.address-detail {
+  display: block;
+  margin-top: 12rpx;
+  font-size: 26rpx;
+  color: #333;
+  line-height: 1.5;
+}
+
+.ship-address {
+  background: #fff7e6;
+  border-radius: 12rpx;
+  padding: 16rpx 20rpx;
+  margin-bottom: 20rpx;
+  font-size: 26rpx;
+}
+
+.ship-address-label {
+  display: block;
+  color: #d46b08;
+  font-weight: 600;
+  margin-bottom: 8rpx;
+}
+
+.ship-address-detail {
+  display: block;
+  margin-top: 8rpx;
+  color: #595959;
+  line-height: 1.5;
+}
+
 .milestone {
   padding: 12rpx 0;
   border-bottom: 1rpx solid #f5f5f5;
@@ -18,4 +48,112 @@
 .actions button {
   width: 100%;
   margin-bottom: 16rpx;
+}
+
+.ship-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.ship-panel {
+  width: 86%;
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 32rpx 28rpx;
+}
+
+.ship-input {
+  width: 100%;
+  border: 1rpx solid #e8e8e8;
+  border-radius: 12rpx;
+  padding: 20rpx 24rpx;
+  margin-bottom: 20rpx;
+  box-sizing: border-box;
+}
+
+.ship-actions {
+  display: flex;
+  gap: 16rpx;
+}
+
+.ship-actions button {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.logistics-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-top: 20rpx;
+}
+
+.logistics-btn {
+  margin: 0 !important;
+  width: auto !important;
+  flex: none;
+}
+
+.logistics-hint {
+  display: block;
+  margin-top: 16rpx;
+  font-size: 24rpx;
+  color: #8c8c8c;
+  line-height: 1.5;
+}
+
+.logistics-status {
+  margin-top: 16rpx;
+  font-size: 26rpx;
+  color: #389e0d;
+  font-weight: 600;
+}
+
+.logistics-tracks {
+  margin-top: 20rpx;
+  border-top: 1rpx solid #f0f0f0;
+  padding-top: 16rpx;
+}
+
+.logistics-track {
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.logistics-time {
+  display: block;
+  font-size: 22rpx;
+  color: #8c8c8c;
+}
+
+.logistics-context {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 26rpx;
+  color: #595959;
+  line-height: 1.5;
+}
+
+.requirements-card {
+  background: #fff7fb;
+  border: 1rpx solid #ffd6e7;
+}
+
+.requirements-alert {
+  background: #e6f4ff;
+  border: 1rpx solid #91caff;
+}
+
+.requirements-text {
+  display: block;
+  font-size: 28rpx;
+  color: #595959;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
 }

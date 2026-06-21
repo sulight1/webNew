@@ -1,0 +1,85 @@
+<view class="page">
+  <view class="hero">
+    <view class="hero-glow"></view>
+    <text class="hero-tag">INSPIRATION GACHA</text>
+    <view class="hero-title">今日灵感<text class="accent">扭蛋</text></view>
+    <text class="hero-sub">随机解锁风格 · 工艺 · 配色 · 文案，还可 AI 生参考图</text>
+    <view class="status-row">
+      <view class="status-chip {{status.freeAvailable ? 'free' : ''}}">
+        {{status.freeAvailable ? '今日免费 1 次' : '今日免费已用'}}
+      </view>
+      <view class="status-chip">余额 {{status.balance || 0}} 币</view>
+    </view>
+  </view>
+
+  <view class="machine">
+    <view class="machine-top">
+      <view class="machine-window {{spinning ? 'spinning' : ''}}">
+        <view wx:if="{{!result && !spinning}}" class="machine-placeholder">
+          <text class="machine-emoji">🎰</text>
+          <text>点下方按钮开扭</text>
+        </view>
+        <view wx:elif="{{spinning}}" class="machine-spin">
+          <text class="spin-emoji">✨</text>
+          <text class="spin-text">灵感汇聚中...</text>
+        </view>
+        <view wx:else class="result-card">
+          <view class="result-tags">
+            <text class="tag style">{{result.styleLabel}}</text>
+            <text class="tag craft">{{result.categoryEmoji}} {{result.categoryLabel}}</text>
+          </view>
+          <view class="palette-row">
+            <view
+              wx:for="{{result.colors}}"
+              wx:key="hex"
+              class="palette-dot"
+              style="background: {{item.hex}};"
+            ></view>
+            <text class="palette-name">{{result.paletteName}}</text>
+          </view>
+          <text class="result-copy">「{{result.copy}}」</text>
+          <text class="result-title">{{result.title}}</text>
+          <image
+            wx:if="{{result.imageUrl}}"
+            class="result-image"
+            src="{{result.imagePreview}}"
+            mode="aspectFill"
+            bindtap="previewImage"
+          />
+        </view>
+      </view>
+    </view>
+    <view class="machine-base"></view>
+  </view>
+
+  <view class="actions">
+    <button
+      class="btn-draw primary"
+      loading="{{drawing}}"
+      disabled="{{drawing || generatingImage}}"
+      bindtap="onDraw"
+    >
+      {{drawButtonText}}
+    </button>
+    <button
+      wx:if="{{result}}"
+      class="btn-draw outline"
+      loading="{{generatingImage}}"
+      disabled="{{drawing || generatingImage}}"
+      bindtap="onGenerateImage"
+    >
+      {{result.imageUrl ? '重新生成参考图' : '通义万相生成参考图'}} · {{status.imageGenCost || 15}}币
+    </button>
+  </view>
+
+  <view wx:if="{{result}}" class="result-actions">
+    <button class="mini-btn" bindtap="saveToNotebook">收藏到灵感本</button>
+    <button class="mini-btn" bindtap="goPublishProduct">一键发作品</button>
+    <button class="mini-btn" bindtap="goPublishRequest">一键发需求</button>
+  </view>
+
+  <view class="tips">
+    <text>· 每日首次扭蛋免费，再次扭蛋 {{status.extraDrawCost || 10}} 造物币</text>
+    <text>· 参考图由通义万相生成，适合灵感参考，可收藏或带入发布页</text>
+  </view>
+</view>

@@ -19,6 +19,8 @@ const productApi = {
   searchProducts: (q, limit = 50) => req.get('/products/search', { q, limit }),
   getSimilarProducts: (id, limit = 6) => req.get(`/products/${id}/similar`, { limit }),
   likeProduct: (id) => req.post(`/products/${id}/like`),
+  favoriteProduct: (id) => req.post(`/products/${id}/favorite`),
+  getFavoriteProducts: () => req.get('/products/favorites'),
   createProduct: (data) => req.post('/products', data),
   updateProduct: (id, data) => req.put(`/products/${id}`, data),
   deleteProduct: (id) => req.del(`/products/${id}`),
@@ -30,21 +32,27 @@ const orderApi = {
   getBuyerOrders: (id) => req.get(`/orders/buyer/${id}`),
   getArtisanOrders: (id) => req.get(`/orders/artisan/${id}`),
   confirmOrder: (id, artisanId) => req.post(`/orders/${id}/confirm`, { artisanId }),
-  payDeposit: (id, buyerId) => req.post(`/orders/${id}/pay-deposit`, { buyerId }),
+  payDeposit: (id, buyerId, paymentChannel = 'MOCK_WECHAT') =>
+    req.post(`/orders/${id}/pay-deposit`, { buyerId, paymentChannel }),
   payBalance: (id, buyerId) => req.post(`/orders/${id}/pay-balance`, { buyerId }),
   confirmReceipt: (id, buyerId) => req.post(`/orders/${id}/confirm-receipt`, { buyerId }),
   updateStatus: (id, status, operatorId, operatorName) =>
     req.put(`/orders/${id}/status`, null, { params: { status, operatorId, operatorName } }),
+  shipOrder: (id, artisanId, shippingCompany, trackingNumber, operatorName) =>
+    req.post(`/orders/${id}/ship`, { artisanId, shippingCompany, trackingNumber, operatorName }),
   requestCancel: (id, buyerId, reason) => req.post(`/orders/${id}/request-cancel`, { buyerId, reason }),
   approveCancel: (id, artisanId) => req.post(`/orders/${id}/approve-cancel`, { artisanId }),
   rejectCancel: (id, artisanId, reason) => req.post(`/orders/${id}/reject-cancel`, { artisanId, reason }),
   openDispute: (id, userId, reason) => req.post(`/orders/${id}/dispute`, { userId, reason }),
   getMilestones: (id) => req.get(`/orders/${id}/milestones`),
   addMilestone: (id, data) => req.post(`/orders/${id}/milestones`, data),
+  getLogistics: (id) => req.get(`/orders/${id}/logistics`),
 };
 
 const customRequestApi = {
   list: () => req.get('/custom-requests'),
+  search: (params) => req.get('/custom-requests', params),
+  getById: (id) => req.get(`/custom-requests/${id}`),
   create: (data) => req.post('/custom-requests', data),
   getBids: (id, viewerUserId) => req.get(`/custom-requests/${id}/bids`, { viewerUserId }),
   submitBid: (id, artisanId, message) => req.post(`/custom-requests/${id}/bids`, { artisanId, message }),
@@ -86,10 +94,17 @@ const statsApi = {
 };
 
 const economyApi = {
-  checkIn: (userId) => req.post('/economy/check-in', null, { params: { userId } }),
-  getTasks: (userId) => req.get('/economy/tasks', { userId }),
-  claimTask: (userId, taskCode) => req.post('/economy/tasks/claim', { userId, taskCode }),
-  boostProduct: (userId, productId) => req.post('/economy/boost-product', { userId, productId }),
+  checkIn: (userId) => req.post('/economy/check-in', null, { params: { userId }, skipAuthRedirect: true }),
+  getTasks: (userId) => req.get('/economy/tasks', { userId }, { skipAuthRedirect: true }),
+  claimTask: (userId, taskCode) => req.post('/economy/tasks/claim', { userId, taskCode }, { skipAuthRedirect: true }),
+  boostProduct: (userId, productId) => req.post('/economy/boost-product', { userId, productId }, { skipAuthRedirect: true }),
+};
+
+const inspirationGachaApi = {
+  getStatus: (userId) => req.get('/ai/inspiration-gacha/status', { userId }),
+  draw: (userId, useFree = true) => req.post('/ai/inspiration-gacha/draw', { userId, useFree }),
+  generateImage: (userId, imagePrompt) =>
+    req.post('/ai/inspiration-gacha/generate-image', { userId, imagePrompt }, { timeout: 120000 }),
 };
 
 module.exports = {
@@ -103,4 +118,5 @@ module.exports = {
   notificationApi,
   statsApi,
   economyApi,
+  inspirationGachaApi,
 };

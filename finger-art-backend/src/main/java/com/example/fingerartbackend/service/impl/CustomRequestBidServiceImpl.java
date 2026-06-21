@@ -1,5 +1,6 @@
 package com.example.fingerartbackend.service.impl;
 
+import com.example.fingerartbackend.auth.AuthContext;
 import com.example.fingerartbackend.dto.CustomRequestBidView;
 import com.example.fingerartbackend.dto.SelectBidResult;
 import com.example.fingerartbackend.entity.CustomOrder;
@@ -12,6 +13,8 @@ import com.example.fingerartbackend.mapper.UserMapper;
 import com.example.fingerartbackend.service.CustomRequestBidService;
 import com.example.fingerartbackend.service.NotificationService;
 import com.example.fingerartbackend.service.OrderService;
+import com.example.fingerartbackend.service.UserPunishmentService;
+import com.example.fingerartbackend.constant.UserPunishmentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,9 +40,13 @@ public class CustomRequestBidServiceImpl implements CustomRequestBidService {
     @Autowired
     private NotificationService notificationService;
 
+    @Autowired
+    private UserPunishmentService userPunishmentService;
+
     @Override
     @Transactional
     public CustomRequestBid submitBid(Long requestId, Long artisanId, String message) {
+        userPunishmentService.assertNotPunished(artisanId, UserPunishmentType.NO_SKILL, "您已被禁止发布和交换技能");
         CustomRequest request = requestMapper.findById(requestId)
                 .orElseThrow(() -> new RuntimeException("需求不存在"));
         if (!"OPEN".equals(request.getStatus())) {
@@ -81,8 +88,10 @@ public class CustomRequestBidServiceImpl implements CustomRequestBidService {
     public List<CustomRequestBidView> listBidsForRequest(Long requestId, Long viewerUserId) {
         CustomRequest request = requestMapper.findById(requestId)
                 .orElseThrow(() -> new RuntimeException("需求不存在"));
-        if (request.getBuyer() == null || !request.getBuyer().getId().equals(viewerUserId)) {
-            throw new RuntimeException("仅需求发起人可查看揭榜列表");
+        if (!AuthContext.isAdmin()) {
+            if (request.getBuyer() == null || !request.getBuyer().getId().equals(viewerUserId)) {
+                throw new RuntimeException("仅需求发起人可查看揭榜列表");
+            }
         }
         return bidMapper.findByRequestIdOrderByCreateTimeDesc(requestId).stream()
                 .map(this::toView)
@@ -110,6 +119,7 @@ public class CustomRequestBidServiceImpl implements CustomRequestBidService {
         if (request.getBuyer() == null || !request.getBuyer().getId().equals(buyerId)) {
             throw new RuntimeException("仅需求发起人可选择合作对象");
         }
+        userPunishmentService.assertNotPunished(buyerId, UserPunishmentType.NO_ORDER, "您已被禁止下单");
         if (!"OPEN".equals(request.getStatus())) {
             throw new RuntimeException("该需求已结束招募");
         }

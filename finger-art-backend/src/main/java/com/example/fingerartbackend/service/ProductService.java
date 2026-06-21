@@ -1,5 +1,6 @@
 package com.example.fingerartbackend.service;
 
+import com.example.fingerartbackend.dto.FavoriteToggleResult;
 import com.example.fingerartbackend.dto.LikeToggleResult;
 import com.example.fingerartbackend.entity.Product;
 import java.util.List;
@@ -15,6 +16,8 @@ public interface ProductService {
     Product createInitialProduct();
     Product saveProduct(Product product);
     LikeToggleResult toggleLikeProduct(Long id, Long userId);
+
+    FavoriteToggleResult toggleFavoriteProduct(Long id, Long userId);
     void deleteProduct(Long id);
     Product auditProduct(Long id, String status);
     int batchAuditProducts(List<Long> ids, String status);
@@ -23,4 +26,6 @@ public interface ProductService {
     List<Product> searchApprovedProducts(String q, int limit, Long viewerId);
     List<Product> getHotProducts(int limit, Long viewerId);
     List<Product> getSimilarProducts(Long id, int limit, Long viewerId);
+
+    List<Product> getFavoriteProducts(Long userId);
 }

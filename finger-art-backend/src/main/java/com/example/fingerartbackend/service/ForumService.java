@@ -10,6 +10,8 @@ import java.util.Map;
 public interface ForumService {
     List<ForumPost> listPosts(String sort, Long viewerId);
 
+    List<ForumPost> listMyPosts(Long authorId);
+
     ForumPost getPost(Long id, boolean incrementView);
 
     ForumPost createPost(Long authorId, String title, String content, String imageUrl);
@@ -29,4 +31,6 @@ public interface ForumService {
     Map<String, Object> getPostDetailForAdmin(Long id);
 
     void deleteReply(Long id, Long operatorId);
+
+    void restorePost(Long id);
 }

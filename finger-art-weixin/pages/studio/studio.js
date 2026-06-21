@@ -1,6 +1,6 @@
 const { productApi, orderApi, userApi, economyApi, statsApi } = require('../../services/api');
 const auth = require('../../utils/auth');
-const { formatImageUrl, orderStatusText } = require('../../utils/format');
+const { formatImageUrl, artisanOrderStatusText, buildOrderStatusDistribution } = require('../../utils/format');
 
 const PRODUCT_STATUS = {
   PENDING: '审核中',
@@ -8,21 +8,14 @@ const PRODUCT_STATUS = {
   REJECTED: '未通过',
 };
 
-const ORDER_STATUS_LABEL = {
-  PENDING_CONFIRM: '待确认',
-  PENDING_PAY: '待付款',
-  PRODUCING: '制作中',
-  HALF_FINISHED_CONFIRM: '半成品确认',
-  PENDING_SHIP: '待发货',
-  PENDING_ACCEPT: '待收货',
-  PENDING_BALANCE: '待付尾款',
-  COMPLETED: '已完成',
-  DISPUTED: '纠纷中',
-  CANCELLED: '已取消',
-};
+const TOP_RANK_LABELS = ['🥇', '🥈', '🥉', '4', '5'];
 
 function isCustomOrder(order) {
-  return order.productType === 'CUSTOMIZABLE';
+  if (order.productType === 'CUSTOMIZABLE' || order.productType === 'CUSTOM') return true;
+  if (order.customRequestId) return true;
+  if (order.status === 'PENDING_CONFIRM') return true;
+  const req = (order.requirements || '').trim();
+  return req.length > 0 && !req.startsWith('正式购买请求');
 }
 
 function filterProducts(products, tab) {
@@ -44,6 +37,11 @@ function filterOrders(orders, tab) {
     );
   }
   return orders.filter((o) => o.status === tab);
+}
+
+function isCheckinClaimed(tasks) {
+  const task = (tasks || []).find((t) => t.code === 'daily_checkin');
+  return !!(task && task.claimed);
 }
 
 Page({
@@ -68,7 +66,7 @@ Page({
     ],
     orderTabs: [
       { key: 'all', label: '全部' },
-      { key: 'PENDING_CONFIRM', label: '待确认' },
+      { key: 'PENDING_CONFIRM', label: '待我确认' },
       { key: 'PENDING_SHIP', label: '待发货' },
       { key: 'PRODUCING', label: '制作中' },
       { key: 'COMPLETED', label: '已完成' },
@@ -82,6 +80,7 @@ Page({
     statCards: [],
     loading: false,
     checkingIn: false,
+    checkinClaimed: false,
     claiming: '',
     applying: false,
   },
@@ -180,10 +179,15 @@ Page({
       const list = await orderApi.getArtisanOrders(user.id);
       const orders = (list || []).map((o) => ({
         ...o,
-        statusLabel: orderStatusText(o.status, o),
+        statusLabel: artisanOrderStatusText(o.status, o),
         isCustom: isCustomOrder(o),
         typeLabel: isCustomOrder(o) ? '定制' : '成品',
-      }));
+        requirements: (o.requirements || '').trim(),
+      })).sort((a, b) => {
+        const timeA = new Date(a.createTime || 0).getTime();
+        const timeB = new Date(b.createTime || 0).getTime();
+        return timeB - timeA;
+      });
       this.setData({ orders });
       this.applyOrderFilter();
     } catch (e) {
@@ -198,7 +202,10 @@ Page({
     this.setData({ loading: true });
     try {
       const tasks = await economyApi.getTasks(user.id);
-      this.setData({ tasks: tasks || [] });
+      this.setData({
+        tasks: tasks || [],
+        checkinClaimed: isCheckinClaimed(tasks),
+      });
     } catch (e) {
       wx.showToast({ title: e.message || '加载失败', icon: 'none' });
     } finally {
@@ -219,22 +226,55 @@ Page({
         { label: '粉丝', value: analytics.followerCount ?? 0 },
         { label: '总获赞', value: analytics.totalLikes ?? 0 },
       ];
-      const orderStatusList = Object.keys(analytics.ordersByStatus || {}).map((key) => ({
-        key,
-        label: ORDER_STATUS_LABEL[key] || key,
-        count: analytics.ordersByStatus[key],
-      }));
-      const maxCount = Math.max(...orderStatusList.map((o) => o.count), 1);
-      orderStatusList.forEach((o) => {
-        o.percent = Math.round((o.count / maxCount) * 100);
-      });
+      const orderStatusList = buildOrderStatusDistribution(analytics.ordersByStatus || {});
       analytics.orderStatusList = orderStatusList;
+      analytics.topProducts = (analytics.topProducts || []).map((item, index) => ({
+        ...item,
+        rank: index + 1,
+        rankLabel: TOP_RANK_LABELS[index] || String(index + 1),
+        imageUrl: formatImageUrl(item.image),
+        likes: item.likes ?? 0,
+        priceText: item.price != null ? Number(item.price).toFixed(0) : '',
+      }));
       this.setData({ analytics, statCards });
     } catch (e) {
       wx.showToast({ title: e.message || '加载失败', icon: 'none' });
     } finally {
       this.setData({ loading: false });
     }
+  },
+
+  onStatusCardTap(e) {
+    const statusKey = e.currentTarget.dataset.key;
+    const tabMap = {
+      PENDING_CONFIRM: 'PENDING_CONFIRM',
+      PENDING_PAY: 'PRODUCING',
+      PRODUCING: 'PRODUCING',
+      HALF_FINISHED_CONFIRM: 'PRODUCING',
+      PENDING_SHIP: 'PENDING_SHIP',
+      PENDING_ACCEPT: 'PENDING_SHIP',
+      PENDING_BALANCE: 'PRODUCING',
+      RECEIVED: 'PENDING_SHIP',
+      COMPLETED: 'COMPLETED',
+      DISPUTED: 'all',
+      CANCELLED: 'all',
+    };
+    this.setData({
+      menu: 'orders',
+      orderTab: tabMap[statusKey] || 'all',
+    });
+    this.loadOrders();
+  },
+
+  onTopProductTap(e) {
+    const id = e.currentTarget.dataset.id;
+    if (id) {
+      wx.navigateTo({ url: `/pages/product-detail/product-detail?id=${id}` });
+    }
+  },
+
+  goPublishFromAnalytics() {
+    wx.navigateTo({ url: '/pages/publish-product/publish-product' });
   },
 
   goPublish() {
@@ -313,7 +353,23 @@ Page({
     });
   },
 
+  promptRelogin(tip) {
+    wx.showModal({
+      title: '需要登录',
+      content: tip || '登录已过期，请重新登录后再签到',
+      confirmText: '去登录',
+      success: (res) => {
+        if (res.confirm) wx.navigateTo({ url: '/pages/login/login' });
+      },
+    });
+  },
+
   async doCheckIn() {
+    if (this.data.checkinClaimed) return;
+    if (!auth.isLoggedIn()) {
+      this.promptRelogin();
+      return;
+    }
     const user = auth.getUser();
     this.setData({ checkingIn: true });
     try {
@@ -322,13 +378,22 @@ Page({
       await this.syncUserState();
       this.loadTasks();
     } catch (e) {
-      wx.showToast({ title: e.message || '签到失败', icon: 'none' });
+      const msg = e.message || '签到失败';
+      if (msg.includes('登录') || msg.includes('请先')) {
+        this.promptRelogin(msg);
+      } else {
+        wx.showToast({ title: msg, icon: 'none' });
+      }
     } finally {
       this.setData({ checkingIn: false });
     }
   },
 
   async claimTask(e) {
+    if (!auth.isLoggedIn()) {
+      this.promptRelogin();
+      return;
+    }
     const code = e.currentTarget.dataset.code;
     const user = auth.getUser();
     this.setData({ claiming: code });
@@ -338,7 +403,12 @@ Page({
       await this.syncUserState();
       this.loadTasks();
     } catch (err) {
-      wx.showToast({ title: err.message || '领取失败', icon: 'none' });
+      const msg = err.message || '领取失败';
+      if (msg.includes('登录') || msg.includes('请先')) {
+        this.promptRelogin(msg);
+      } else {
+        wx.showToast({ title: msg, icon: 'none' });
+      }
     } finally {
       this.setData({ claiming: '' });
     }

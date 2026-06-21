@@ -8,13 +8,24 @@
     </swiper-item>
   </swiper>
 
-  <view class="card">
+  <view class="info-card">
     <text class="title">{{product.title}}</text>
     <text class="text-price price">¥{{product.price}}</text>
     <view class="tags flex-row">
       <text class="tag">{{product.type === 'READY_MADE' ? '成品' : '可定制'}}</text>
       <text class="tag" wx:if="{{product.categoryLabel}}">{{product.categoryLabel}}</text>
+      <text class="tag stock-tag" wx:if="{{isSoldOut}}">已售罄</text>
+      <text class="tag stock-tag warn" wx:elif="{{product.type !== 'CUSTOMIZABLE' && product.stock <= 3}}">仅剩 {{product.stock}} 件</text>
     </view>
+    <view class="qty-row flex-between" wx:if="{{product.type !== 'CUSTOMIZABLE' && !isSoldOut}}">
+      <text class="qty-label">购买数量</text>
+      <view class="qty-stepper flex-row">
+        <view class="qty-btn" bindtap="onMinusQty">−</view>
+        <text class="qty-num">{{purchaseQuantity}}</text>
+        <view class="qty-btn" bindtap="onPlusQty">+</view>
+      </view>
+    </view>
+    <text class="line-total" wx:if="{{product.type !== 'CUSTOMIZABLE' && !isSoldOut}}">小计 ¥{{lineTotal}}</text>
     <view class="creator flex-between" bindtap="goArtisan">
       <text>{{product.creator}}</text>
       <button class="btn-outline mini-btn" catchtap="onFollow">{{isFollowing ? '已关注' : '+ 关注'}}</button>
@@ -22,7 +33,13 @@
     <text class="desc">{{product.description || '暂无描述'}}</text>
   </view>
 
-  <view class="section-title">猜你喜欢</view>
+  <view class="section-head similar-head">
+    <text class="section-subtitle">FOR YOU</text>
+    <view class="section-title-row">
+      <text class="section-title">猜你喜欢</text>
+      <view class="section-line"></view>
+    </view>
+  </view>
   <scroll-view scroll-x class="similar-scroll">
     <view class="similar-item" wx:for="{{similar}}" wx:key="id" data-id="{{item.id}}" bindtap="goSimilar">
       <image src="{{item.image}}" mode="aspectFill" />
@@ -30,9 +47,41 @@
     </view>
   </scroll-view>
 
-  <view class="bottom-bar safe-bottom flex-row">
-    <view class="like-btn {{isLiked ? 'liked' : ''}}" bindtap="onLike">{{isLiked ? '❤️' : '🤍'}} {{product.likes || 0}}</view>
-    <button class="btn-primary buy-btn" bindtap="onBuy">立即购买</button>
+  <view class="bottom-bar safe-bottom">
+    <view class="bottom-icons">
+      <view class="icon-action {{isLiked ? 'liked' : ''}}" bindtap="onLike">
+        <text class="icon-action-symbol">{{isLiked ? '❤️' : '🤍'}}</text>
+        <text class="icon-action-label">{{product.likes || 0}}</text>
+      </view>
+      <view class="icon-action {{isFavorited ? 'favorited' : ''}}" bindtap="onFavorite">
+        <text class="icon-action-symbol">{{isFavorited ? '★' : '☆'}}</text>
+        <text class="icon-action-label">收藏</text>
+      </view>
+    </view>
+    <view class="bottom-actions">
+      <button wx:if="{{canAddToCart}}" class="btn-outline cart-add-btn" bindtap="onAddToCart">加入购物车</button>
+      <button class="btn-primary buy-btn" disabled="{{isSoldOut && product.type !== 'CUSTOMIZABLE'}}" bindtap="onBuy">
+        {{isSoldOut && product.type !== 'CUSTOMIZABLE' ? '已售罄' : (product.type === 'CUSTOMIZABLE' ? '发起定制' : '立即购买')}}
+      </button>
+    </view>
   </view>
 </view>
 <view wx:elif="{{loading}}" class="empty">加载中...</view>
+
+<view class="custom-mask" wx:if="{{showCustomModal}}" bindtap="closeCustomModal">
+  <view class="custom-panel" catchtap="stopPropagation">
+    <view class="custom-panel-title">填写定制需求</view>
+    <text class="custom-panel-hint">向 {{product.creator}} 说明尺寸、颜色、材质等细节，手作人确认后再支付定金。</text>
+    <textarea
+      class="custom-textarea"
+      placeholder="请描述你的定制需求..."
+      maxlength="500"
+      value="{{customRequirements}}"
+      bindinput="onCustomRequirementsInput"
+    />
+    <view class="custom-actions">
+      <button class="btn-outline" bindtap="closeCustomModal">取消</button>
+      <button class="btn-primary" loading="{{customSubmitting}}" bindtap="submitCustomOrder">提交定制请求</button>
+    </view>
+  </view>
+</view>

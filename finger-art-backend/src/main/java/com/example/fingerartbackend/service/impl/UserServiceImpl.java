@@ -11,7 +11,9 @@ import com.example.fingerartbackend.mapper.SkillMapper;
 import com.example.fingerartbackend.mapper.ProductMapper;
 import com.example.fingerartbackend.mapper.FollowMapper;
 import com.example.fingerartbackend.service.NotificationService;
+import com.example.fingerartbackend.service.PasswordService;
 import com.example.fingerartbackend.service.UserService;
+import com.example.fingerartbackend.service.UserPunishmentService;
 import com.example.fingerartbackend.util.AccountUtils;
 import com.example.fingerartbackend.util.NicknameGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +42,12 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private NotificationService notificationService;
 
+    @Autowired
+    private PasswordService passwordService;
+
+    @Autowired
+    private UserPunishmentService userPunishmentService;
+
     @Override
     public User register(RegisterRequest request) {
         if (request == null) {
@@ -65,7 +73,7 @@ public class UserServiceImpl implements UserService {
         User user = new User();
         user.setAccount(account);
         user.setUsername(NicknameGenerator.randomNickname());
-        user.setPassword(password);
+        user.setPassword(passwordService.encode(password));
         user.setRole("BUYER");
         user.setArtisanApplyStatus("NONE");
         return userMapper.save(user);
@@ -158,8 +166,15 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("请输入密码");
         }
         
-        if (!password.equals(user.getPassword())) {
+        if (!passwordService.matches(password, user.getPassword())) {
             throw new RuntimeException("密码错误");
+        }
+        if (passwordService.needsUpgrade(user.getPassword())) {
+            user.setPassword(passwordService.encode(password));
+            userMapper.save(user);
+        }
+        if (userPunishmentService.isAccountBanned(user.getId())) {
+            throw new RuntimeException("账号已被封禁，如有疑问请联系平台");
         }
         normalizeRole(user);
         return user;
@@ -208,6 +223,16 @@ public class UserServiceImpl implements UserService {
             existing.setBio(user.getBio());
         }
 
+        if (user.getShippingName() != null) {
+            existing.setShippingName(user.getShippingName().trim());
+        }
+        if (user.getShippingPhone() != null) {
+            existing.setShippingPhone(user.getShippingPhone().trim());
+        }
+        if (user.getShippingAddress() != null) {
+            existing.setShippingAddress(user.getShippingAddress().trim());
+        }
+
         if (user.getRole() != null) {
             existing.setRole(user.getRole());
         }
@@ -251,7 +276,7 @@ public class UserServiceImpl implements UserService {
         }
         User existing = userMapper.findById(id)
                 .orElseThrow(() -> new RuntimeException("用户不存在"));
-        existing.setPassword(newPassword);
+        existing.setPassword(passwordService.encode(newPassword));
         existing.setPasswordResetStatus("NONE");
         return userMapper.save(existing);
     }

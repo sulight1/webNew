@@ -7,20 +7,25 @@
     "pages/account/account",
     "pages/login/login",
     "pages/product-detail/product-detail",
+    "pages/cart/cart",
+    "pages/checkout/checkout",
     "pages/artisan-profile/artisan-profile",
     "pages/studio/studio",
     "pages/order-detail/order-detail",
     "pages/orders/orders",
+    "pages/favorites/favorites",
     "pages/wallet/wallet",
     "pages/messages/messages",
     "pages/publish-product/publish-product",
-    "pages/publish-request/publish-request"
+    "pages/publish-request/publish-request",
+    "pages/inspiration-gacha/inspiration-gacha",
+    "pages/inspiration-notebook/inspiration-notebook"
   ],
   "window": {
     "navigationBarTextStyle": "black",
     "navigationBarTitleText": "指尖造物",
-    "navigationBarBackgroundColor": "#ffffff",
-    "backgroundColor": "#f5f5f5"
+    "navigationBarBackgroundColor": "#fffafb",
+    "backgroundColor": "#f9f9f9"
   },
   "tabBar": {
     "custom": true,

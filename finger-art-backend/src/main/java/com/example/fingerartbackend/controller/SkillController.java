@@ -2,6 +2,7 @@ package com.example.fingerartbackend.controller;
 
 import com.example.fingerartbackend.common.Result;
 import com.example.fingerartbackend.entity.Skill;
+import com.example.fingerartbackend.service.AdminAuditService;
 import com.example.fingerartbackend.service.SkillService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +14,9 @@ import java.util.List;
 public class SkillController {
     @Autowired
     private SkillService skillService;
+
+    @Autowired
+    private AdminAuditService adminAuditService;
 
     @GetMapping
     public Result<List<Skill>> getAllSkills(
@@ -37,7 +41,10 @@ public class SkillController {
     @PatchMapping("/{id}/audit")
     public Result<Skill> auditSkill(@PathVariable Long id, @RequestParam String status) {
         try {
-            return Result.success(skillService.auditSkill(id, status));
+            Skill skill = skillService.auditSkill(id, status);
+            adminAuditService.log("AUDIT_SKILL", "SKILL", id,
+                    "审核技能「" + skill.getTitle() + "」为 " + status);
+            return Result.success(skill);
         } catch (Exception e) {
             return Result.error(e.getMessage());
         }

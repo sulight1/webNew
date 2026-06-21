@@ -24,6 +24,24 @@
     </view>
   </view>
 
+  <view class="card address-card" wx:if="{{user}}">
+    <view class="section-title">收货地址</view>
+    <text class="address-hint">购买成品或卖家发货时将使用此地址</text>
+    <view class="field">
+      <text class="field-label">收货人</text>
+      <input class="field-input" placeholder="收货人姓名" value="{{shippingName}}" bindinput="onShippingNameInput" />
+    </view>
+    <view class="field">
+      <text class="field-label">手机号</text>
+      <input class="field-input" type="number" maxlength="11" placeholder="11 位手机号" value="{{shippingPhone}}" bindinput="onShippingPhoneInput" />
+    </view>
+    <view class="field">
+      <text class="field-label">详细地址</text>
+      <textarea class="field-textarea" placeholder="省市区 + 街道门牌号" value="{{shippingAddress}}" bindinput="onShippingAddressInput" maxlength="200" />
+    </view>
+    <button class="btn-primary address-save" loading="{{savingAddress}}" bindtap="saveShippingAddress">保存收货地址</button>
+  </view>
+
   <view class="card menu-list" wx:if="{{user}}">
     <view
       class="menu-item flex-between"
@@ -33,7 +51,10 @@
       bindtap="onMenuTap"
     >
       <text>{{item.title}}</text>
-      <text class="arrow">›</text>
+      <view class="menu-right flex-row">
+        <text wx:if="{{item.key === 'cart' && cartCount > 0}}" class="menu-badge">{{cartCount > 99 ? '99+' : cartCount}}</text>
+        <text class="arrow">›</text>
+      </view>
     </view>
   </view>
 

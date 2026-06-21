@@ -25,6 +25,15 @@ public class Review {
     @Column(columnDefinition = "TEXT")
     private String content;
 
+    /** 关联作品（买家订单评价时写入，便于作品详情页展示） */
+    private Long productId;
+
+    /** 评价配图 JSON 数组 */
+    @Column(columnDefinition = "TEXT")
+    private String imageUrls;
+
+    private String fromUserAvatar;
+
     private LocalDateTime createdAt;
 
     @PrePersist

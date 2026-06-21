@@ -1,4 +1,5 @@
 {
   "navigationBarTitleText": "定制需求",
-  "enablePullDownRefresh": true
+  "enablePullDownRefresh": true,
+  "onReachBottomDistance": 120
 }

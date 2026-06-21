@@ -14,5 +14,7 @@ public interface UserLikeMapper extends JpaRepository<UserLike, Long> {
 
     List<UserLike> findByUserIdAndTargetTypeAndTargetIdIn(Long userId, String targetType, Collection<Long> targetIds);
 
+    List<UserLike> findByUserIdAndTargetTypeOrderByCreateTimeDesc(Long userId, String targetType);
+
     long countByTargetTypeAndTargetId(String targetType, Long targetId);
 }

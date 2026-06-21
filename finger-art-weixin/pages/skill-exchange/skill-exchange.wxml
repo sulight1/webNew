@@ -1,43 +1,124 @@
 <view class="container">
-  <view class="top-actions flex-row">
-    <button class="btn-primary flex1" bindtap="toggleForm">{{showForm ? '取消' : '+ 发布技能'}}</button>
-    <button class="btn-outline flex1" bindtap="showMyExchanges">我的交换</button>
+  <view class="page-hero">
+    <text class="page-hero-title">技能交换</text>
+    <view class="hero-search-row">
+      <input
+        class="hero-search-input"
+        placeholder="搜索技能、匠人..."
+        value="{{keyword}}"
+        bindinput="onKeywordInput"
+        confirm-type="search"
+        bindconfirm="onSearch"
+      />
+      <button class="btn-primary hero-search-btn" bindtap="onSearch">搜索</button>
+    </view>
+    <view class="hero-actions">
+      <button class="btn-primary" bindtap="toggleForm">{{showForm ? '取消发布' : '发布技能'}}</button>
+      <button class="btn-outline" bindtap="showMyExchanges">交换记录</button>
+    </view>
   </view>
 
   <view class="card form-card" wx:if="{{showForm}}">
     <input placeholder="技能标题" data-field="title" bindinput="onInput" value="{{form.title}}" />
+    <picker mode="selector" range="{{publishCategoryLabels}}" value="{{publishCategoryIndex}}" bindchange="onCategoryFormPick">
+      <view class="toolbar-picker" style="margin-bottom:16rpx">分类：{{publishCategoryLabels[publishCategoryIndex]}} ▾</view>
+    </picker>
     <textarea placeholder="技能描述" data-field="description" bindinput="onInput" value="{{form.description}}" />
-    <input placeholder="分类（如钩织）" data-field="category" bindinput="onInput" value="{{form.category}}" />
     <input placeholder="造物币费用" type="number" data-field="zaowuBiCost" bindinput="onInput" value="{{form.zaowuBiCost}}" />
     <button class="btn-primary" bindtap="submitForm">提交审核</button>
   </view>
 
-  <view wx:if="{{loading}}" class="empty">加载中...</view>
-  <view wx:elif="{{skills.length === 0}}" class="empty">暂无技能</view>
-  <view class="card" wx:for="{{skills}}" wx:key="id">
-    <view class="flex-row skill-header" data-userid="{{item.userId}}" bindtap="goUserProfile">
-      <image class="avatar" src="{{item.avatar}}" mode="aspectFill" />
-      <view>
-        <text class="skill-title">{{item.title}}</text>
-        <text class="text-muted">{{item.username}} · {{item.category}}</text>
+  <view class="list-toolbar">
+    <view wx:if="{{listRefreshing}}" class="list-refresh-bar"><text>加载中…</text></view>
+    <text class="list-count">共 {{displaySkills.length}} 项技能</text>
+    <view class="list-toolbar-head">
+      <picker mode="selector" range="{{categoryLabels}}" value="{{categoryIndex}}" bindchange="onCategoryPick">
+        <view class="toolbar-picker {{skillFilter !== 'all' ? 'active' : ''}}">
+          {{categoryLabels[categoryIndex]}} ▾
+        </view>
+      </picker>
+      <view class="sort-tabs">
+        <view
+          wx:for="{{sortTabs}}"
+          wx:key="value"
+          class="sort-tab {{skillSort === item.value ? 'active' : ''}}"
+          data-value="{{item.value}}"
+          bindtap="onSortTap"
+        >{{item.label}}</view>
       </view>
     </view>
-    <text class="text-muted">{{item.description}}</text>
-    <view class="flex-between meta">
-      <text class="text-price">{{item.zaowuBiCost}} 造物币</text>
-      <text class="text-muted">信用 {{item.credit || 100}}</text>
-    </view>
-    <button class="btn-outline action-btn" data-id="{{item.id}}" bindtap="onExchange">申请交换</button>
   </view>
 
-  <view class="modal-mask" wx:if="{{showExchanges}}" bindtap="hideExchanges">
-    <view class="modal card" catchtap="">
-      <view class="section-title">我的交换记录</view>
+  <view wx:if="{{showSkeleton}}" class="feed-grid">
+    <view wx:for="{{skeletonItems}}" wx:key="*this" class="skeleton-card">
+      <view class="skeleton-cover"></view>
+      <view class="skeleton-line"></view>
+      <view class="skeleton-line short"></view>
+    </view>
+  </view>
+
+  <view wx:elif="{{showEmpty}}" class="empty-guide">
+    <text class="empty-guide-title">{{keyword ? '未找到匹配技能' : '暂无技能'}}</text>
+    <button wx:if="{{keyword}}" class="btn-outline" bindtap="clearSearch">清空搜索</button>
+    <button wx:else class="btn-primary" bindtap="toggleForm">发布我的技能</button>
+  </view>
+
+  <view wx:else class="feed-grid {{listRefreshing ? 'list-dimmed' : ''}}">
+    <view
+      class="feed-card"
+      wx:for="{{displaySkills}}"
+      wx:key="id"
+      data-index="{{index}}"
+      bindtap="openDetail"
+    >
+      <view class="feed-cover">
+        <image src="{{item.coverImage}}" mode="aspectFill" lazy-load />
+        <text class="feed-cover-cost">{{item.zaowuBiCost}} 币</text>
+        <view class="feed-cover-badges">
+          <text class="feed-cover-tag">{{item.category}}</text>
+        </view>
+      </view>
+      <view class="feed-body">
+        <text class="feed-title">{{item.title}}</text>
+        <view class="feed-meta" catchtap="goUserProfile" data-userid="{{item.userId}}">
+          <image class="avatar" src="{{item.avatar}}" mode="aspectFill" />
+          <text class="feed-sub">{{item.username}}</text>
+        </view>
+        <text class="feed-sub">{{item.duration || '1小时'}} · 已交换 {{item.exchangeCount || 0}} 次</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 技能详情 -->
+  <view class="detail-mask" wx:if="{{showDetail}}" bindtap="closeDetail">
+    <view class="detail-panel" catchtap="stopPropagation">
+      <view class="detail-cover" wx:if="{{detailSkill}}">
+        <image src="{{detailSkill.coverImage}}" mode="aspectFill" />
+      </view>
+      <text class="detail-title">{{detailSkill.title}}</text>
+      <text class="tag">{{detailSkill.category}} · {{detailSkill.zaowuBiCost}} 造物币</text>
+      <view class="feed-meta" style="margin-top:16rpx" catchtap="goUserProfile" data-userid="{{detailSkill.userId}}">
+        <image class="avatar" src="{{detailSkill.avatar}}" mode="aspectFill" />
+        <text>{{detailSkill.username}}</text>
+      </view>
+      <text class="detail-desc">{{detailSkill.description}}</text>
+      <view class="detail-actions">
+        <button class="btn-primary" bindtap="onExchangeFromDetail">申请交换</button>
+      </view>
+      <button class="btn-outline" style="margin-top:16rpx;width:100%" bindtap="closeDetail">关闭</button>
+    </view>
+  </view>
+
+  <!-- 交换记录 -->
+  <view class="detail-mask" wx:if="{{showExchanges}}" bindtap="hideExchanges">
+    <view class="detail-panel" catchtap="stopPropagation">
+      <text class="section-title">我的交换记录</text>
       <view wx:if="{{exchanges.length === 0}}" class="empty">暂无记录</view>
       <view wx:for="{{exchanges}}" wx:key="id" class="exchange-item">
         <text>{{item.description || '技能交换'}}</text>
         <text class="tag">{{item.status}}</text>
       </view>
+      <button class="btn-outline" style="margin-top:24rpx;width:100%" bindtap="hideExchanges">关闭</button>
     </view>
   </view>
 </view>

@@ -55,7 +55,7 @@ public class WalletServiceImpl implements WalletService {
                 amount,
                 balance,
                 channel,
-                "微信支付充值 " + formatAmount(amount) + " 元",
+                rechargeChannelLabel(channel) + "充值 " + formatAmount(amount) + " 元",
                 generateOutTradeNo("RCH")
         );
     }
@@ -68,7 +68,7 @@ public class WalletServiceImpl implements WalletService {
         User user = userService.addZaoWuBi(userId, amount);
         tx.setStatus("SUCCESS");
         tx.setBalanceAfter(round(user.getZaowuBiBalance()));
-        tx.setRemark("微信支付充值成功 " + formatAmount(amount) + " 元");
+        tx.setRemark(rechargeChannelLabel(tx.getChannel()) + "充值成功 " + formatAmount(amount) + " 元");
         walletTransactionMapper.save(tx);
         return new WalletOperationResult(user, tx);
     }
@@ -168,5 +168,12 @@ public class WalletServiceImpl implements WalletService {
 
     private String formatAmount(double amount) {
         return String.format("%.2f", amount);
+    }
+
+    private String rechargeChannelLabel(String channel) {
+        if ("MOCK_ALIPAY".equals(channel)) {
+            return "支付宝";
+        }
+        return "微信支付";
     }
 }

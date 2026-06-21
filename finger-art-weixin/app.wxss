@@ -1,8 +1,9 @@
 page {
-  background: #f5f5f5;
-  color: #333;
+  background: #f9f9f9;
+  color: #262626;
   font-size: 28rpx;
   box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
 }
 
 .container {
@@ -12,17 +13,50 @@ page {
 
 .card {
   background: #fff;
-  border-radius: 16rpx;
-  padding: 24rpx;
+  border-radius: 20rpx;
+  padding: 28rpx;
   margin-bottom: 24rpx;
-  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.04);
+  border: 1rpx solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 8rpx 32rpx rgba(235, 47, 150, 0.06);
 }
 
 .section-title {
   font-size: 32rpx;
-  font-weight: 600;
-  margin-bottom: 20rpx;
+  font-weight: 800;
   color: #1a1a1a;
+}
+
+.section-subtitle {
+  display: block;
+  font-size: 20rpx;
+  font-weight: 700;
+  letter-spacing: 4rpx;
+  color: #eb2f96;
+  margin-bottom: 8rpx;
+}
+
+.section-head {
+  margin: 32rpx 0 20rpx;
+}
+
+.section-title-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.section-line {
+  flex: 1;
+  height: 6rpx;
+  max-width: 80rpx;
+  border-radius: 6rpx;
+  background: linear-gradient(135deg, #eb2f96, #722ed1);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #eb2f96, #722ed1);
+  -webkit-background-clip: text;
+  color: transparent;
 }
 
 .btn-primary {
@@ -31,7 +65,9 @@ page {
   border: none;
   border-radius: 44rpx;
   font-size: 28rpx;
+  font-weight: 600;
   padding: 16rpx 32rpx;
+  box-shadow: 0 8rpx 24rpx rgba(235, 47, 150, 0.28);
 }
 
 .btn-primary::after {
@@ -39,11 +75,12 @@ page {
 }
 
 .btn-outline {
-  background: #fff;
+  background: rgba(255, 255, 255, 0.92);
   color: #eb2f96;
-  border: 2rpx solid #eb2f96;
+  border: 2rpx solid rgba(235, 47, 150, 0.35);
   border-radius: 44rpx;
   font-size: 28rpx;
+  font-weight: 600;
   padding: 14rpx 32rpx;
 }
 
@@ -52,13 +89,14 @@ page {
 }
 
 .text-muted {
-  color: #999;
+  color: #8c8c8c;
   font-size: 24rpx;
 }
 
 .text-price {
   color: #eb2f96;
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 30rpx;
 }
 
 .tag {
@@ -102,3 +140,369 @@ page {
 .safe-bottom {
   padding-bottom: env(safe-area-inset-bottom);
 }
+
+/* ===== 列表页共用（市集 / 技能 / 需求） ===== */
+.page-hero {
+  position: relative;
+  border-radius: 24rpx;
+  padding: 32rpx 28rpx 28rpx;
+  margin-bottom: 24rpx;
+  background: linear-gradient(135deg, #fff5fb 0%, #f3f0ff 50%, #fff 100%);
+  overflow: hidden;
+}
+
+.page-hero-title {
+  display: block;
+  font-size: 40rpx;
+  font-weight: 800;
+  color: #1a1a1a;
+  margin-bottom: 20rpx;
+}
+
+.hero-search-row {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 999rpx;
+  padding: 8rpx 8rpx 8rpx 28rpx;
+  box-shadow: 0 4rpx 20rpx rgba(235, 47, 150, 0.08);
+  border: 1rpx solid rgba(235, 47, 150, 0.12);
+}
+
+.hero-search-input {
+  flex: 1;
+  font-size: 28rpx;
+  height: 64rpx;
+}
+
+.hero-search-btn {
+  padding: 12rpx 28rpx !important;
+  line-height: 1.4;
+  font-size: 26rpx !important;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 20rpx;
+}
+
+.hero-actions button {
+  flex: 1;
+  font-size: 26rpx !important;
+}
+
+.list-toolbar {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 20rpx 24rpx;
+  margin-bottom: 20rpx;
+  border: 1rpx solid #f0f0f0;
+}
+
+.list-toolbar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  flex-wrap: wrap;
+}
+
+.list-count {
+  font-size: 24rpx;
+  color: #8c8c8c;
+  margin-bottom: 12rpx;
+}
+
+.toolbar-picker {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  font-size: 26rpx;
+  color: #595959;
+  padding: 8rpx 16rpx;
+  background: #fafafa;
+  border-radius: 999rpx;
+}
+
+.toolbar-picker.active {
+  color: #eb2f96;
+  background: #fff0f6;
+}
+
+.sort-tabs {
+  display: flex;
+  gap: 8rpx;
+  flex-wrap: wrap;
+}
+
+.sort-tab {
+  padding: 8rpx 20rpx;
+  font-size: 24rpx;
+  color: #8c8c8c;
+  border-radius: 999rpx;
+  background: #fafafa;
+}
+
+.sort-tab.active {
+  color: #fff;
+  background: linear-gradient(135deg, #eb2f96, #722ed1);
+  font-weight: 600;
+  box-shadow: 0 4rpx 16rpx rgba(235, 47, 150, 0.25);
+}
+
+.list-refresh-bar {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  font-size: 24rpx;
+  color: #eb2f96;
+  margin-bottom: 12rpx;
+}
+
+.list-dimmed {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.feed-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-content: flex-start;
+}
+
+.feed-card,
+.skeleton-card {
+  width: 48%;
+  box-sizing: border-box;
+  margin-bottom: 20rpx;
+}
+
+.feed-card {
+  background: #fff;
+  border-radius: 20rpx;
+  overflow: hidden;
+  border: 1rpx solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 8rpx 28rpx rgba(0, 0, 0, 0.04);
+}
+
+.feed-card:active {
+  transform: scale(0.98);
+}
+
+.feed-cover {
+  position: relative;
+  width: 100%;
+  height: 200rpx;
+  background: #f5f5f5;
+}
+
+.feed-cover image {
+  width: 100%;
+  height: 100%;
+}
+
+.feed-cover-badges {
+  position: absolute;
+  left: 12rpx;
+  top: 12rpx;
+  right: 12rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.feed-cover-tag {
+  font-size: 20rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+  background: rgba(255, 255, 255, 0.92);
+  color: #595959;
+}
+
+.feed-cover-status {
+  font-size: 20rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+  background: rgba(235, 47, 150, 0.9);
+  color: #fff;
+}
+
+.feed-cover-status.matched {
+  background: rgba(82, 196, 26, 0.9);
+}
+
+.feed-cover-status.ended {
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.feed-cover-cost {
+  position: absolute;
+  right: 12rpx;
+  bottom: 12rpx;
+  font-size: 22rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+}
+
+.feed-body {
+  padding: 16rpx;
+}
+
+.feed-title {
+  display: block;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #262626;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.feed-meta {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  margin-top: 10rpx;
+}
+
+.feed-meta .avatar {
+  width: 40rpx;
+  height: 40rpx;
+}
+
+.feed-sub {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  color: #999;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.feed-price-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4rpx;
+  margin-top: 10rpx;
+}
+
+.skeleton-card {
+  background: #fff;
+  border-radius: 16rpx;
+  overflow: hidden;
+  border: 1rpx solid #f0f0f0;
+}
+
+.skeleton-cover {
+  height: 200rpx;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite;
+}
+
+.skeleton-line {
+  height: 24rpx;
+  margin: 16rpx;
+  border-radius: 8rpx;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite;
+}
+
+.skeleton-line.short {
+  width: 60%;
+  margin-top: 0;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.empty-guide {
+  text-align: center;
+  padding: 80rpx 40rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  border: 1rpx dashed #ffd6e7;
+}
+
+.empty-guide-title {
+  display: block;
+  font-size: 30rpx;
+  color: #595959;
+  margin-bottom: 24rpx;
+}
+
+.load-more-wrap {
+  text-align: center;
+  padding: 24rpx 0 8rpx;
+}
+
+.load-more-btn {
+  font-size: 26rpx !important;
+  padding: 12rpx 48rpx !important;
+}
+
+.detail-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+}
+
+.detail-panel {
+  width: 100%;
+  max-height: 85vh;
+  background: #fff;
+  border-radius: 24rpx 24rpx 0 0;
+  padding: 32rpx 28rpx calc(32rpx + env(safe-area-inset-bottom));
+  overflow-y: auto;
+}
+
+.detail-cover {
+  width: 100%;
+  height: 320rpx;
+  border-radius: 16rpx;
+  overflow: hidden;
+  margin-bottom: 20rpx;
+}
+
+.detail-cover image {
+  width: 100%;
+  height: 100%;
+}
+
+.detail-title {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 700;
+  margin-bottom: 12rpx;
+}
+
+.detail-desc {
+  display: block;
+  font-size: 28rpx;
+  color: #595959;
+  line-height: 1.6;
+  margin: 16rpx 0;
+}
+
+.detail-actions {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 24rpx;
+}
+
+.detail-actions button {
+  flex: 1;
+}
+

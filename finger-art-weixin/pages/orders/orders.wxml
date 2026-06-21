@@ -12,8 +12,9 @@
       <text class="tag">{{item.statusLabel}}</text>
     </view>
     <text class="text-muted">{{item.productTitle || '定制订单'}}</text>
+    <text class="order-req text-muted" wx:if="{{item.requirements}}">{{item.requirements}}</text>
     <view class="flex-between">
-      <text class="text-price">¥{{item.price}}</text>
+      <text class="text-price">¥{{item.price}}<text wx:if="{{item.quantity > 1}}" class="qty-text"> × {{item.quantity}}</text></text>
       <text class="text-muted">{{item.createTime}}</text>
     </view>
   </view>

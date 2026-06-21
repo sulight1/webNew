@@ -98,17 +98,24 @@
         <text class="text-price">¥{{item.price}}</text>
       </view>
       <text class="text-muted order-req" wx:if="{{item.requirements}}">{{item.requirements}}</text>
+      <text class="text-muted order-req empty" wx:elif="{{item.isCustom}}">买家未填写详细定制描述</text>
     </view>
   </block>
 
   <!-- 任务与签到 -->
   <block wx:elif="{{menu === 'coin-tasks'}}">
-    <view class="card checkin-card flex-between">
-      <view>
+    <view class="card checkin-card {{checkinClaimed ? 'checkin-done' : ''}}">
+      <view class="checkin-info">
         <text class="checkin-title">每日签到</text>
         <text class="checkin-reward">+5 造物币</text>
+        <text wx:if="{{checkinClaimed}}" class="checkin-hint">明天 0:00 后可再领</text>
       </view>
-      <button class="btn-primary" loading="{{checkingIn}}" bindtap="doCheckIn">立即签到</button>
+      <button
+        class="{{checkinClaimed ? 'btn-checkin-done' : 'btn-primary'}}"
+        disabled="{{checkinClaimed}}"
+        loading="{{checkingIn && !checkinClaimed}}"
+        bindtap="doCheckIn"
+      >{{checkinClaimed ? '今日已签到' : '立即签到'}}</button>
     </view>
     <view wx:if="{{tasks.length === 0}}" class="empty">暂无任务</view>
     <view class="card task-item" wx:for="{{tasks}}" wx:key="code">
@@ -142,19 +149,50 @@
       </view>
       <view class="card">
         <view class="section-title">订单状态分布</view>
+        <text wx:if="{{analytics.orderStatusList.length}}" class="status-hint">点击卡片查看对应订单</text>
         <view wx:if="{{analytics.orderStatusList.length === 0}}" class="text-muted">暂无订单</view>
-        <view class="status-row" wx:for="{{analytics.orderStatusList}}" wx:key="key">
-          <text class="status-label">{{item.label}}</text>
-          <view class="status-bar"><view class="status-fill" style="width: {{item.percent}}%;"></view></view>
-          <text>{{item.count}}</text>
+        <view class="status-grid">
+          <view
+            class="status-card"
+            wx:for="{{analytics.orderStatusList}}"
+            wx:key="key"
+            data-key="{{item.key}}"
+            bindtap="onStatusCardTap"
+            style="background: {{item.bg}}; border-color: {{item.color}}33;"
+          >
+            <text class="status-icon">{{item.icon}}</text>
+            <text class="status-value" style="color: {{item.color}};">{{item.count}}</text>
+            <text class="status-label">{{item.label}}</text>
+          </view>
         </view>
       </view>
       <view class="card">
         <view class="section-title">人气作品 Top5</view>
-        <view wx:if="{{!analytics.topProducts || analytics.topProducts.length === 0}}" class="text-muted">暂无作品</view>
-        <view class="top-item flex-between" wx:for="{{analytics.topProducts}}" wx:key="id">
-          <text>{{item.title}}</text>
-          <text class="text-muted">❤ {{item.likes}}<text wx:if="{{item.exposureBoost}}" class="tag">推广中</text></text>
+        <text wx:if="{{analytics.topProducts.length}}" class="status-hint">点击作品查看详情</text>
+        <view wx:if="{{!analytics.topProducts || analytics.topProducts.length === 0}}" class="top-empty">
+          <text class="text-muted">还没有作品数据</text>
+          <button class="btn-primary top-empty-btn" bindtap="goPublishFromAnalytics">去发布作品</button>
+        </view>
+        <view wx:else class="top-list">
+          <view
+            class="top-card"
+            wx:for="{{analytics.topProducts}}"
+            wx:key="id"
+            data-id="{{item.id}}"
+            bindtap="onTopProductTap"
+          >
+            <text class="rank-badge rank-{{item.rank}}">{{item.rankLabel}}</text>
+            <image wx:if="{{item.imageUrl}}" class="top-cover" src="{{item.imageUrl}}" mode="aspectFill" />
+            <view wx:else class="top-cover top-cover-placeholder">🖼</view>
+            <view class="top-info">
+              <text class="top-title">{{item.title}}</text>
+              <view class="top-meta">
+                <text>❤ {{item.likes}}</text>
+                <text wx:if="{{item.priceText}}">· ¥{{item.priceText}}</text>
+                <text wx:if="{{item.exposureBoost}}" class="tag boost-tag">推广中</text>
+              </view>
+            </view>
+          </view>
         </view>
       </view>
     </block>

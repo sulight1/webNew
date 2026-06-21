@@ -32,7 +32,12 @@ Page({
       const list = (orders || []).map((o) => ({
         ...o,
         statusLabel: orderStatusText(o.status, o),
-      }));
+        quantity: o.quantity || 1,
+      })).sort((a, b) => {
+        const timeA = new Date(a.createTime || 0).getTime();
+        const timeB = new Date(b.createTime || 0).getTime();
+        return timeB - timeA;
+      });
       this.setData({ orders: list });
     } catch (e) {
       wx.showToast({ title: e.message || '加载失败', icon: 'none' });

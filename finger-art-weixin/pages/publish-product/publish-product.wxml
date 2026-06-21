@@ -1,7 +1,7 @@
 <view class="container">
   <view class="card">
     <view class="cover-upload" bindtap="chooseImage">
-      <image wx:if="{{imageUrl}}" src="{{imageUrl}}" mode="aspectFill" />
+      <image wx:if="{{imagePreview}}" src="{{imagePreview}}" mode="aspectFill" />
       <text wx:else>+ 上传封面</text>
     </view>
     <input placeholder="作品标题" data-field="title" bindinput="onInput" value="{{form.title}}" />

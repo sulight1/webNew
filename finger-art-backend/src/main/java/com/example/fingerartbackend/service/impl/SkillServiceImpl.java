@@ -3,6 +3,8 @@ package com.example.fingerartbackend.service.impl;
 import com.example.fingerartbackend.entity.Skill;
 import com.example.fingerartbackend.mapper.SkillMapper;
 import com.example.fingerartbackend.service.SkillService;
+import com.example.fingerartbackend.service.UserPunishmentService;
+import com.example.fingerartbackend.constant.UserPunishmentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.Arrays;
@@ -12,6 +14,9 @@ import java.util.List;
 public class SkillServiceImpl implements SkillService {
     @Autowired
     private SkillMapper skillMapper;
+
+    @Autowired
+    private UserPunishmentService userPunishmentService;
 
     @Override
     public List<Skill> getAllSkills() {
@@ -47,6 +52,9 @@ public class SkillServiceImpl implements SkillService {
 
     @Override
     public Skill saveSkill(Skill skill) {
+        if (skill.getUserId() != null) {
+            userPunishmentService.assertNotPunished(skill.getUserId(), UserPunishmentType.NO_SKILL, "您已被禁止发布和交换技能");
+        }
         if (skill.getRating() == null) skill.setRating(5.0);
         if (skill.getCredit() == null) skill.setCredit(100);
         if (skill.getExchangeCount() == null) skill.setExchangeCount(0);

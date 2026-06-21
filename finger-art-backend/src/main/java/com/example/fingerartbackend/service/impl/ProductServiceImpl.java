@@ -1,23 +1,31 @@
 package com.example.fingerartbackend.service.impl;
 
 import com.example.fingerartbackend.constant.LikeTargetType;
+import com.example.fingerartbackend.dto.FavoriteToggleResult;
 import com.example.fingerartbackend.dto.LikeToggleResult;
 import com.example.fingerartbackend.entity.Product;
 import com.example.fingerartbackend.entity.User;
+import com.example.fingerartbackend.entity.UserLike;
 import com.example.fingerartbackend.mapper.ProductMapper;
+import com.example.fingerartbackend.mapper.UserLikeMapper;
 import com.example.fingerartbackend.mapper.UserMapper;
 import com.example.fingerartbackend.service.LikeService;
 import com.example.fingerartbackend.service.NotificationService;
 import com.example.fingerartbackend.service.ProductService;
 import com.example.fingerartbackend.service.SensitiveWordService;
+import com.example.fingerartbackend.service.UserPunishmentService;
+import com.example.fingerartbackend.constant.UserPunishmentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,7 +44,13 @@ public class ProductServiceImpl implements ProductService {
     private SensitiveWordService sensitiveWordService;
 
     @Autowired
+    private UserPunishmentService userPunishmentService;
+
+    @Autowired
     private LikeService likeService;
+
+    @Autowired
+    private UserLikeMapper userLikeMapper;
 
     private void populateCreatorAvatar(Product product) {
         if (product.getCreatorId() != null) {
@@ -51,27 +65,32 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
-    private void populateLikedStatus(List<Product> products, Long viewerId) {
+    private void populateEngagementStatus(List<Product> products, Long viewerId) {
         if (viewerId == null || products.isEmpty()) {
             return;
         }
         List<Long> ids = products.stream().map(Product::getId).collect(Collectors.toList());
         Set<Long> likedIds = likeService.getLikedTargetIds(viewerId, LikeTargetType.PRODUCT, ids);
-        products.forEach(p -> p.setLiked(likedIds.contains(p.getId())));
+        Set<Long> favoritedIds = likeService.getLikedTargetIds(viewerId, LikeTargetType.PRODUCT_FAVORITE, ids);
+        products.forEach(p -> {
+            p.setLiked(likedIds.contains(p.getId()));
+            p.setFavorited(favoritedIds.contains(p.getId()));
+        });
     }
 
-    private void populateLikedStatus(Product product, Long viewerId) {
+    private void populateEngagementStatus(Product product, Long viewerId) {
         if (viewerId == null || product == null) {
             return;
         }
         product.setLiked(likeService.isLiked(viewerId, LikeTargetType.PRODUCT, product.getId()));
+        product.setFavorited(likeService.isLiked(viewerId, LikeTargetType.PRODUCT_FAVORITE, product.getId()));
     }
 
     @Override
     public List<Product> getAllProducts(Long viewerId) {
         List<Product> products = productMapper.findAll();
         products.forEach(this::populateCreatorAvatar);
-        populateLikedStatus(products, viewerId);
+        populateEngagementStatus(products, viewerId);
         return products;
     }
 
@@ -79,7 +98,7 @@ public class ProductServiceImpl implements ProductService {
     public Product getProductById(Long id, Long viewerId) {
         Product product = productMapper.findById(id).orElseThrow(() -> new RuntimeException("商品不存在"));
         populateCreatorAvatar(product);
-        populateLikedStatus(product, viewerId);
+        populateEngagementStatus(product, viewerId);
         return product;
     }
 
@@ -106,7 +125,7 @@ public class ProductServiceImpl implements ProductService {
                 .peek(this::refreshBoost)
                 .sorted(this::compareExposure)
                 .collect(Collectors.toList());
-        populateLikedStatus(products, viewerId);
+        populateEngagementStatus(products, viewerId);
         return products;
     }
 
@@ -139,7 +158,7 @@ public class ProductServiceImpl implements ProductService {
                 .filter(this::hasAvailableStock)
                 .peek(this::populateCreatorAvatar)
                 .collect(Collectors.toList());
-        populateLikedStatus(products, viewerId);
+        populateEngagementStatus(products, viewerId);
         return products;
     }
 
@@ -151,7 +170,7 @@ public class ProductServiceImpl implements ProductService {
                 .filter(this::hasAvailableStock)
                 .peek(this::populateCreatorAvatar)
                 .collect(Collectors.toList());
-        populateLikedStatus(products, viewerId);
+        populateEngagementStatus(products, viewerId);
         return products;
     }
 
@@ -163,7 +182,7 @@ public class ProductServiceImpl implements ProductService {
                 .filter(this::hasAvailableStock)
                 .peek(this::populateCreatorAvatar)
                 .collect(Collectors.toList());
-        populateLikedStatus(products, viewerId);
+        populateEngagementStatus(products, viewerId);
         return products;
     }
 
@@ -173,7 +192,7 @@ public class ProductServiceImpl implements ProductService {
                 .filter(p -> "APPROVED".equals(p.getStatus()))
                 .peek(this::populateCreatorAvatar)
                 .collect(Collectors.toList());
-        populateLikedStatus(products, viewerId);
+        populateEngagementStatus(products, viewerId);
         return products;
     }
 
@@ -212,6 +231,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Product saveProduct(Product product) {
+        assertCanPublishProduct(product);
         if (product.getTitle() != null) {
             sensitiveWordService.validateText(product.getTitle(), "作品标题");
         }
@@ -243,6 +263,14 @@ public class ProductServiceImpl implements ProductService {
         product.setLikes(liked ? current + 1 : Math.max(0, current - 1));
         productMapper.save(product);
         return new LikeToggleResult(liked, product.getLikes());
+    }
+
+    @Override
+    @Transactional
+    public FavoriteToggleResult toggleFavoriteProduct(Long id, Long userId) {
+        productMapper.findById(id).orElseThrow(() -> new RuntimeException("商品不存在"));
+        boolean favorited = likeService.toggle(userId, LikeTargetType.PRODUCT_FAVORITE, id);
+        return new FavoriteToggleResult(favorited);
     }
 
     @Override
@@ -285,6 +313,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Product updateProduct(Long id, Product product) {
         Product existing = productMapper.findById(id).orElseThrow(() -> new RuntimeException("商品不存在"));
+        assertCanPublishProduct(existing);
         ensureArtisanCreator(existing.getCreatorId());
         boolean requiresReview = hasContentChanges(existing, product);
         existing.setTitle(product.getTitle());
@@ -418,5 +447,40 @@ public class ProductServiceImpl implements ProductService {
                 title,
                 content,
                 "/artisan-dashboard?menu=my-products");
+    }
+
+    @Override
+    public List<Product> getFavoriteProducts(Long userId) {
+        if (userId == null) {
+            throw new RuntimeException("请先登录");
+        }
+        List<UserLike> likes = userLikeMapper.findByUserIdAndTargetTypeOrderByCreateTimeDesc(
+                userId, LikeTargetType.PRODUCT_FAVORITE);
+        if (likes.isEmpty()) {
+            return List.of();
+        }
+        List<Long> productIds = likes.stream().map(UserLike::getTargetId).collect(Collectors.toList());
+        Map<Long, Product> productMap = productMapper.findAllById(productIds).stream()
+                .collect(Collectors.toMap(Product::getId, Function.identity()));
+        List<Product> result = new ArrayList<>();
+        for (UserLike like : likes) {
+            Product product = productMap.get(like.getTargetId());
+            if (product != null) {
+                result.add(product);
+            }
+        }
+        result.forEach(this::populateCreatorAvatar);
+        populateEngagementStatus(result, userId);
+        return result;
+    }
+
+    private void assertCanPublishProduct(Product product) {
+        Long creatorId = product.getCreatorId();
+        if (creatorId == null && product.getCreator() != null) {
+            creatorId = userMapper.findByUsername(product.getCreator()).map(User::getId).orElse(null);
+        }
+        if (creatorId != null) {
+            userPunishmentService.assertNotPunished(creatorId, UserPunishmentType.NO_PRODUCT, "您已被禁止上架商品");
+        }
     }
 }

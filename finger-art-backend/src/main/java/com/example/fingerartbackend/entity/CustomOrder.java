@@ -24,6 +24,8 @@ public class CustomOrder {
     private String productTitle;
     private String productType;
     private Double price;
+    /** 购买数量（成品订单，默认 1；price 为总价 = 单价 × 数量） */
+    private Integer quantity = 1;
     private String requirements;
 
     /**
@@ -49,6 +51,25 @@ public class CustomOrder {
 
     @Column(columnDefinition = "TEXT")
     private String cancelReason;
+
+    /** 收货人姓名（下单时快照） */
+    private String shippingName;
+
+    /** 收货人手机（下单时快照） */
+    private String shippingPhone;
+
+    /** 收货详细地址（下单时快照） */
+    @Column(columnDefinition = "TEXT")
+    private String shippingAddress;
+
+    /** 物流公司 */
+    private String shippingCompany;
+
+    /** 快递单号 */
+    private String trackingNumber;
+
+    /** 发货时间 */
+    private LocalDateTime shippedAt;
 
     private LocalDateTime createTime;
 

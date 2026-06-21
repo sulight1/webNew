@@ -1,4 +1,5 @@
 const auth = require('../../utils/auth');
+const cartUtil = require('../../utils/cart');
 const { userApi, notificationApi } = require('../../services/api');
 const { formatImageUrl } = require('../../utils/format');
 
@@ -6,8 +7,16 @@ Page({
   data: {
     user: null,
     unreadCount: 0,
+    shippingName: '',
+    shippingPhone: '',
+    shippingAddress: '',
+    savingAddress: false,
+    cartCount: 0,
     menuItems: [
+      { key: 'cart', title: '购物车', url: '/pages/cart/cart' },
       { key: 'orders', title: '我的订单', url: '/pages/orders/orders' },
+      { key: 'favorites', title: '我的收藏', url: '/pages/favorites/favorites' },
+      { key: 'inspiration', title: '我的灵感本', url: '/pages/inspiration-notebook/inspiration-notebook' },
       { key: 'wallet', title: '造物币钱包', url: '/pages/wallet/wallet' },
       { key: 'messages', title: '私信咨询', url: '/pages/messages/messages' },
       { key: 'studio', title: '手作达人工作台', url: '/pages/studio/studio' },
@@ -45,9 +54,58 @@ Page({
         }
         return item;
       });
-      this.setData({ user, unreadCount, menuItems });
+      this.setData({ user, unreadCount, menuItems, cartCount: cartUtil.getTotalCount() });
+      this.syncShippingForm(user);
     } catch (e) {
-      this.setData({ user: auth.getUser() });
+      this.setData({ user: auth.getUser(), cartCount: cartUtil.getTotalCount() });
+      this.syncShippingForm(auth.getUser());
+    }
+  },
+
+  syncShippingForm(user) {
+    if (!user) return;
+    this.setData({
+      shippingName: user.shippingName || '',
+      shippingPhone: user.shippingPhone || '',
+      shippingAddress: user.shippingAddress || '',
+    });
+  },
+
+  onShippingNameInput(e) {
+    this.setData({ shippingName: e.detail.value });
+  },
+
+  onShippingPhoneInput(e) {
+    this.setData({ shippingPhone: e.detail.value });
+  },
+
+  onShippingAddressInput(e) {
+    this.setData({ shippingAddress: e.detail.value });
+  },
+
+  async saveShippingAddress() {
+    if (!auth.isLoggedIn()) return;
+    const { shippingName, shippingPhone, shippingAddress } = this.data;
+    const phone = (shippingPhone || '').trim();
+    if (phone && !/^1\d{10}$/.test(phone)) {
+      wx.showToast({ title: '请输入正确手机号', icon: 'none' });
+      return;
+    }
+    this.setData({ savingAddress: true });
+    try {
+      const user = auth.getUser();
+      const updated = await userApi.updateUser(user.id, {
+        shippingName: (shippingName || '').trim(),
+        shippingPhone: phone,
+        shippingAddress: (shippingAddress || '').trim(),
+      });
+      getApp().setUser(updated);
+      this.refreshProfile();
+      wx.showToast({ title: '已保存', icon: 'success' });
+    } catch (e) {
+      wx.showToast({ title: e.message || '保存失败', icon: 'none' });
+    } finally {
+      this.setData({ savingAddress: false });
     }
   },
 

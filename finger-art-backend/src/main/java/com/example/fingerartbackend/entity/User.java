@@ -2,7 +2,10 @@ package com.example.fingerartbackend.entity;
 
 import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.example.fingerartbackend.dto.UserPunishmentView;
 import lombok.Data;
+
+import java.util.List;
 
 @Entity
 @Data
@@ -39,6 +42,16 @@ public class User {
 
     private String bio;
 
+    /** 收货人姓名 */
+    private String shippingName;
+
+    /** 收货人手机 */
+    private String shippingPhone;
+
+    /** 收货详细地址 */
+    @Column(columnDefinition = "TEXT")
+    private String shippingAddress;
+
     @Column(columnDefinition = "decimal(10,2) default 0.00")
     private Double zaowuBiBalance = 0.0;
 
@@ -56,4 +69,15 @@ public class User {
 
     @Column(columnDefinition = "int default 0")
     private Integer completedOrders = 0;
+
+    /** 管理员 TOTP 密钥（Base32），仅服务端使用 */
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private String totpSecret;
+
+    /** 是否已启用 TOTP 二次验证（仅管理员） */
+    @Column(columnDefinition = "boolean default false")
+    private Boolean totpEnabled = false;
+
+    @Transient
+    private List<UserPunishmentView> activePunishments;
 }

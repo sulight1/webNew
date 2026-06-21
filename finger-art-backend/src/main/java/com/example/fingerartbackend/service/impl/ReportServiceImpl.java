@@ -1,5 +1,6 @@
 package com.example.fingerartbackend.service.impl;
 
+import com.example.fingerartbackend.auth.AuthContext;
 import com.example.fingerartbackend.entity.ContentReport;
 import com.example.fingerartbackend.entity.ForumPost;
 import com.example.fingerartbackend.entity.ForumReply;
@@ -45,18 +46,41 @@ public class ReportServiceImpl implements ReportService {
     @Override
     @Transactional
     public ContentReport submitReport(ContentReport report) {
-        if (report.getReporterId() == null || report.getTargetType() == null || report.getTargetId() == null) {
+        Long userId = AuthContext.getUserId();
+        if (userId == null) {
+            throw new RuntimeException("请先登录");
+        }
+        if (report.getTargetType() == null || report.getTargetId() == null) {
             throw new RuntimeException("举报信息不完整");
         }
         if (report.getReason() == null || report.getReason().isBlank()) {
             throw new RuntimeException("请填写举报原因");
         }
+        if ("USER".equals(report.getTargetType()) && userId.equals(report.getTargetId())) {
+            throw new RuntimeException("不能举报自己");
+        }
         sensitiveWordService.validateText(report.getDetail(), "举报说明");
+
+        User reporter = userMapper.findById(userId)
+                .orElseThrow(() -> new RuntimeException("用户不存在"));
+        report.setReporterId(userId);
+        report.setReporterName(reporter.getUsername());
         report.setStatus("PENDING");
         if (report.getTargetTitle() == null) {
             report.setTargetTitle(resolveTargetTitle(report.getTargetType(), report.getTargetId()));
         }
-        return reportMapper.save(report);
+        ContentReport saved = reportMapper.save(report);
+
+        userMapper.findAll().stream()
+                .filter(u -> "ADMIN".equals(u.getRole()))
+                .forEach(admin -> notificationService.notify(
+                        admin.getId(),
+                        "REPORT",
+                        "新举报待处理",
+                        reporter.getUsername() + " 举报了「" + saved.getTargetTitle() + "」",
+                        "/admin"));
+
+        return saved;
     }
 
     @Override

@@ -5,11 +5,14 @@ import com.example.fingerartbackend.mapper.*;
 import com.example.fingerartbackend.service.CoinEconomyService;
 import com.example.fingerartbackend.service.NotificationService;
 import com.example.fingerartbackend.service.OrderService;
+import com.example.fingerartbackend.service.UserPunishmentService;
+import com.example.fingerartbackend.constant.UserPunishmentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -31,12 +34,27 @@ public class OrderServiceImpl implements OrderService {
     private NotificationService notificationService;
     @Autowired
     private CoinEconomyService coinEconomyService;
+    @Autowired
+    private UserPunishmentService userPunishmentService;
 
     @Override
     @Transactional
     public CustomOrder createOrder(CustomOrder order) {
+        if (order.getBuyerId() != null) {
+            userPunishmentService.assertNotPunished(order.getBuyerId(), UserPunishmentType.NO_ORDER, "您已被禁止下单");
+        }
         if (order.getArtisanId() == null) {
             throw new RuntimeException("创作者ID不能为空");
+        }
+        if (order.getQuantity() == null || order.getQuantity() < 1) {
+            order.setQuantity(1);
+        }
+        if ((order.getProductType() == null || order.getProductType().isBlank()) && order.getProductId() != null) {
+            productMapper.findById(order.getProductId()).ifPresent(product -> {
+                if (product.getType() != null && !product.getType().isBlank()) {
+                    order.setProductType(product.getType());
+                }
+            });
         }
         boolean readyMade = isReadyMadeOrder(order);
         if (readyMade) {
@@ -59,6 +77,10 @@ public class OrderServiceImpl implements OrderService {
         if (order.getStatus() == null || order.getStatus().isEmpty()) {
             order.setStatus(readyMade ? "PENDING_PAY" : "PENDING_CONFIRM");
         }
+        applyShippingFromBuyer(order);
+        if (readyMade) {
+            requireOrderShippingAddress(order);
+        }
         validateProductStock(order);
         CustomOrder saved = orderMapper.save(order);
         if (readyMade) {
@@ -67,9 +89,10 @@ public class OrderServiceImpl implements OrderService {
             notifyBuyer(saved, "订单待支付", "请支付全款完成购买「" + safeTitle(order) + "」");
             notifyArtisan(saved, "新成品订单", "买家「" + safeName(order.getBuyerName()) + "」下单「" + safeTitle(order) + "」，等待付款");
         } else {
-            addMilestoneRecord(saved.getId(), "CONFIRM", "确认需求", "订单已创建，等待手作人确认", null,
+            String confirmNote = buildCustomRequirementsMilestoneNote(order.getRequirements());
+            addMilestoneRecord(saved.getId(), "CONFIRM", "确认需求", confirmNote, null,
                     order.getBuyerId(), order.getBuyerName());
-            notifyArtisan(saved, "新订单待确认", "买家「" + safeName(order.getBuyerName()) + "」下单「" + safeTitle(order) + "」");
+            notifyArtisan(saved, "新订单待确认", buildCustomOrderNotifyContent(order));
         }
         return saved;
     }
@@ -95,7 +118,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public List<CustomOrder> getBuyerOrders(Long buyerId) {
-        return orderMapper.findByBuyerId(buyerId).stream().map(this::normalizeOrderForRead).toList();
+        return orderMapper.findByBuyerIdOrderByCreateTimeDesc(buyerId).stream().map(this::normalizeOrderForRead).toList();
     }
 
     @Override
@@ -119,7 +142,8 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public CustomOrder payDeposit(Long orderId, Long buyerId) {
+    public CustomOrder payDeposit(Long orderId, Long buyerId, String paymentChannel) {
+        userPunishmentService.assertNotPunished(buyerId, UserPunishmentType.NO_ORDER, "您已被禁止下单");
         CustomOrder order = getOrder(orderId);
         if (!Objects.equals(order.getBuyerId(), buyerId)) {
             throw new RuntimeException("无权支付此订单");
@@ -136,17 +160,30 @@ public class OrderServiceImpl implements OrderService {
         double amount = readyMade
                 ? round(order.getPrice())
                 : (order.getDepositAmount() != null ? order.getDepositAmount() : round(order.getPrice() * DEPOSIT_RATIO));
-        holdEscrow(order, buyerId, amount, readyMade ? "FULL_PAY" : "DEPOSIT",
-                readyMade ? "支付全款（托管）" : "支付定金（托管）");
+        String channel = normalizePaymentChannel(paymentChannel);
+        boolean useZaowuCoin = "ZAOWU_COIN".equals(channel);
+        if (useZaowuCoin) {
+            holdEscrow(order, buyerId, amount, readyMade ? "FULL_PAY" : "DEPOSIT",
+                    readyMade ? "支付全款（造物币托管）" : "支付定金（造物币托管）");
+            order.setEscrowStatus("HELD");
+        } else {
+            order.setEscrowStatus("NONE");
+        }
         order.setStatus(readyMade ? "PENDING_SHIP" : "PRODUCING");
-        order.setEscrowStatus("HELD");
+        String channelLabel = paymentChannelLabel(channel);
         CustomOrder saved = orderMapper.save(order);
         if (readyMade) {
-            addMilestoneRecord(orderId, "DEPOSIT", "支付全款", "买家已支付全款 ￥" + amount + "（平台托管）", null, buyerId, order.getBuyerName());
+            String milestoneNote = useZaowuCoin
+                    ? "买家已支付全款 ￥" + amount + "（造物币托管）"
+                    : "买家已通过" + channelLabel + "支付全款 ￥" + amount;
+            addMilestoneRecord(orderId, "DEPOSIT", "支付全款", milestoneNote, null, buyerId, order.getBuyerName());
             notifyArtisan(saved, "买家已付款", "「" + safeTitle(order) + "」已全款支付，请尽快发货");
             notifyBuyer(saved, "支付成功", "「" + safeTitle(order) + "」已支付，等待卖家发货");
         } else {
-            addMilestoneRecord(orderId, "DEPOSIT", "支付定金", "买家已支付定金 ￥" + amount + "（平台托管）", null, buyerId, order.getBuyerName());
+            String milestoneNote = useZaowuCoin
+                    ? "买家已支付定金 ￥" + amount + "（造物币托管）"
+                    : "买家已通过" + channelLabel + "支付定金 ￥" + amount;
+            addMilestoneRecord(orderId, "DEPOSIT", "支付定金", milestoneNote, null, buyerId, order.getBuyerName());
             notifyArtisan(saved, "买家已付定金", "「" + safeTitle(order) + "」进入制作阶段");
         }
         return saved;
@@ -186,6 +223,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public CustomOrder payBalance(Long orderId, Long buyerId) {
+        userPunishmentService.assertNotPunished(buyerId, UserPunishmentType.NO_ORDER, "您已被禁止下单");
         CustomOrder order = getOrder(orderId);
         if (!Objects.equals(order.getBuyerId(), buyerId)) {
             throw new RuntimeException("无权支付此订单");
@@ -228,6 +266,36 @@ public class OrderServiceImpl implements OrderService {
         String label = statusLabel(status);
         addMilestoneRecord(orderId, stageKey, label, "订单进入「" + label + "」阶段", null, operatorId, operatorName);
         notifyOrderStatusChange(saved, operatorId, label);
+        return saved;
+    }
+
+    @Override
+    @Transactional
+    public CustomOrder shipOrder(Long orderId, Long artisanId, String shippingCompany, String trackingNumber, String operatorName) {
+        CustomOrder order = getOrder(orderId);
+        if (!Objects.equals(order.getArtisanId(), artisanId)) {
+            throw new RuntimeException("无权发货");
+        }
+        if (!"PENDING_SHIP".equals(order.getStatus())) {
+            throw new RuntimeException("当前订单状态不可发货");
+        }
+        if (shippingCompany == null || shippingCompany.trim().isEmpty()) {
+            throw new RuntimeException("请填写物流公司");
+        }
+        if (trackingNumber == null || trackingNumber.trim().isEmpty()) {
+            throw new RuntimeException("请填写快递单号");
+        }
+        applyShippingFromBuyer(order);
+        requireOrderShippingAddress(order);
+        order.setShippingCompany(shippingCompany.trim());
+        order.setTrackingNumber(trackingNumber.trim());
+        order.setShippedAt(LocalDateTime.now());
+        order.setStatus("PENDING_ACCEPT");
+        CustomOrder saved = orderMapper.save(order);
+        String note = shippingCompany.trim() + " · 单号 " + trackingNumber.trim();
+        addMilestoneRecord(orderId, "SHIP", "已发货", note, null, artisanId,
+                operatorName != null ? operatorName : "手作人");
+        notifyOrderStatusChange(saved, artisanId, "待收货");
         return saved;
     }
 
@@ -507,13 +575,37 @@ public class OrderServiceImpl implements OrderService {
         return Math.round(v * 100.0) / 100.0;
     }
 
+    private String normalizePaymentChannel(String paymentChannel) {
+        if (paymentChannel == null || paymentChannel.isBlank()) {
+            return "ZAOWU_COIN";
+        }
+        return switch (paymentChannel.trim().toUpperCase()) {
+            case "MOCK_WECHAT", "WECHAT" -> "MOCK_WECHAT";
+            case "MOCK_ALIPAY", "ALIPAY" -> "MOCK_ALIPAY";
+            default -> "ZAOWU_COIN";
+        };
+    }
+
+    private String paymentChannelLabel(String channel) {
+        return switch (channel) {
+            case "MOCK_WECHAT" -> "微信";
+            case "MOCK_ALIPAY" -> "支付宝";
+            default -> "造物币";
+        };
+    }
+
+    private int orderQuantity(CustomOrder order) {
+        return order.getQuantity() != null && order.getQuantity() > 0 ? order.getQuantity() : 1;
+    }
+
     private void validateProductStock(CustomOrder order) {
         if (order.getProductId() == null) return;
         Product product = productMapper.findById(order.getProductId()).orElse(null);
         if (product == null || !"READY_MADE".equals(product.getType())) return;
         int stock = product.getStock() != null ? product.getStock() : 0;
-        if (stock <= 0) {
-            throw new RuntimeException("商品已售罄");
+        int qty = orderQuantity(order);
+        if (stock < qty) {
+            throw new RuntimeException(stock <= 0 ? "商品已售罄" : "库存不足，当前仅剩 " + stock + " 件");
         }
     }
 
@@ -522,10 +614,11 @@ public class OrderServiceImpl implements OrderService {
         Product product = productMapper.findById(order.getProductId()).orElse(null);
         if (product == null || !"READY_MADE".equals(product.getType())) return;
         int stock = product.getStock() != null ? product.getStock() : 0;
-        if (stock <= 0) {
-            throw new RuntimeException("商品已售罄");
+        int qty = orderQuantity(order);
+        if (stock < qty) {
+            throw new RuntimeException(stock <= 0 ? "商品已售罄" : "库存不足，当前仅剩 " + stock + " 件");
         }
-        product.setStock(stock - 1);
+        product.setStock(stock - qty);
         productMapper.save(product);
     }
 
@@ -534,7 +627,7 @@ public class OrderServiceImpl implements OrderService {
         Product product = productMapper.findById(order.getProductId()).orElse(null);
         if (product == null || !"READY_MADE".equals(product.getType())) return;
         int stock = product.getStock() != null ? product.getStock() : 0;
-        product.setStock(stock + 1);
+        product.setStock(stock + orderQuantity(order));
         productMapper.save(product);
     }
 
@@ -563,6 +656,25 @@ public class OrderServiceImpl implements OrderService {
 
     private String safeName(String name) {
         return name != null ? name : "买家";
+    }
+
+    private String buildCustomRequirementsMilestoneNote(String requirements) {
+        if (requirements == null || requirements.isBlank()) {
+            return "订单已创建，等待手作人确认（买家未填写详细定制描述）";
+        }
+        return "买家定制需求：" + requirements.trim();
+    }
+
+    private String buildCustomOrderNotifyContent(CustomOrder order) {
+        String content = "买家「" + safeName(order.getBuyerName()) + "」下单「" + safeTitle(order) + "」";
+        if (order.getRequirements() != null && !order.getRequirements().isBlank()) {
+            String preview = order.getRequirements().trim();
+            if (preview.length() > 80) {
+                preview = preview.substring(0, 80) + "...";
+            }
+            content += "，需求：" + preview;
+        }
+        return content;
     }
 
     private boolean isReadyMadeOrder(CustomOrder order) {
@@ -637,5 +749,34 @@ public class OrderServiceImpl implements OrderService {
             return orderMapper.save(order);
         }
         return order;
+    }
+
+    private void applyShippingFromBuyer(CustomOrder order) {
+        if (hasOrderShippingAddress(order) || order.getBuyerId() == null) {
+            return;
+        }
+        userMapper.findById(order.getBuyerId()).ifPresent(buyer -> {
+            if (order.getShippingName() == null || order.getShippingName().isBlank()) {
+                order.setShippingName(buyer.getShippingName());
+            }
+            if (order.getShippingPhone() == null || order.getShippingPhone().isBlank()) {
+                order.setShippingPhone(buyer.getShippingPhone());
+            }
+            if (order.getShippingAddress() == null || order.getShippingAddress().isBlank()) {
+                order.setShippingAddress(buyer.getShippingAddress());
+            }
+        });
+    }
+
+    private void requireOrderShippingAddress(CustomOrder order) {
+        if (!hasOrderShippingAddress(order)) {
+            throw new RuntimeException("请先在个人信息中填写收货地址");
+        }
+    }
+
+    private boolean hasOrderShippingAddress(CustomOrder order) {
+        return order.getShippingName() != null && !order.getShippingName().isBlank()
+                && order.getShippingPhone() != null && !order.getShippingPhone().isBlank()
+                && order.getShippingAddress() != null && !order.getShippingAddress().isBlank();
     }
 }

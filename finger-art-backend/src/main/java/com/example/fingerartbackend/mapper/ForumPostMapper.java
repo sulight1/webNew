@@ -13,4 +13,6 @@ public interface ForumPostMapper extends JpaRepository<ForumPost, Long> {
     List<ForumPost> findByStatusOrderByReplyCountDescCreateTimeDesc(String status);
 
     List<ForumPost> findAllByOrderByCreateTimeDesc();
+
+    List<ForumPost> findByAuthorIdOrderByCreateTimeDesc(Long authorId);
 }

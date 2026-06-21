@@ -1,0 +1,48 @@
+<view class="container" wx:if="{{!loading && product}}">
+  <view class="card">
+    <view class="section-title">商品信息</view>
+    <view class="product-row flex-row">
+      <image class="product-thumb" src="{{product.image}}" mode="aspectFill" />
+      <view class="product-info">
+        <text class="product-title">{{product.title}}</text>
+        <text class="text-muted">手作人：{{product.creator}}</text>
+        <text class="text-muted">单价 ¥{{unitPrice}}</text>
+        <text class="text-muted">数量 × {{checkoutQuantity}}</text>
+        <text class="text-price">¥{{totalAmount}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">收货信息</view>
+    <view wx:if="{{buyer.shippingAddress}}">
+      <text class="ship-name">{{buyer.shippingName}} {{buyer.shippingPhone}}</text>
+      <text class="ship-address">{{buyer.shippingAddress}}</text>
+    </view>
+    <view wx:else class="empty-tip">请先完善收货地址</view>
+    <text class="edit-link" bindtap="goEditAddress">修改收货地址 ›</text>
+  </view>
+
+  <view class="card">
+    <view class="section-title">支付方式</view>
+    <view class="pay-option active">
+      <view class="pay-icon wechat">微</view>
+      <view class="pay-main">
+        <text class="pay-label">微信支付</text>
+        <text class="pay-desc">演示环境，不会真实扣款</text>
+      </view>
+      <text class="pay-check">✓</text>
+    </view>
+  </view>
+
+  <view class="summary card">
+    <view class="flex-between summary-row">
+      <text>应付合计</text>
+      <text class="text-price total">¥{{totalAmount}}</text>
+    </view>
+    <button class="btn-primary pay-btn" loading="{{submitting}}" disabled="{{submitting}}" bindtap="submitPayment">
+      微信支付 ¥{{totalAmount}}
+    </button>
+  </view>
+</view>
+<view wx:elif="{{loading}}" class="empty">加载中...</view>

@@ -7,3 +7,8 @@ ai.image.dashscope.api-key=sk-在这里粘贴你的密钥
 
 # 生产环境前端域名
 # app.cors.allowed-origins=https://your-domain.com
+
+# 快递100 实时物流（https://api.kuaidi100.com/ 注册获取 customer / key）
+# logistics.kuaidi100.enabled=true
+# logistics.kuaidi100.customer=你的customer
+# logistics.kuaidi100.key=你的key

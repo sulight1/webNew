@@ -13,6 +13,8 @@ import com.example.fingerartbackend.service.ForumService;
 import com.example.fingerartbackend.service.LikeService;
 import com.example.fingerartbackend.service.NotificationService;
 import com.example.fingerartbackend.service.SensitiveWordService;
+import com.example.fingerartbackend.service.UserPunishmentService;
+import com.example.fingerartbackend.constant.UserPunishmentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,6 +46,9 @@ public class ForumServiceImpl implements ForumService {
     @Autowired
     private LikeService likeService;
 
+    @Autowired
+    private UserPunishmentService userPunishmentService;
+
     private void populateLikedStatus(List<ForumPost> posts, Long viewerId) {
         if (viewerId == null || posts.isEmpty()) {
             return;
@@ -62,6 +67,16 @@ public class ForumServiceImpl implements ForumService {
             posts = postMapper.findByStatusOrderByCreateTimeDesc("ACTIVE");
         }
         populateLikedStatus(posts, viewerId);
+        return posts;
+    }
+
+    @Override
+    public List<ForumPost> listMyPosts(Long authorId) {
+        if (authorId == null) {
+            throw new RuntimeException("请先登录");
+        }
+        List<ForumPost> posts = postMapper.findByAuthorIdOrderByCreateTimeDesc(authorId);
+        populateLikedStatus(posts, authorId);
         return posts;
     }
 
@@ -86,6 +101,7 @@ public class ForumServiceImpl implements ForumService {
         if (authorId == null) {
             throw new RuntimeException("请先登录");
         }
+        userPunishmentService.assertNotPunished(authorId, UserPunishmentType.NO_FORUM, "您已被禁止发布帖子");
         if (title == null || title.isBlank()) {
             throw new RuntimeException("标题不能为空");
         }
@@ -133,6 +149,7 @@ public class ForumServiceImpl implements ForumService {
         if (authorId == null) {
             throw new RuntimeException("请先登录");
         }
+        userPunishmentService.assertNotPunished(authorId, UserPunishmentType.NO_FORUM, "您已被禁止发布帖子");
         if (content == null || content.isBlank()) {
             throw new RuntimeException("回复内容不能为空");
         }
@@ -223,18 +240,42 @@ public class ForumServiceImpl implements ForumService {
     @Override
     @Transactional
     public void deleteReply(Long id, Long operatorId) {
+        if (operatorId == null) {
+            throw new RuntimeException("请先登录");
+        }
         ForumReply reply = replyMapper.findById(id)
                 .orElseThrow(() -> new RuntimeException("回复不存在"));
-        if (!AuthContext.isAdmin()) {
+        if (!"ACTIVE".equals(reply.getStatus())) {
+            throw new RuntimeException("回复已删除");
+        }
+        ForumPost post = postMapper.findById(reply.getPostId())
+                .orElseThrow(() -> new RuntimeException("帖子不存在"));
+        boolean isReplyAuthor = operatorId.equals(reply.getAuthorId());
+        boolean isPostAuthor = operatorId.equals(post.getAuthorId());
+        boolean isAdmin = AuthContext.isAdmin();
+        if (!isReplyAuthor && !isPostAuthor && !isAdmin) {
             throw new RuntimeException("无权删除该回复");
         }
         reply.setStatus("REMOVED");
         replyMapper.save(reply);
         Long postId = reply.getPostId();
-        postMapper.findById(postId).ifPresent(post -> {
-            post.setReplyCount((int) replyMapper.countByPostIdAndStatus(postId, "ACTIVE"));
-            postMapper.save(post);
-        });
+        post.setReplyCount((int) replyMapper.countByPostIdAndStatus(postId, "ACTIVE"));
+        postMapper.save(post);
+    }
+
+    @Override
+    @Transactional
+    public void restorePost(Long id) {
+        if (!AuthContext.isAdmin()) {
+            throw new RuntimeException("无权操作");
+        }
+        ForumPost post = postMapper.findById(id)
+                .orElseThrow(() -> new RuntimeException("帖子不存在"));
+        if ("ACTIVE".equals(post.getStatus())) {
+            throw new RuntimeException("帖子已是正常状态");
+        }
+        post.setStatus("ACTIVE");
+        postMapper.save(post);
     }
 
     private boolean containsIgnoreCase(String text, String kw) {

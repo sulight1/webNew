@@ -9,6 +9,8 @@ import com.example.fingerartbackend.mapper.UserMapper;
 import com.example.fingerartbackend.service.CoinEconomyService;
 import com.example.fingerartbackend.service.NotificationService;
 import com.example.fingerartbackend.service.SkillExchangeService;
+import com.example.fingerartbackend.service.UserPunishmentService;
+import com.example.fingerartbackend.constant.UserPunishmentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -36,9 +38,13 @@ public class SkillExchangeServiceImpl implements SkillExchangeService {
     @Autowired
     private CoinEconomyService coinEconomyService;
 
+    @Autowired
+    private UserPunishmentService userPunishmentService;
+
     @Override
     @Transactional
     public SkillExchange requestExchange(Long userAId, Long userBId, String description, Integer cost, String scheduleDateStr) {
+        userPunishmentService.assertNotPunished(userAId, UserPunishmentType.NO_SKILL, "您已被禁止发布和交换技能");
         if (userAId != null && userAId.equals(userBId)) {
             throw new RuntimeException("不能与自己交换技能");
         }

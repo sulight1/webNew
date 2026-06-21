@@ -5,6 +5,7 @@ import com.example.fingerartbackend.common.Result;
 import com.example.fingerartbackend.dto.LikeToggleResult;
 import com.example.fingerartbackend.entity.ForumPost;
 import com.example.fingerartbackend.entity.ForumReply;
+import com.example.fingerartbackend.service.AdminAuditService;
 import com.example.fingerartbackend.service.ForumService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -20,10 +21,26 @@ public class ForumController {
     @Autowired
     private ForumService forumService;
 
+    @Autowired
+    private AdminAuditService adminAuditService;
+
     @GetMapping("/posts")
     public Result<List<ForumPost>> listPosts(@RequestParam(defaultValue = "latest") String sort) {
         try {
             return Result.success(forumService.listPosts(sort, AuthContext.getUserId()));
+        } catch (Exception e) {
+            return Result.error(e.getMessage());
+        }
+    }
+
+    @GetMapping("/my-posts")
+    public Result<List<ForumPost>> listMyPosts() {
+        try {
+            Long userId = AuthContext.getUserId();
+            if (userId == null) {
+                return Result.error(401, "请先登录");
+            }
+            return Result.success(forumService.listMyPosts(userId));
         } catch (Exception e) {
             return Result.error(e.getMessage());
         }
@@ -59,6 +76,9 @@ public class ForumController {
     public Result<String> deletePost(@PathVariable Long id) {
         try {
             forumService.deletePost(id, AuthContext.getUserId());
+            if (AuthContext.isAdmin()) {
+                adminAuditService.log("DELETE_FORUM_POST", "FORUM", id, "删除论坛帖子 #" + id);
+            }
             return Result.success("已删除");
         } catch (Exception e) {
             return Result.error(e.getMessage());
@@ -117,11 +137,33 @@ public class ForumController {
         }
     }
 
+    @DeleteMapping("/replies/{id}")
+    public Result<String> deleteReply(@PathVariable Long id) {
+        try {
+            forumService.deleteReply(id, AuthContext.getUserId());
+            return Result.success("已删除");
+        } catch (Exception e) {
+            return Result.error(e.getMessage());
+        }
+    }
+
     @DeleteMapping("/admin/replies/{id}")
     public Result<String> adminDeleteReply(@PathVariable Long id) {
         try {
             forumService.deleteReply(id, AuthContext.getUserId());
+            adminAuditService.log("DELETE_FORUM_REPLY", "FORUM", id, "删除论坛回复 #" + id);
             return Result.success("已删除");
+        } catch (Exception e) {
+            return Result.error(e.getMessage());
+        }
+    }
+
+    @PostMapping("/admin/posts/{id}/restore")
+    public Result<String> adminRestorePost(@PathVariable Long id) {
+        try {
+            forumService.restorePost(id);
+            adminAuditService.log("RESTORE_FORUM_POST", "FORUM", id, "重新上架论坛帖子 #" + id);
+            return Result.success("已重新上架");
         } catch (Exception e) {
             return Result.error(e.getMessage());
         }

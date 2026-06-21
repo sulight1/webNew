@@ -1,12 +1,19 @@
 .login-card {
   text-align: center;
-  padding: 60rpx 24rpx;
+  padding: 80rpx 32rpx;
+  background: linear-gradient(135deg, #fff5fb, #fff);
 }
 
 .login-tip {
   display: block;
-  margin-bottom: 24rpx;
-  color: #666;
+  margin-bottom: 32rpx;
+  color: #8c8c8c;
+  font-size: 28rpx;
+}
+
+.profile-card {
+  background: linear-gradient(135deg, #fff0f6 0%, #f9f0ff 50%, #fff 100%);
+  border: 1rpx solid rgba(235, 47, 150, 0.12);
 }
 
 .profile-header {
@@ -16,57 +23,78 @@
 
 .profile-info {
   flex: 1;
+  min-width: 0;
+}
+
+.profile-header .avatar-lg {
+  border-radius: 50%;
+  border: 4rpx solid #fff;
+  box-shadow: 0 8rpx 24rpx rgba(235, 47, 150, 0.15);
 }
 
 .username {
   display: block;
   font-size: 36rpx;
-  font-weight: 600;
+  font-weight: 800;
+  color: #1a1a1a;
 }
 
 .account-line {
   display: block;
   margin-top: 6rpx;
   font-size: 24rpx;
-  color: #999;
+  color: #8c8c8c;
 }
 
 .bio {
   display: block;
   margin-top: 8rpx;
-  color: #666;
+  color: #595959;
   font-size: 24rpx;
+  line-height: 1.5;
 }
 
 .name-line {
   align-items: center;
   gap: 12rpx;
   margin-bottom: 4rpx;
+  flex-wrap: wrap;
 }
 
 .badge {
   font-size: 20rpx;
-  padding: 4rpx 12rpx;
-  background: #fff0f6;
-  color: #eb2f96;
-  border-radius: 8rpx;
+  padding: 6rpx 14rpx;
+  background: linear-gradient(135deg, #eb2f96, #722ed1);
+  color: #fff;
+  border-radius: 999rpx;
+  font-weight: 600;
 }
 
 .profile-link {
   display: block;
   color: #eb2f96;
   font-size: 24rpx;
-  margin: 8rpx 0;
+  font-weight: 600;
+  margin: 10rpx 0;
 }
 
 .balance-row {
-  padding-top: 20rpx;
-  border-top: 1rpx solid #f0f0f0;
+  padding: 20rpx 24rpx;
+  margin-top: 8rpx;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 16rpx;
+  border: 1rpx solid rgba(235, 47, 150, 0.1);
+}
+
+.menu-list {
+  padding: 8rpx 28rpx;
 }
 
 .menu-item {
-  padding: 28rpx 0;
+  padding: 32rpx 0;
   border-bottom: 1rpx solid #f5f5f5;
+  font-size: 28rpx;
+  color: #262626;
 }
 
 .menu-item:last-child {
@@ -74,11 +102,73 @@
 }
 
 .arrow {
-  color: #ccc;
+  color: #d9d9d9;
   font-size: 36rpx;
 }
 
+.menu-right {
+  gap: 12rpx;
+}
+
+.menu-badge {
+  min-width: 36rpx;
+  height: 36rpx;
+  padding: 0 10rpx;
+  border-radius: 999rpx;
+  background: #ff4d4f;
+  color: #fff;
+  font-size: 20rpx;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
 .logout-btn {
-  margin-top: 40rpx;
+  margin-top: 16rpx;
   width: 100%;
+}
+
+.address-card .section-title {
+  margin-bottom: 8rpx;
+}
+
+.address-hint {
+  display: block;
+  font-size: 24rpx;
+  color: #8c8c8c;
+  margin-bottom: 24rpx;
+  line-height: 1.5;
+}
+
+.field {
+  margin-bottom: 24rpx;
+}
+
+.field-label {
+  display: block;
+  font-size: 24rpx;
+  color: #595959;
+  font-weight: 600;
+  margin-bottom: 10rpx;
+}
+
+.field-input,
+.field-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 20rpx 24rpx;
+  background: #fafafa;
+  border: 1rpx solid #f0f0f0;
+  border-radius: 16rpx;
+  font-size: 28rpx;
+}
+
+.field-textarea {
+  min-height: 140rpx;
+}
+
+.address-save {
+  margin-top: 8rpx;
 }

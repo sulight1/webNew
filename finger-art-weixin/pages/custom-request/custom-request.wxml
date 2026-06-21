@@ -1,39 +1,133 @@
 <view class="container">
-  <view class="tabs flex-row">
-    <view class="tab {{tab === 'all' ? 'active' : ''}}" data-tab="all" bindtap="onTabChange">全部</view>
-    <view class="tab {{tab === 'open' ? 'active' : ''}}" data-tab="open" bindtap="onTabChange">待揭榜</view>
-    <view class="tab {{tab === 'mine' ? 'active' : ''}}" data-tab="mine" bindtap="onTabChange">我的</view>
+  <view class="page-hero">
+    <text class="page-hero-title">定制需求大厅</text>
+    <view class="hero-search-row">
+      <input
+        class="hero-search-input"
+        placeholder="搜索需求、关键词..."
+        value="{{keyword}}"
+        bindinput="onKeywordInput"
+        confirm-type="search"
+        bindconfirm="onSearch"
+      />
+      <button class="btn-primary hero-search-btn" bindtap="onSearch">搜索</button>
+    </view>
+    <view class="hero-actions">
+      <button class="btn-primary" bindtap="goPublish">发布求定制</button>
+    </view>
   </view>
 
-  <button class="btn-primary publish-btn" bindtap="goPublish">+ 发布定制需求</button>
+  <view class="scope-tabs flex-row">
+    <view
+      wx:for="{{scopeTabs}}"
+      wx:key="key"
+      class="scope-tab {{scope === item.key ? 'active' : ''}}"
+      data-key="{{item.key}}"
+      bindtap="onScopeChange"
+    >{{item.label}}</view>
+  </view>
 
-  <view wx:if="{{loading}}" class="empty">加载中...</view>
-  <view wx:elif="{{list.length === 0}}" class="empty">暂无需求</view>
-  <view wx:else>
-    <view class="card" wx:for="{{list}}" wx:key="id">
+  <view class="list-toolbar" wx:if="{{scope !== 'mine'}}">
+    <view wx:if="{{listRefreshing}}" class="list-refresh-bar"><text>加载中…</text></view>
+    <text class="list-count">共 {{total}} 条需求</text>
+    <view class="list-toolbar-head">
+      <picker mode="selector" range="{{categoryLabels}}" value="{{categoryIndex}}" bindchange="onCategoryPick">
+        <view class="toolbar-picker {{filterCategory !== 'all' ? 'active' : ''}}">
+          {{categoryLabels[categoryIndex]}} ▾
+        </view>
+      </picker>
+      <view class="sort-tabs">
+        <view
+          wx:for="{{sortTabs}}"
+          wx:key="value"
+          class="sort-tab {{requestSort === item.value ? 'active' : ''}}"
+          data-value="{{item.value}}"
+          bindtap="onSortTap"
+        >{{item.label}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{showSkeleton}}" class="feed-grid">
+    <view wx:for="{{skeletonItems}}" wx:key="*this" class="skeleton-card">
+      <view class="skeleton-cover"></view>
+      <view class="skeleton-line"></view>
+      <view class="skeleton-line short"></view>
+    </view>
+  </view>
+
+  <view wx:elif="{{showEmpty}}" class="empty-guide">
+    <text class="empty-guide-title">{{emptyText}}</text>
+    <button wx:if="{{hasActiveFilters}}" class="btn-outline" bindtap="clearFilters">清空筛选</button>
+    <button wx:else class="btn-primary" bindtap="goPublish">发布求定制</button>
+  </view>
+
+  <view wx:else class="feed-grid {{listRefreshing ? 'list-dimmed' : ''}}">
+    <view
+      class="feed-card"
+      wx:for="{{list}}"
+      wx:key="id"
+      data-index="{{index}}"
+      bindtap="openDetail"
+    >
+      <view class="feed-cover">
+        <image src="{{item.coverImage}}" mode="aspectFill" lazy-load data-index="{{index}}" binderror="onCoverError" />
+        <view class="feed-cover-badges">
+          <text class="feed-cover-tag">{{item.category}}</text>
+          <text class="feed-cover-status {{item.statusClass}}">{{item.statusLabel}}</text>
+        </view>
+      </view>
+      <view class="feed-body">
+        <text class="feed-title">{{item.title}}</text>
+        <view class="feed-meta">
+          <text class="feed-sub">{{item.buyerName || '买家'}}</text>
+        </view>
+        <view class="feed-price-row">
+          <text class="text-price">¥{{item.budgetMin}}–{{item.budgetMax}}</text>
+          <text class="text-muted">{{item.deadlineText}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{scope !== 'mine' && hasMore && !showSkeleton && !showEmpty}}" class="load-more-wrap">
+    <button class="btn-outline load-more-btn" loading="{{loadingMore}}" bindtap="loadMore">加载更多</button>
+  </view>
+
+  <!-- 详情弹层 -->
+  <view class="detail-mask" wx:if="{{showDetail}}" bindtap="closeDetail">
+    <view class="detail-panel" catchtap="stopPropagation">
+      <view class="detail-cover" wx:if="{{detailItem}}">
+        <image src="{{detailItem.coverImage}}" mode="aspectFill" />
+      </view>
+      <text class="detail-title">{{detailItem.title}}</text>
+      <text class="tag">{{detailItem.statusLabel}}</text>
+      <view class="flex-between" style="margin-top:16rpx">
+        <text class="text-muted">预算</text>
+        <text class="text-price">¥{{detailItem.budgetMin}}–{{detailItem.budgetMax}}</text>
+      </view>
       <view class="flex-between">
-        <text class="req-title">{{item.title}}</text>
-        <text class="tag">{{item.status}}</text>
+        <text class="text-muted">买家</text>
+        <text>{{detailItem.buyerName || '买家'}}</text>
       </view>
-      <text class="text-muted">{{item.description}}</text>
-      <view class="flex-between meta">
-        <text class="text-price">预算 ¥{{item.budget}}</text>
-        <text class="text-muted">{{item.buyerName || '买家'}}</text>
+      <view class="flex-between" wx:if="{{detailItem.deadline}}">
+        <text class="text-muted">工期</text>
+        <text>{{detailItem.deadline}}</text>
       </view>
-      <view class="actions flex-row">
+      <text class="detail-desc">{{detailItem.description}}</text>
+      <view class="detail-actions">
         <button
-          wx:if="{{item.status === 'OPEN'}}"
-          class="btn-outline action-btn"
-          data-id="{{item.id}}"
-          bindtap="onBid"
+          wx:if="{{detailItem.status === 'OPEN' && !detailItem.isOwn}}"
+          class="btn-outline"
+          bindtap="onBidFromDetail"
         >揭榜报价</button>
         <button
-          wx:if="{{item.status === 'OPEN' || item.status === 'BIDDING'}}"
-          class="btn-primary action-btn"
-          data-id="{{item.id}}"
-          bindtap="showBids"
+          wx:if="{{detailItem.status === 'OPEN' || detailItem.status === 'MATCHED'}}"
+          class="btn-primary"
+          bindtap="showBidsFromDetail"
         >查看报价</button>
       </view>
+      <button class="btn-outline" style="margin-top:16rpx;width:100%" bindtap="closeDetail">关闭</button>
     </view>
   </view>
 </view>
