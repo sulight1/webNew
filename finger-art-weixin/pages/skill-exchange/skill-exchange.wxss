@@ -8,11 +8,177 @@
   box-sizing: border-box;
 }
 
-.exchange-item {
-  padding: 16rpx 0;
+.exchange-book-panel .section-title,
+.exchange-history-panel .section-title {
+  display: block;
+  margin-bottom: 20rpx;
+}
+
+.exchange-book-target {
+  display: block;
+  font-size: 28rpx;
+  color: #262626;
+  line-height: 1.5;
+  margin-bottom: 8rpx;
+}
+
+.exchange-book-cost {
+  display: block;
+  font-size: 26rpx;
+  color: #eb2f96;
+  font-weight: 600;
+  margin-bottom: 20rpx;
+}
+
+.exchange-book-field {
+  margin-bottom: 20rpx;
+}
+
+.field-label {
+  display: block;
+  font-size: 24rpx;
+  color: #8c8c8c;
+  margin-bottom: 8rpx;
+}
+
+.exchange-book-textarea {
+  width: 100%;
+  min-height: 140rpx;
+  background: #f5f5f5;
+  border-radius: 12rpx;
+  padding: 16rpx;
+  box-sizing: border-box;
+  font-size: 28rpx;
+}
+
+.exchange-history-panel {
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.exchange-loading,
+.exchange-scroll {
+  flex: 1;
+  max-height: 56vh;
+}
+
+.exchange-scroll {
+  margin-bottom: 16rpx;
+}
+
+.exchange-card {
+  padding: 20rpx 0;
   border-bottom: 1rpx solid #f0f0f0;
+}
+
+.exchange-card:last-child {
+  border-bottom: none;
+}
+
+.exchange-card-head {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  gap: 12rpx;
+  margin-bottom: 10rpx;
+}
+
+.exchange-partner {
+  flex: 1;
+  font-size: 26rpx;
+  color: #595959;
+  line-height: 1.4;
+}
+
+.partner-name {
+  color: #eb2f96;
+  font-weight: 600;
+}
+
+.exchange-status-tag {
+  flex-shrink: 0;
+}
+
+.exchange-desc {
+  display: block;
+  font-size: 28rpx;
+  color: #262626;
+  font-weight: 600;
+  margin-bottom: 8rpx;
+}
+
+.exchange-meta-row {
+  display: flex;
+  flex-wrap: wrap;
   gap: 16rpx;
+  margin-bottom: 6rpx;
+}
+
+.exchange-meta {
+  font-size: 24rpx;
+  color: #8c8c8c;
+}
+
+.exchange-wait-hint {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  color: #ad6882;
+}
+
+.exchange-reward {
+  display: block;
+  font-size: 24rpx;
+  color: #52c41a;
+  margin-bottom: 8rpx;
+}
+
+.exchange-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-top: 12rpx;
+}
+
+.exchange-action-btn {
+  margin: 0 !important;
+  font-size: 24rpx !important;
+  line-height: 1.4 !important;
+  padding: 8rpx 20rpx !important;
+  border-radius: 999rpx !important;
+  background: #fff !important;
+  color: #eb2f96 !important;
+  border: 1rpx solid #ffd6e7 !important;
+}
+
+.exchange-action-btn.primary {
+  background: #eb2f96 !important;
+  color: #fff !important;
+  border-color: #eb2f96 !important;
+}
+
+.exchange-action-btn.danger {
+  color: #cf1322 !important;
+  border-color: #ffa39e !important;
+}
+
+.exchange-close-btn {
+  width: 100%;
+  margin-top: 8rpx;
+}
+
+.review-stars {
+  display: flex;
+  gap: 12rpx;
+  margin-bottom: 20rpx;
+}
+
+.review-star {
+  font-size: 48rpx;
+  color: #d9d9d9;
+}
+
+.review-star.active {
+  color: #faad14;
 }

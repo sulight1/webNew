@@ -13,6 +13,9 @@ import org.springframework.stereotype.Service;
 
 import static dev.samstevens.totp.util.Utils.getDataUriForImage;
 
+/**
+ * 双因素认证服务接口，定义业务能力（业务服务接口）。
+ */
 @Service
 public class TotpService {
 
@@ -23,10 +26,16 @@ public class TotpService {
     private final CodeGenerator codeGenerator = new DefaultCodeGenerator();
     private final CodeVerifier codeVerifier = new DefaultCodeVerifier(codeGenerator, timeProvider);
 
+    /**
+     * 生成令牌或数据。
+     */
     public String generateSecret() {
         return secretGenerator.generate();
     }
 
+    /**
+     * 构建响应对象。
+     */
     public String buildOtpAuthUrl(String account, String secret) {
         QrData data = new QrData.Builder()
                 .label(account)
@@ -39,6 +48,9 @@ public class TotpService {
         return data.getUri();
     }
 
+    /**
+     * 生成令牌或数据。
+     */
     public String generateQrDataUri(String account, String secret) throws QrGenerationException {
         QrData data = new QrData.Builder()
                 .label(account)
@@ -53,6 +65,9 @@ public class TotpService {
         return getDataUriForImage(imageData, generator.getImageMimeType());
     }
 
+    /**
+     * 执行 verifyCode 相关逻辑。
+     */
     public boolean verifyCode(String secret, String code) {
         if (secret == null || secret.isBlank() || code == null || code.isBlank()) {
             return false;

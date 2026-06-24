@@ -14,6 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.concurrent.ThreadLocalRandom;
 
+/**
+ * 钱包服务实现类。
+ */
 @Service
 public class WalletServiceImpl implements WalletService {
 
@@ -26,6 +29,9 @@ public class WalletServiceImpl implements WalletService {
     @Autowired
     private WalletTransactionMapper walletTransactionMapper;
 
+    /**
+     * 执行 recharge 相关逻辑。
+     */
     @Override
     @Transactional
     public WalletOperationResult recharge(Long userId, Double amount, String channel) {
@@ -33,6 +39,9 @@ public class WalletServiceImpl implements WalletService {
         return rechargeConfirm(userId, pending.getOutTradeNo());
     }
 
+    /**
+     * 执行 withdraw 相关逻辑。
+     */
     @Override
     @Transactional
     public WalletOperationResult withdraw(Long userId, Double amount, String channel) {
@@ -40,6 +49,9 @@ public class WalletServiceImpl implements WalletService {
         return withdrawConfirm(userId, pending.getOutTradeNo());
     }
 
+    /**
+     * 执行 rechargePrepay 相关逻辑。
+     */
     @Override
     @Transactional
     public WalletTransaction rechargePrepay(Long userId, Double amount, String channel) {
@@ -60,6 +72,9 @@ public class WalletServiceImpl implements WalletService {
         );
     }
 
+    /**
+     * 执行 rechargeConfirm 相关逻辑。
+     */
     @Override
     @Transactional
     public WalletOperationResult rechargeConfirm(Long userId, String outTradeNo) {
@@ -73,6 +88,9 @@ public class WalletServiceImpl implements WalletService {
         return new WalletOperationResult(user, tx);
     }
 
+    /**
+     * 执行 withdrawPrepay 相关逻辑。
+     */
     @Override
     @Transactional
     public WalletTransaction withdrawPrepay(Long userId, Double amount, String channel) {
@@ -94,6 +112,9 @@ public class WalletServiceImpl implements WalletService {
         );
     }
 
+    /**
+     * 执行 withdrawConfirm 相关逻辑。
+     */
     @Override
     @Transactional
     public WalletOperationResult withdrawConfirm(Long userId, String outTradeNo) {
@@ -108,6 +129,9 @@ public class WalletServiceImpl implements WalletService {
         return new WalletOperationResult(user, tx);
     }
 
+    /**
+     * 查询钱包信息。
+     */
     @Override
     public Page<WalletTransaction> getTransactions(Long userId, int page, int size) {
         int safePage = Math.max(page, 0);
@@ -115,6 +139,9 @@ public class WalletServiceImpl implements WalletService {
         return walletTransactionMapper.findByUserIdOrderByCreatedAtDesc(userId, PageRequest.of(safePage, safeSize));
     }
 
+    /**
+     * 查询钱包信息。
+     */
     private WalletTransaction getPendingTransaction(Long userId, String outTradeNo, String type) {
         if (outTradeNo == null || outTradeNo.isBlank()) {
             throw new RuntimeException("订单号不能为空");
@@ -130,6 +157,9 @@ public class WalletServiceImpl implements WalletService {
         return tx;
     }
 
+    /**
+     * 保存钱包。
+     */
     private WalletTransaction savePendingTransaction(
             Long userId,
             String type,
@@ -151,25 +181,40 @@ public class WalletServiceImpl implements WalletService {
         return walletTransactionMapper.save(tx);
     }
 
+    /**
+     * 校验数据。
+     */
     private void validateAmount(Double amount) {
         if (amount == null || amount < MIN_AMOUNT) {
             throw new RuntimeException("金额不能小于 " + (int) MIN_AMOUNT + " 造物币");
         }
     }
 
+    /**
+     * 生成令牌或数据。
+     */
     private String generateOutTradeNo(String prefix) {
         int suffix = ThreadLocalRandom.current().nextInt(1000, 10000);
         return prefix + System.currentTimeMillis() + suffix;
     }
 
+    /**
+     * 执行 round 相关逻辑。
+     */
     private double round(double value) {
         return Math.round(value * 100.0) / 100.0;
     }
 
+    /**
+     * 执行 formatAmount 相关逻辑。
+     */
     private String formatAmount(double amount) {
         return String.format("%.2f", amount);
     }
 
+    /**
+     * 执行 rechargeChannelLabel 相关逻辑。
+     */
     private String rechargeChannelLabel(String channel) {
         if ("MOCK_ALIPAY".equals(channel)) {
             return "支付宝";

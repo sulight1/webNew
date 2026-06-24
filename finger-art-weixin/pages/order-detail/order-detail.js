@@ -51,10 +51,37 @@ Page({
     }
   },
 
+  goProduct() {
+    const order = this.data.order;
+    if (!order?.productId) return;
+    wx.navigateTo({
+      url: `/pages/product-detail/product-detail?id=${order.productId}&fromOrder=${order.id}`,
+    });
+  },
+
   async doPayDeposit() {
     const user = auth.getUser();
+    const order = this.data.order;
+    const amount = order?.depositAmount ?? order?.price ?? 0;
+    const balance = Number(user?.zaowuBiBalance ?? 0);
+    if (balance < Number(amount)) {
+      wx.showModal({
+        title: '造物币余额不足',
+        content: '请先在钱包充值后再支付',
+        confirmText: '去充值',
+        success: (r) => {
+          if (r.confirm) wx.navigateTo({ url: '/pages/wallet/wallet' });
+        },
+      });
+      return;
+    }
     try {
-      await orderApi.payDeposit(this.orderId, user.id, 'MOCK_WECHAT');
+      await orderApi.payDeposit(this.orderId, user.id, 'ZAOWU_COIN');
+      try {
+        const { userApi } = require('../../services/api');
+        const profile = await userApi.getProfile(user.id);
+        getApp().setUser(profile);
+      } catch (_) {}
       wx.showToast({ title: '支付成功', icon: 'success' });
       this.loadOrder();
     } catch (e) {

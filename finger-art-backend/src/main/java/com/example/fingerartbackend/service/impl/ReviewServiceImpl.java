@@ -1,12 +1,8 @@
 package com.example.fingerartbackend.service.impl;
 
-import com.example.fingerartbackend.entity.CustomOrder;
-import com.example.fingerartbackend.entity.Review;
-import com.example.fingerartbackend.entity.ReviewReply;
-import com.example.fingerartbackend.entity.Skill;
-import com.example.fingerartbackend.entity.SkillExchange;
-import com.example.fingerartbackend.entity.User;
+import com.example.fingerartbackend.entity.*;
 import com.example.fingerartbackend.mapper.CustomOrderMapper;
+import com.example.fingerartbackend.mapper.ProductMapper;
 import com.example.fingerartbackend.mapper.ReviewMapper;
 import com.example.fingerartbackend.mapper.ReviewReplyMapper;
 import com.example.fingerartbackend.mapper.SkillExchangeRepository;
@@ -27,6 +23,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * 评价服务实现类。
+ */
 @Service
 public class ReviewServiceImpl implements ReviewService {
 
@@ -42,9 +41,14 @@ public class ReviewServiceImpl implements ReviewService {
     private SkillExchangeRepository exchangeRepository;
     @Autowired
     private SkillMapper skillMapper;
+    @Autowired
+    private ProductMapper productMapper;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    /**
+     * 提交评价。
+     */
     @Override
     @Transactional
     public Review submitReview(Map<String, Object> payload) {
@@ -122,11 +126,128 @@ public class ReviewServiceImpl implements ReviewService {
         return saved;
     }
 
+    /**
+     * 查询评价信息。
+     */
     @Override
-    public List<Review> getReviewsForUser(Long userId) {
-        return reviewMapper.findByToUserIdOrderByCreatedAtDesc(userId);
+    public List<Map<String, Object>> getReviewsForUser(Long userId) {
+        return reviewMapper.findByToUserIdOrderByCreatedAtDesc(userId).stream()
+                .map(this::toUserReviewView)
+                .collect(Collectors.toList());
     }
 
+    /**
+     * 执行 toUserReviewView 相关逻辑。
+     */
+    private Map<String, Object> toUserReviewView(Review review) {
+        Map<String, Object> item = new LinkedHashMap<>();
+        item.put("id", review.getId());
+        item.put("orderId", review.getOrderId());
+        item.put("exchangeId", review.getExchangeId());
+        item.put("productId", review.getProductId());
+        item.put("fromUserId", review.getFromUserId());
+        item.put("fromUserName", review.getFromUserName());
+        item.put("fromUserAvatar", review.getFromUserAvatar());
+        item.put("toUserId", review.getToUserId());
+        item.put("toUserName", review.getToUserName());
+        item.put("score", review.getScore());
+        item.put("content", review.getContent());
+        item.put("imageUrls", review.getImageUrls());
+        item.put("createdAt", review.getCreatedAt());
+        backfillFromUserProfile(item, review);
+
+        if (review.getExchangeId() != null) {
+            item.put("sourceType", "SKILL_EXCHANGE");
+            item.put("sourceLabel", "技能交换");
+            exchangeRepository.findById(review.getExchangeId()).ifPresent(exchange -> {
+                item.put("contextTitle", resolveExchangeContextTitle(exchange));
+            });
+            if (!item.containsKey("contextTitle")) {
+                item.put("contextTitle", "技能交换 #" + review.getExchangeId());
+            }
+            return item;
+        }
+
+        if (review.getOrderId() != null) {
+            orderMapper.findById(review.getOrderId()).ifPresent(order -> enrichOrderReviewContext(item, review, order));
+            if (!item.containsKey("sourceType")) {
+                item.put("sourceType", "ORDER");
+                item.put("sourceLabel", "订单交易");
+            }
+            if (!item.containsKey("contextTitle")) {
+                item.put("contextTitle", "订单 #" + review.getOrderId());
+            }
+            return item;
+        }
+
+        item.put("sourceType", "GENERAL");
+        item.put("sourceLabel", "交易评价");
+        return item;
+    }
+
+    /**
+     * 执行 enrichOrderReviewContext 相关逻辑。
+     */
+    private void enrichOrderReviewContext(Map<String, Object> item, Review review, CustomOrder order) {
+        Long productId = review.getProductId() != null ? review.getProductId() : order.getProductId();
+        boolean fromCustomRequest = order.getCustomRequestId() != null
+                || "CUSTOM".equalsIgnoreCase(order.getProductType());
+        if (productId != null) {
+            item.put("sourceType", "PRODUCT_ORDER");
+            item.put("sourceLabel", "作品交易");
+            item.put("linkProductId", productId);
+            String title = productMapper.findById(productId).map(Product::getTitle).orElse(null);
+            item.put("contextTitle", (title != null && !title.isBlank()) ? title : fallbackOrderTitle(order));
+        } else if (fromCustomRequest) {
+            item.put("sourceType", "CUSTOM_ORDER");
+            item.put("sourceLabel", "定制订单");
+            item.put("contextTitle", fallbackOrderTitle(order));
+        } else {
+            item.put("sourceType", "ORDER");
+            item.put("sourceLabel", "订单交易");
+            item.put("contextTitle", fallbackOrderTitle(order));
+        }
+    }
+
+    /**
+     * 执行 fallbackOrderTitle 相关逻辑。
+     */
+    private String fallbackOrderTitle(CustomOrder order) {
+        if (order.getProductTitle() != null && !order.getProductTitle().isBlank()) {
+            return order.getProductTitle();
+        }
+        return "订单 #" + order.getId();
+    }
+
+    /**
+     * 执行 resolveExchangeContextTitle 相关逻辑。
+     */
+    private String resolveExchangeContextTitle(SkillExchange exchange) {
+        if (exchange.getDescription() != null && !exchange.getDescription().isBlank()) {
+            String desc = exchange.getDescription().trim();
+            return desc.length() > 48 ? desc.substring(0, 48) + "…" : desc;
+        }
+        return "技能交换 #" + exchange.getId();
+    }
+
+    /** 评价列表展示时使用用户当前头像/昵称，避免历史快照为空或失效 */
+    private void backfillFromUserProfile(Map<String, Object> item, Review review) {
+        if (review.getFromUserId() == null) {
+            return;
+        }
+        userMapper.findById(review.getFromUserId()).ifPresent(user -> {
+            if (user.getAvatar() != null && !user.getAvatar().isBlank()) {
+                item.put("fromUserAvatar", user.getAvatar());
+            }
+            if (user.getUsername() != null && !user.getUsername().isBlank()) {
+                item.put("fromUserName", user.getUsername());
+            }
+        });
+    }
+
+    /**
+     * 查询评价信息。
+     */
     @Override
     public List<Map<String, Object>> getProductReviews(Long productId) {
         if (productId == null) {
@@ -149,12 +270,16 @@ public class ReviewServiceImpl implements ReviewService {
             item.put("content", review.getContent());
             item.put("imageUrls", review.getImageUrls());
             item.put("createdAt", review.getCreatedAt());
+            backfillFromUserProfile(item, review);
             item.put("replies", reviewReplyMapper.findByReviewIdOrderByCreatedAtAsc(review.getId()));
             result.add(item);
         }
         return result;
     }
 
+    /**
+     * 查询评价信息。
+     */
     @Override
     public Map<String, Object> getProductReviewEligibility(Long productId, Long userId) {
         Map<String, Object> result = new HashMap<>();
@@ -179,22 +304,34 @@ public class ReviewServiceImpl implements ReviewService {
         return result;
     }
 
+    /**
+     * 判断是否包含/拥有。
+     */
     @Override
     public boolean hasReviewedOrder(Long orderId, Long fromUserId) {
         return reviewMapper.existsByOrderIdAndFromUserId(orderId, fromUserId);
     }
 
+    /**
+     * 判断是否包含/拥有。
+     */
     @Override
     public boolean hasReviewedExchange(Long exchangeId, Long fromUserId) {
         return reviewMapper.existsByExchangeIdAndFromUserId(exchangeId, fromUserId);
     }
 
+    /**
+     * 完成评价。
+     */
     @Override
     @Transactional
     public SkillExchange completeExchangeWithReview(Long exchangeId) {
         return exchangeRepository.findById(exchangeId).orElseThrow(() -> new RuntimeException("交换不存在"));
     }
 
+    /**
+     * 查询评价信息。
+     */
     @Override
     public Map<String, Object> getOrderReviewDetail(Long orderId, Long userId) {
         Map<String, Object> result = new HashMap<>();
@@ -220,6 +357,9 @@ public class ReviewServiceImpl implements ReviewService {
         return result;
     }
 
+    /**
+     * 删除评价。
+     */
     @Override
     @Transactional
     public void deleteReview(Long reviewId, Long userId) {
@@ -242,6 +382,9 @@ public class ReviewServiceImpl implements ReviewService {
         }
     }
 
+    /**
+     * 执行 appendReviewReply 相关逻辑。
+     */
     @Override
     @Transactional
     public ReviewReply appendReviewReply(Long reviewId, Long userId, String content, Object imageUrlsRaw) {
@@ -268,6 +411,9 @@ public class ReviewServiceImpl implements ReviewService {
         return reviewReplyMapper.save(reply);
     }
 
+    /**
+     * 删除评价。
+     */
     @Override
     @Transactional
     public void deleteReviewReply(Long replyId, Long userId) {
@@ -279,6 +425,9 @@ public class ReviewServiceImpl implements ReviewService {
         reviewReplyMapper.delete(reply);
     }
 
+    /**
+     * 执行 applyCreditAndRating 相关逻辑。
+     */
     private void applyCreditAndRating(User user, int score) {
         int credit = user.getCreditScore() != null ? user.getCreditScore() : 100;
         if (score >= 4) credit += 2;
@@ -294,6 +443,9 @@ public class ReviewServiceImpl implements ReviewService {
         userMapper.save(user);
     }
 
+    /**
+     * 执行 syncSkillCredit 相关逻辑。
+     */
     private void syncSkillCredit(User user) {
         List<Skill> skills = skillMapper.findByUserId(user.getId());
         for (Skill s : skills) {
@@ -303,10 +455,16 @@ public class ReviewServiceImpl implements ReviewService {
         }
     }
 
+    /**
+     * 执行 serializeImageUrls 相关逻辑。
+     */
     private String serializeImageUrls(Object raw) {
         return serializeImageUrls(raw, 5);
     }
 
+    /**
+     * 执行 serializeImageUrls 相关逻辑。
+     */
     private String serializeImageUrls(Object raw, int maxCount) {
         if (raw == null) {
             return null;

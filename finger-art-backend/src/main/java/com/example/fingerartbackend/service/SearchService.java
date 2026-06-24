@@ -12,6 +12,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * 搜索服务接口，定义业务能力（业务服务接口）。
+ */
 @Service
 public class SearchService {
 
@@ -22,6 +25,9 @@ public class SearchService {
     @Autowired
     private SkillMapper skillMapper;
 
+    /**
+     * 搜索搜索。
+     */
     public List<SearchResultItem> search(String q, int limit) {
         if (q == null || q.trim().isEmpty()) {
             return List.of();
@@ -58,6 +64,9 @@ public class SearchService {
         return items.size() > cap ? items.subList(0, cap) : items;
     }
 
+    /**
+     * 执行 textMatch 相关逻辑。
+     */
     private boolean textMatch(String kw, String... fields) {
         for (String field : fields) {
             if (field != null && field.toLowerCase(Locale.ROOT).contains(kw)) {
@@ -67,6 +76,9 @@ public class SearchService {
         return false;
     }
 
+    /**
+     * 执行 joinSubtitle 相关逻辑。
+     */
     private String joinSubtitle(String... parts) {
         StringBuilder sb = new StringBuilder();
         for (String part : parts) {

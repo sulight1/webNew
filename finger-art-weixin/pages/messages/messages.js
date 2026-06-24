@@ -12,7 +12,19 @@ Page({
       wx.navigateTo({ url: '/pages/login/login' });
       return;
     }
+    this._onRealtimeBound = (event) => this._onRealtimeEvent(event);
+    getApp().registerRealtimeHandler('messages', this._onRealtimeBound);
     this.loadMessages();
+  },
+
+  onHide() {
+    getApp().unregisterRealtimeHandler('messages');
+  },
+
+  _onRealtimeEvent(event) {
+    if (event.type === 'CHAT_MESSAGE') {
+      this.loadMessages();
+    }
   },
 
   async loadMessages() {

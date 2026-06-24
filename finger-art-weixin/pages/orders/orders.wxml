@@ -11,7 +11,15 @@
       <text>订单 #{{item.id}}</text>
       <text class="tag">{{item.statusLabel}}</text>
     </view>
-    <text class="text-muted">{{item.productTitle || '定制订单'}}</text>
+    <text
+      wx:if="{{item.productId}}"
+      class="order-title-link"
+      catchtap="goProduct"
+      data-product-id="{{item.productId}}"
+      data-order-id="{{item.id}}"
+    >{{item.productTitle || '定制订单'}} ›</text>
+    <text wx:else class="text-muted">{{item.productTitle || '定制订单'}}</text>
+    <text class="order-hint text-muted" wx:if="{{item.productId}}">点击标题看作品，点击卡片看订单进度</text>
     <text class="order-req text-muted" wx:if="{{item.requirements}}">{{item.requirements}}</text>
     <view class="flex-between">
       <text class="text-price">¥{{item.price}}<text wx:if="{{item.quantity > 1}}" class="qty-text"> × {{item.quantity}}</text></text>

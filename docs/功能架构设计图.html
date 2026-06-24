@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>功能架构设计图 - 指尖造物</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "SimSun", "宋体", serif;
+      padding: 24px;
+      background: #fff;
+      color: #000;
+    }
+    h1 {
+      text-align: center;
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 24px;
+    }
+    .root-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    .root {
+      border: 2px solid #000;
+      text-align: center;
+      padding: 12px 20px;
+      font-size: 15px;
+      font-weight: bold;
+      width: 100%;
+      max-width: 720px;
+    }
+    .root-line {
+      width: 2px;
+      height: 24px;
+      background: #000;
+    }
+    .h-line {
+      width: 100%;
+      height: 2px;
+      background: #000;
+      position: relative;
+    }
+    .modules {
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+      width: 100%;
+      margin-top: 0;
+    }
+    .col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 0;
+    }
+    .col-line {
+      width: 2px;
+      height: 20px;
+      background: #000;
+    }
+    .module {
+      border: 2px solid #000;
+      text-align: center;
+      padding: 8px 4px;
+      font-size: 13px;
+      font-weight: bold;
+      width: 100%;
+      min-height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.35;
+    }
+    .subs {
+      width: 100%;
+      margin-top: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .sub {
+      border: 1px solid #000;
+      text-align: center;
+      padding: 8px 4px;
+      font-size: 11px;
+      line-height: 1.35;
+      min-height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .hint {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: #666;
+      font-family: sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <h1>图 2-2 系统功能架构设计图</h1>
+
+  <div class="root-wrap">
+    <div class="root">基于SpringBoot的指尖造物手作定制与技能交换平台</div>
+    <div class="root-line"></div>
+    <div class="h-line"></div>
+    <div class="modules">
+      <div class="col">
+        <div class="col-line"></div>
+        <div class="module">用户与<br />权限管理</div>
+        <div class="col-line"></div>
+        <div class="subs">
+          <div class="sub">用户注册登录</div>
+          <div class="sub">身份权限认证</div>
+          <div class="sub">手作人申请</div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="col-line"></div>
+        <div class="module">作品与<br />市集管理</div>
+        <div class="col-line"></div>
+        <div class="subs">
+          <div class="sub">作品发布审核</div>
+          <div class="sub">分类浏览搜索</div>
+          <div class="sub">点赞收藏购物车</div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="col-line"></div>
+        <div class="module">订单与<br />交易管理</div>
+        <div class="col-line"></div>
+        <div class="subs">
+          <div class="sub">订单状态流转</div>
+          <div class="sub">定金尾款支付</div>
+          <div class="sub">物流发货查询</div>
+          <div class="sub">造物币托管</div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="col-line"></div>
+        <div class="module">定制需求<br />管理</div>
+        <div class="col-line"></div>
+        <div class="subs">
+          <div class="sub">需求发布</div>
+          <div class="sub">手作人投标</div>
+          <div class="sub">选人合作</div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="col-line"></div>
+        <div class="module">技能交换<br />管理</div>
+        <div class="col-line"></div>
+        <div class="subs">
+          <div class="sub">技能发布</div>
+          <div class="sub">造物币预约</div>
+          <div class="sub">完成互评</div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="col-line"></div>
+        <div class="module">评价与<br />社区管理</div>
+        <div class="col-line"></div>
+        <div class="subs">
+          <div class="sub">带图评价追评</div>
+          <div class="sub">论坛帖子互动</div>
+          <div class="sub">消息通知</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="hint">截图或 Ctrl+P 导出 PDF 后插入 Word 论文。</p>
+</body>
+</html>

@@ -5,6 +5,13 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * 工艺分类名称标准化工具。
+ * <p>
+ * 将中英文别名、简称统一映射为内部标准 category key（如 crochet、resin），
+ * 用于搜索筛选、分类匹配等场景。
+ * </p>
+ */
 public final class CategoryNormalizer {
     private static final Map<String, String> ALIASES = new HashMap<>();
 
@@ -45,6 +52,12 @@ public final class CategoryNormalizer {
         put("纸艺", "paper");
         put("纸艺衍纸", "paper");
         put("paper", "paper");
+        put("团扇", "tuanshan");
+        put("手绘团扇", "tuanshan");
+        put("tuanshan", "tuanshan");
+        put("花灯", "lantern");
+        put("传统花灯", "lantern");
+        put("lantern", "lantern");
         put("摄影", "photography");
         put("photography", "photography");
         put("设计", "design");
@@ -55,10 +68,20 @@ public final class CategoryNormalizer {
 
     private CategoryNormalizer() {}
 
+    /**
+     * 执行 put 相关逻辑。
+     */
     private static void put(String key, String normalized) {
         ALIASES.put(key.toLowerCase(Locale.ROOT), normalized);
     }
 
+    /**
+     * 将原始分类名称标准化为内部 key。
+     * 空值返回 {@code other}；无法匹配时返回小写原文。
+     *
+     * @param raw 原始分类字符串
+     * @return 标准化后的 category key
+     */
     public static String normalize(String raw) {
         if (raw == null || raw.isBlank()) return "other";
         String trimmed = raw.trim();
@@ -72,10 +95,22 @@ public final class CategoryNormalizer {
         return trimmed.toLowerCase(Locale.ROOT);
     }
 
+    /**
+     * 判断两个分类名称是否指向同一标准分类。
+     *
+     * @param a 分类 A
+     * @param b 分类 B
+     * @return 是否等价
+     */
     public static boolean matches(String a, String b) {
         return normalize(a).equals(normalize(b));
     }
 
+    /**
+     * 返回全部已注册的别名 key 集合。
+     *
+     * @return 别名 key 集合
+     */
     public static Set<String> keys() {
         return ALIASES.keySet();
     }

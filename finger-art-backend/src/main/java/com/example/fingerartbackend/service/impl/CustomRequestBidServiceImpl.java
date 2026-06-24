@@ -22,6 +22,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * 定制需求服务实现类。
+ */
 @Service
 public class CustomRequestBidServiceImpl implements CustomRequestBidService {
 
@@ -43,15 +46,16 @@ public class CustomRequestBidServiceImpl implements CustomRequestBidService {
     @Autowired
     private UserPunishmentService userPunishmentService;
 
+    /**
+     * 提交定制需求。
+     */
     @Override
     @Transactional
     public CustomRequestBid submitBid(Long requestId, Long artisanId, String message) {
         userPunishmentService.assertNotPunished(artisanId, UserPunishmentType.NO_SKILL, "您已被禁止发布和交换技能");
         CustomRequest request = requestMapper.findById(requestId)
                 .orElseThrow(() -> new RuntimeException("需求不存在"));
-        if (!"OPEN".equals(request.getStatus())) {
-            throw new RuntimeException("该需求已结束招募");
-        }
+        assertRecruiting(request);
         User artisan = userMapper.findById(artisanId)
                 .orElseThrow(() -> new RuntimeException("用户不存在"));
         if (!"ARTISAN".equals(artisan.getRole())) {
@@ -84,6 +88,9 @@ public class CustomRequestBidServiceImpl implements CustomRequestBidService {
         return saved;
     }
 
+    /**
+     * 查询定制需求列表。
+     */
     @Override
     public List<CustomRequestBidView> listBidsForRequest(Long requestId, Long viewerUserId) {
         CustomRequest request = requestMapper.findById(requestId)
@@ -98,6 +105,9 @@ public class CustomRequestBidServiceImpl implements CustomRequestBidService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 查询定制需求列表。
+     */
     @Override
     public List<Long> listBidRequestIdsByArtisan(Long artisanId) {
         return bidMapper.findByArtisanIdOrderByCreateTimeDesc(artisanId).stream()
@@ -106,11 +116,17 @@ public class CustomRequestBidServiceImpl implements CustomRequestBidService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 执行 countPendingBids 相关逻辑。
+     */
     @Override
     public long countPendingBids(Long requestId) {
         return bidMapper.countByRequestIdAndStatus(requestId, "PENDING");
     }
 
+    /**
+     * 选择定制需求。
+     */
     @Override
     @Transactional
     public SelectBidResult selectBid(Long requestId, Long buyerId, Long bidId) {
@@ -120,9 +136,7 @@ public class CustomRequestBidServiceImpl implements CustomRequestBidService {
             throw new RuntimeException("仅需求发起人可选择合作对象");
         }
         userPunishmentService.assertNotPunished(buyerId, UserPunishmentType.NO_ORDER, "您已被禁止下单");
-        if (!"OPEN".equals(request.getStatus())) {
-            throw new RuntimeException("该需求已结束招募");
-        }
+        assertRecruiting(request);
 
         CustomRequestBid bid = bidMapper.findById(bidId)
                 .orElseThrow(() -> new RuntimeException("揭榜记录不存在"));
@@ -184,6 +198,9 @@ public class CustomRequestBidServiceImpl implements CustomRequestBidService {
         return result;
     }
 
+    /**
+     * 执行 toView 相关逻辑。
+     */
     private CustomRequestBidView toView(CustomRequestBid bid) {
         CustomRequestBidView view = new CustomRequestBidView();
         view.setId(bid.getId());
@@ -202,6 +219,9 @@ public class CustomRequestBidServiceImpl implements CustomRequestBidService {
         return view;
     }
 
+    /**
+     * 执行 averageBudget 相关逻辑。
+     */
     private double averageBudget(Double min, Double max) {
         double low = min != null ? min : 0;
         double high = max != null ? max : low;
@@ -216,6 +236,24 @@ public class CustomRequestBidServiceImpl implements CustomRequestBidService {
         return Math.round((low + high) / 2.0 * 100.0) / 100.0;
     }
 
+    /**
+     * 断言业务条件，不满足则抛异常。
+     */
+    private void assertRecruiting(CustomRequest request) {
+        if ("PENDING".equals(request.getStatus())) {
+            throw new RuntimeException("该需求尚在审核中，暂不可揭榜");
+        }
+        if ("REJECTED".equals(request.getStatus())) {
+            throw new RuntimeException("该需求未通过审核");
+        }
+        if (!"OPEN".equals(request.getStatus())) {
+            throw new RuntimeException("该需求已结束招募");
+        }
+    }
+
+    /**
+     * 构建响应对象。
+     */
     private String buildRequirements(CustomRequest request, String bidMessage) {
         StringBuilder sb = new StringBuilder();
         if (request.getDescription() != null && !request.getDescription().isBlank()) {

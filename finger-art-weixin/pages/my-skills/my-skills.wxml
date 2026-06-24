@@ -1,0 +1,178 @@
+<view class="container">
+  <view class="page-head flex-between">
+    <text class="page-title">我的技能交换</text>
+    <button class="btn-primary head-btn" bindtap="goPublish">发布新技能</button>
+  </view>
+
+  <view class="hub-tabs flex-row">
+    <view
+      wx:for="{{hubTabs}}"
+      wx:key="key"
+      class="hub-tab {{hubTab === item.key ? 'active' : ''}}"
+      data-key="{{item.key}}"
+      bindtap="onHubTabChange"
+    >{{item.label}}</view>
+  </view>
+
+  <!-- 我发布的 -->
+  <block wx:if="{{hubTab === 'published'}}">
+    <view class="scope-tabs flex-row">
+      <view
+        wx:for="{{scopeTabs}}"
+        wx:key="key"
+        class="scope-tab {{scope === item.key ? 'active' : ''}}"
+        data-key="{{item.key}}"
+        bindtap="onScopeChange"
+      >{{item.label}}</view>
+    </view>
+
+    <view wx:if="{{loading}}" class="empty">加载中...</view>
+    <view wx:elif="{{list.length === 0}}" class="empty">还没有发布过技能，点右上角去发布吧</view>
+    <view wx:else class="skill-list">
+      <view class="skill-card card" wx:for="{{list}}" wx:key="id">
+        <view class="skill-card-main">
+          <image class="cover" src="{{item.coverImage}}" mode="aspectFill" data-index="{{index}}" data-category="{{item.coverCategory || item.category}}" data-title="{{item.title}}" data-description="{{item.description}}" binderror="onCoverError" />
+          <view class="info">
+            <view class="title-row flex-between">
+              <text class="title">{{item.title}}</text>
+              <text class="tag status-tag {{item.statusClass}}">{{item.statusLabel}}</text>
+            </view>
+            <text class="meta">{{item.category}} · {{item.zaowuBiCost}} 造物币 · {{item.duration || '1小时'}}</text>
+            <text class="desc">{{item.description}}</text>
+            <text class="hint" wx:if="{{item.status === 'PENDING'}}">审核中，通过后将在技能大厅展示</text>
+            <text class="hint rejected" wx:if="{{item.status === 'REJECTED'}}">未通过审核，可编辑后重新提交</text>
+          </view>
+        </view>
+        <view class="actions flex-row">
+          <button class="action-btn" size="mini" data-id="{{item.id}}" bindtap="openEdit">编辑</button>
+          <button class="action-btn danger" size="mini" data-id="{{item.id}}" bindtap="onDelete">删除</button>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 交换记录 -->
+  <block wx:else>
+    <view wx:if="{{exchangesLoading}}" class="empty">加载中...</view>
+    <view wx:elif="{{exchanges.length === 0}}" class="empty">暂无交换记录，去技能页找找合作伙伴吧</view>
+    <view wx:else class="exchange-list">
+      <view wx:for="{{exchanges}}" wx:key="id" class="exchange-card card">
+        <view class="exchange-card-head">
+          <text class="exchange-partner" catchtap="goUserProfile" data-userid="{{item.partnerId}}">
+            与 <text class="partner-name">{{item.partnerName}}</text> 的交换 ›
+          </text>
+          <text class="tag exchange-status-tag">{{item.statusLabel}}</text>
+        </view>
+        <text class="exchange-desc">{{item.description || '技能交换'}}</text>
+        <view class="exchange-meta-row">
+          <text class="exchange-meta">{{item.costText}} 造物币</text>
+          <text wx:if="{{item.scheduleText}}" class="exchange-meta">{{item.scheduleText}}</text>
+        </view>
+        <text wx:if="{{item.confirmText && !item.isCompleted}}" class="exchange-meta">{{item.confirmText}}</text>
+        <text wx:if="{{item.waitHint}}" class="exchange-wait-hint">{{item.waitHint}}</text>
+        <text wx:if="{{item.isCompleted}}" class="exchange-reward">已完成 · 双方各得完成奖励</text>
+        <view class="exchange-actions">
+          <button
+            wx:if="{{item.canAccept === true}}"
+            class="exchange-action-btn primary"
+            size="mini"
+            loading="{{actionLoadingId === item.id}}"
+            data-id="{{item.id}}"
+            data-action="accept"
+            bindtap="onExchangeAction"
+          >接受请求</button>
+          <button
+            wx:if="{{item.canConfirm === true}}"
+            class="exchange-action-btn"
+            size="mini"
+            loading="{{actionLoadingId === item.id}}"
+            data-id="{{item.id}}"
+            data-action="confirm"
+            bindtap="onExchangeAction"
+          >确认预约</button>
+          <button
+            wx:if="{{item.canComplete === true}}"
+            class="exchange-action-btn primary"
+            size="mini"
+            loading="{{actionLoadingId === item.id}}"
+            data-id="{{item.id}}"
+            data-action="complete"
+            bindtap="onExchangeAction"
+          >确认完成并收款</button>
+          <button
+            wx:if="{{item.canReview === true}}"
+            class="exchange-action-btn"
+            size="mini"
+            data-id="{{item.id}}"
+            data-partner-id="{{item.partnerId}}"
+            bindtap="openReview"
+          >评价对方</button>
+          <button
+            wx:if="{{item.canReportNoShow === true}}"
+            class="exchange-action-btn danger"
+            size="mini"
+            loading="{{actionLoadingId === item.id}}"
+            data-id="{{item.id}}"
+            data-action="noShow"
+            bindtap="onExchangeAction"
+          >标记爽约</button>
+        </view>
+      </view>
+    </view>
+  </block>
+</view>
+
+<view class="detail-mask" wx:if="{{showEdit}}" bindtap="closeEdit">
+  <view class="detail-panel" catchtap="stopPropagation">
+    <text class="section-title">编辑技能</text>
+    <view class="field">
+      <text class="field-label">技能标题</text>
+      <input class="field-input" placeholder="例如：零基础教你做发簪" value="{{editForm.title}}" data-field="title" bindinput="onEditInput" />
+    </view>
+    <view class="field">
+      <text class="field-label">详细描述</text>
+      <textarea class="field-textarea" placeholder="描述你能提供的服务" value="{{editForm.description}}" data-field="description" bindinput="onEditInput" maxlength="500" />
+    </view>
+    <view class="field">
+      <text class="field-label">分类</text>
+      <picker mode="selector" range="{{categoryLabels}}" value="{{editCategoryIndex}}" bindchange="onEditCategoryPick">
+        <view class="picker-value">{{categoryLabels[editCategoryIndex]}} ▾</view>
+      </picker>
+    </view>
+    <view class="field">
+      <text class="field-label">预计耗时</text>
+      <input class="field-input" placeholder="例如：2小时" value="{{editForm.duration}}" data-field="duration" bindinput="onEditInput" />
+    </view>
+    <view class="field">
+      <text class="field-label">造物币价值</text>
+      <input class="field-input" type="number" value="{{editForm.zaowuBiCost}}" data-field="zaowuBiCost" bindinput="onEditInput" />
+    </view>
+    <text class="edit-hint" wx:if="{{editForm.status === 'APPROVED' || editForm.status === 'REJECTED'}}">保存后将重新进入审核</text>
+    <button class="btn-primary" loading="{{saving}}" bindtap="submitEdit">保存</button>
+    <button class="btn-outline edit-cancel" bindtap="closeEdit">取消</button>
+  </view>
+</view>
+
+<view class="detail-mask" wx:if="{{showReview}}" bindtap="closeReview">
+  <view class="detail-panel" catchtap="stopPropagation">
+    <text class="section-title">评价交换体验</text>
+    <view class="review-stars">
+      <text
+        wx:for="{{reviewStars}}"
+        wx:key="*this"
+        class="review-star {{reviewScore >= item ? 'active' : ''}}"
+        data-score="{{item}}"
+        bindtap="onReviewScoreTap"
+      >★</text>
+    </view>
+    <textarea
+      class="field-textarea"
+      placeholder="说说这次技能交换的体验..."
+      maxlength="300"
+      value="{{reviewContent}}"
+      bindinput="onReviewContentInput"
+    />
+    <button class="btn-primary" loading="{{reviewSubmitting}}" bindtap="submitReview">提交评价</button>
+    <button class="btn-outline edit-cancel" bindtap="closeReview">取消</button>
+  </view>
+</view>

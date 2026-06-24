@@ -71,7 +71,7 @@
       bindtap="openDetail"
     >
       <view class="feed-cover">
-        <image src="{{item.coverImage}}" mode="aspectFill" lazy-load data-index="{{index}}" binderror="onCoverError" />
+        <image src="{{item.coverImage}}" mode="aspectFill" lazy-load data-index="{{index}}" data-category="{{item.coverCategory || item.category}}" data-title="{{item.title}}" data-description="{{item.description}}" binderror="onCoverError" />
         <view class="feed-cover-badges">
           <text class="feed-cover-tag">{{item.category}}</text>
           <text class="feed-cover-status {{item.statusClass}}">{{item.statusLabel}}</text>

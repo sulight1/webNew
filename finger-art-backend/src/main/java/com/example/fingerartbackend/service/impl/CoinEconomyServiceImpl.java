@@ -20,6 +20,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 造物币经济服务实现类。
+ */
 @Service
 public class CoinEconomyServiceImpl implements CoinEconomyService {
 
@@ -41,12 +44,18 @@ public class CoinEconomyServiceImpl implements CoinEconomyService {
     @Autowired
     private NotificationService notificationService;
 
+    /**
+     * 执行 checkIn 相关逻辑。
+     */
     @Override
     @Transactional
     public Map<String, Object> checkIn(Long userId) {
         return claimDailyInternal(userId, "daily_checkin", CHECKIN_COINS, "每日签到");
     }
 
+    /**
+     * 查询造物币经济信息。
+     */
     @Override
     public List<Map<String, Object>> getTaskStatus(Long userId) {
         LocalDate today = LocalDate.now();
@@ -57,6 +66,9 @@ public class CoinEconomyServiceImpl implements CoinEconomyService {
         return tasks;
     }
 
+    /**
+     * 执行 claimDailyTask 相关逻辑。
+     */
     @Override
     @Transactional
     public Map<String, Object> claimDailyTask(Long userId, String taskCode) {
@@ -68,6 +80,9 @@ public class CoinEconomyServiceImpl implements CoinEconomyService {
         };
     }
 
+    /**
+     * 执行 grantEventReward 相关逻辑。
+     */
     @Override
     @Transactional
     public void grantEventReward(Long userId, String taskCode, Long referenceId, int coins, String title) {
@@ -84,6 +99,9 @@ public class CoinEconomyServiceImpl implements CoinEconomyService {
         notificationService.notify(userId, "COIN", "造物币奖励", title + " +" + coins + " 币", "/artisan-dashboard?menu=coin-tasks");
     }
 
+    /**
+     * 执行 boostProductExposure 相关逻辑。
+     */
     @Override
     @Transactional
     public Product boostProductExposure(Long userId, Long productId) {
@@ -102,6 +120,9 @@ public class CoinEconomyServiceImpl implements CoinEconomyService {
         return productMapper.save(product);
     }
 
+    /**
+     * 执行 claimDailyInternal 相关逻辑。
+     */
     private Map<String, Object> claimDailyInternal(Long userId, String taskCode, int coins, String title) {
         LocalDate today = LocalDate.now();
         if (claimMapper.existsByUserIdAndTaskCodeAndClaimDate(userId, taskCode, today)) {
@@ -122,6 +143,9 @@ public class CoinEconomyServiceImpl implements CoinEconomyService {
         return result;
     }
 
+    /**
+     * 执行 taskRow 相关逻辑。
+     */
     private Map<String, Object> taskRow(String code, String name, int coins, String desc, boolean claimed) {
         Map<String, Object> row = new HashMap<>();
         row.put("code", code);

@@ -21,6 +21,9 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.*;
 
+/**
+ * 物流服务实现类。
+ */
 @Service
 public class LogisticsServiceImpl implements LogisticsService {
 
@@ -63,8 +66,13 @@ public class LogisticsServiceImpl implements LogisticsService {
     private Kuaidi100Properties kuaidi100Properties;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final RestTemplate restTemplate = new RestTemplate();
 
+    @Autowired
+    private RestTemplate restTemplate;
+
+    /**
+     * 执行 queryOrderLogistics 相关逻辑。
+     */
     @Override
     public LogisticsTraceResult queryOrderLogistics(Long orderId, Long userId) {
         CustomOrder order = orderService.getOrder(orderId);
@@ -105,6 +113,9 @@ public class LogisticsServiceImpl implements LogisticsService {
         return result;
     }
 
+    /**
+     * 断言业务条件，不满足则抛异常。
+     */
     private void assertCanView(CustomOrder order, Long userId) {
         if (userId == null) {
             throw new RuntimeException("请先登录");
@@ -117,6 +128,9 @@ public class LogisticsServiceImpl implements LogisticsService {
         }
     }
 
+    /**
+     * 执行 fillFromKuaidi100 相关逻辑。
+     */
     private void fillFromKuaidi100(LogisticsTraceResult result, String companyCode, String trackingNo) throws Exception {
         Map<String, String> paramMap = new LinkedHashMap<>();
         paramMap.put("com", companyCode);
@@ -166,6 +180,9 @@ public class LogisticsServiceImpl implements LogisticsService {
         result.setTracks(tracks);
     }
 
+    /**
+     * 执行 resolveCompanyCode 相关逻辑。
+     */
     private String resolveCompanyCode(String companyName) {
         if (companyName == null || companyName.isBlank()) {
             return null;
@@ -182,6 +199,9 @@ public class LogisticsServiceImpl implements LogisticsService {
         return null;
     }
 
+    /**
+     * 构建响应对象。
+     */
     private String buildFallbackUrl(String companyCode, String trackingNo) {
         try {
             String encodedNu = URLEncoder.encode(trackingNo, StandardCharsets.UTF_8);
@@ -194,6 +214,9 @@ public class LogisticsServiceImpl implements LogisticsService {
         }
     }
 
+    /**
+     * 执行 md5Upper 相关逻辑。
+     */
     private String md5Upper(String input) throws Exception {
         MessageDigest md = MessageDigest.getInstance("MD5");
         byte[] digest = md.digest(input.getBytes(StandardCharsets.UTF_8));

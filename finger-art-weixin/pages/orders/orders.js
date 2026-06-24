@@ -49,4 +49,11 @@ Page({
   goDetail(e) {
     wx.navigateTo({ url: `/pages/order-detail/order-detail?id=${e.currentTarget.dataset.id}` });
   },
+
+  goProduct(e) {
+    const { productId, orderId } = e.currentTarget.dataset;
+    if (!productId) return;
+    const query = orderId ? `?fromOrder=${orderId}` : '';
+    wx.navigateTo({ url: `/pages/product-detail/product-detail?id=${productId}${query}` });
+  },
 });

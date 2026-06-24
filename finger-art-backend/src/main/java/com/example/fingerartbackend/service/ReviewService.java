@@ -7,9 +7,12 @@ import com.example.fingerartbackend.entity.SkillExchange;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 评价服务接口，定义业务能力（业务服务接口）。
+ */
 public interface ReviewService {
     Review submitReview(Map<String, Object> payload);
-    List<Review> getReviewsForUser(Long userId);
+    List<Map<String, Object>> getReviewsForUser(Long userId);
     List<Map<String, Object>> getProductReviews(Long productId);
     Map<String, Object> getProductReviewEligibility(Long productId, Long userId);
     boolean hasReviewedOrder(Long orderId, Long fromUserId);

@@ -5,6 +5,9 @@ import com.example.fingerartbackend.entity.Product;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 造物币经济服务接口，定义业务能力（业务服务接口）。
+ */
 public interface CoinEconomyService {
     Map<String, Object> checkIn(Long userId);
     List<Map<String, Object>> getTaskStatus(Long userId);

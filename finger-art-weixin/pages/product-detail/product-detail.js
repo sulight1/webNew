@@ -20,10 +20,13 @@ Page({
     showCustomModal: false,
     customRequirements: '',
     customSubmitting: false,
+    fromOrderId: '',
   },
 
   onLoad(options) {
     this.productId = options.id;
+    this.fromOrderId = options.fromOrder || '';
+    this.setData({ fromOrderId: this.fromOrderId });
     this.loadDetail();
   },
 
@@ -60,6 +63,7 @@ Page({
         }
       }
       product.categoryLabel = catLabel(product.category);
+      product.creatorAvatar = formatImageUrl(product.creatorAvatar);
       const similar = await productApi.getSimilarProducts(this.productId).catch(() => []);
       const user = auth.getUser();
       let isFollowing = false;
@@ -154,6 +158,30 @@ Page({
   goArtisan() {
     const id = this.data.product.creatorId;
     if (id) wx.navigateTo({ url: `/pages/artisan-profile/artisan-profile?id=${id}` });
+  },
+
+  onContactCreator() {
+    if (!auth.isLoggedIn()) {
+      wx.navigateTo({ url: '/pages/login/login' });
+      return;
+    }
+    const { product } = this.data;
+    const user = auth.getUser();
+    if (!product.creatorId) {
+      wx.showToast({ title: '无法联系创作者', icon: 'none' });
+      return;
+    }
+    if (product.creatorId === user.id) {
+      wx.showToast({ title: '这是你的作品', icon: 'none' });
+      return;
+    }
+    const peerName = encodeURIComponent(product.creator || '手作人');
+    wx.navigateTo({ url: `/pages/chat/chat?peerId=${product.creatorId}&peerName=${peerName}` });
+  },
+
+  goBackToOrder() {
+    if (!this.fromOrderId) return;
+    wx.navigateTo({ url: `/pages/order-detail/order-detail?id=${this.fromOrderId}` });
   },
 
   onAddToCart() {
@@ -261,5 +289,31 @@ Page({
 
   goSimilar(e) {
     wx.navigateTo({ url: `/pages/product-detail/product-detail?id=${e.currentTarget.dataset.id}` });
+  },
+
+  onShareAppMessage() {
+    const { product } = this.data;
+    const id = this.productId;
+    if (!product || !id) {
+      return { title: '指尖造物', path: '/pages/home/home' };
+    }
+    return {
+      title: `${product.title} - ¥${product.price}`,
+      path: `/pages/product-detail/product-detail?id=${id}`,
+      imageUrl: product.image || '',
+    };
+  },
+
+  onShareTimeline() {
+    const { product } = this.data;
+    const id = this.productId;
+    if (!product || !id) {
+      return { title: '指尖造物', query: '' };
+    }
+    return {
+      title: `${product.title} - 指尖造物`,
+      query: `id=${id}`,
+      imageUrl: product.image || '',
+    };
   },
 });

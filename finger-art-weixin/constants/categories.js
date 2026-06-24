@@ -11,6 +11,8 @@ const PRODUCT_CATEGORIES = [
   { key: 'wood', label: '木工雕绘', emoji: '🪵' },
   { key: 'candle', label: '香薰蜡烛', emoji: '🕯️' },
   { key: 'paper', label: '纸艺衍纸', emoji: '📄' },
+  { key: 'tuanshan', label: '手绘团扇', emoji: '🪭' },
+  { key: 'lantern', label: '传统花灯', emoji: '🏮' },
 ];
 
 function categoryLabel(key) {

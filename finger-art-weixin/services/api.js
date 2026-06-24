@@ -32,7 +32,7 @@ const orderApi = {
   getBuyerOrders: (id) => req.get(`/orders/buyer/${id}`),
   getArtisanOrders: (id) => req.get(`/orders/artisan/${id}`),
   confirmOrder: (id, artisanId) => req.post(`/orders/${id}/confirm`, { artisanId }),
-  payDeposit: (id, buyerId, paymentChannel = 'MOCK_WECHAT') =>
+  payDeposit: (id, buyerId, paymentChannel = 'ZAOWU_COIN') =>
     req.post(`/orders/${id}/pay-deposit`, { buyerId, paymentChannel }),
   payBalance: (id, buyerId) => req.post(`/orders/${id}/pay-balance`, { buyerId }),
   confirmReceipt: (id, buyerId) => req.post(`/orders/${id}/confirm-receipt`, { buyerId }),
@@ -47,6 +47,7 @@ const orderApi = {
   getMilestones: (id) => req.get(`/orders/${id}/milestones`),
   addMilestone: (id, data) => req.post(`/orders/${id}/milestones`, data),
   getLogistics: (id) => req.get(`/orders/${id}/logistics`),
+  batchCheckout: (data) => req.post('/orders/batch-checkout', data),
 };
 
 const customRequestApi = {
@@ -61,13 +62,20 @@ const customRequestApi = {
 
 const skillApi = {
   getSkills: (params) => req.get('/skills', params),
+  getMySkills: () => req.get('/skills/mine', null, { skipAuthRedirect: true }),
   addSkill: (data) => req.post('/skills', data),
-  deleteSkill: (id) => req.del(`/skills/${id}`),
+  updateSkill: (id, data) => req.put(`/skills/${id}`, data),
+  deleteSkill: (id, userId) => req.del(`/skills/${id}`, { params: { userId } }),
   requestExchange: (data) => req.post('/skill-exchange/request', data),
   getMyExchanges: (userId) => req.get('/skill-exchange/my', { userId }),
   acceptExchange: (id, userId) => req.patch(`/skill-exchange/${id}/accept`, { userId }),
   confirmExchange: (id, userId) => req.patch(`/skill-exchange/${id}/confirm`, { userId }),
   completeExchange: (id, userId) => req.patch(`/skill-exchange/${id}/complete`, { userId }),
+  reportNoShow: (id, userId) => req.patch(`/skill-exchange/${id}/no-show`, { userId }),
+  getScheduleSlots: (userId, year, month) => req.get('/schedule-slots', { userId, year, month }),
+  checkExchangeReview: (exchangeId, fromUserId) =>
+    req.get('/reviews/check-exchange', { exchangeId, fromUserId }),
+  submitReview: (data) => req.post('/reviews', data),
 };
 
 const walletApi = {

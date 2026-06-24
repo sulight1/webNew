@@ -3,6 +3,7 @@ package com.example.fingerartbackend.service.impl;
 import com.example.fingerartbackend.constant.LikeTargetType;
 import com.example.fingerartbackend.dto.FavoriteToggleResult;
 import com.example.fingerartbackend.dto.LikeToggleResult;
+import com.example.fingerartbackend.auth.AuthContext;
 import com.example.fingerartbackend.entity.Product;
 import com.example.fingerartbackend.entity.User;
 import com.example.fingerartbackend.entity.UserLike;
@@ -28,6 +29,9 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * 作品/商品服务实现类。
+ */
 @Service
 public class ProductServiceImpl implements ProductService {
 
@@ -52,6 +56,9 @@ public class ProductServiceImpl implements ProductService {
     @Autowired
     private UserLikeMapper userLikeMapper;
 
+    /**
+     * 执行 populateCreatorAvatar 相关逻辑。
+     */
     private void populateCreatorAvatar(Product product) {
         if (product.getCreatorId() != null) {
             userMapper.findById(product.getCreatorId())
@@ -65,6 +72,9 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
+    /**
+     * 执行 populateEngagementStatus 相关逻辑。
+     */
     private void populateEngagementStatus(List<Product> products, Long viewerId) {
         if (viewerId == null || products.isEmpty()) {
             return;
@@ -78,6 +88,9 @@ public class ProductServiceImpl implements ProductService {
         });
     }
 
+    /**
+     * 执行 populateEngagementStatus 相关逻辑。
+     */
     private void populateEngagementStatus(Product product, Long viewerId) {
         if (viewerId == null || product == null) {
             return;
@@ -86,6 +99,9 @@ public class ProductServiceImpl implements ProductService {
         product.setFavorited(likeService.isLiked(viewerId, LikeTargetType.PRODUCT_FAVORITE, product.getId()));
     }
 
+    /**
+     * 查询作品/商品信息。
+     */
     @Override
     public List<Product> getAllProducts(Long viewerId) {
         List<Product> products = productMapper.findAll();
@@ -94,6 +110,9 @@ public class ProductServiceImpl implements ProductService {
         return products;
     }
 
+    /**
+     * 查询作品/商品信息。
+     */
     @Override
     public Product getProductById(Long id, Long viewerId) {
         Product product = productMapper.findById(id).orElseThrow(() -> new RuntimeException("商品不存在"));
@@ -102,11 +121,17 @@ public class ProductServiceImpl implements ProductService {
         return product;
     }
 
+    /**
+     * 判断是否包含/拥有。
+     */
     private boolean hasAvailableStock(Product product) {
         int stock = product.getStock() != null ? product.getStock() : 1;
         return stock > 0;
     }
 
+    /**
+     * 执行 ensureDefaultStock 相关逻辑。
+     */
     private void ensureDefaultStock(Product product) {
         if (product.getStock() != null && product.getStock() > 0) return;
         if ("CUSTOMIZABLE".equals(product.getType())) {
@@ -116,6 +141,9 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
+    /**
+     * 查询作品/商品信息。
+     */
     @Override
     public List<Product> getApprovedProducts(Long viewerId) {
         List<Product> products = productMapper.findAll().stream()
@@ -129,6 +157,9 @@ public class ProductServiceImpl implements ProductService {
         return products;
     }
 
+    /**
+     * 执行 refreshBoost 相关逻辑。
+     */
     private void refreshBoost(Product p) {
         if (p.getBoostUntil() != null && p.getBoostUntil().isBefore(java.time.LocalDateTime.now())) {
             p.setExposureBoost(0);
@@ -136,6 +167,9 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
+    /**
+     * 执行 compareExposure 相关逻辑。
+     */
     private int compareExposure(Product a, Product b) {
         int boostA = effectiveBoost(a);
         int boostB = effectiveBoost(b);
@@ -145,11 +179,17 @@ public class ProductServiceImpl implements ProductService {
         return Integer.compare(likesB, likesA);
     }
 
+    /**
+     * 执行 effectiveBoost 相关逻辑。
+     */
     private int effectiveBoost(Product p) {
         refreshBoost(p);
         return p.getExposureBoost() != null ? p.getExposureBoost() : 0;
     }
 
+    /**
+     * 查询作品/商品信息。
+     */
     @Override
     public List<Product> getApprovedProductsByType(String type, Long viewerId) {
         List<Product> products = productMapper.findAll().stream()
@@ -162,6 +202,9 @@ public class ProductServiceImpl implements ProductService {
         return products;
     }
 
+    /**
+     * 查询作品/商品信息。
+     */
     @Override
     public List<Product> getApprovedProductsByCategory(String category, Long viewerId) {
         List<Product> products = productMapper.findAll().stream()
@@ -174,6 +217,9 @@ public class ProductServiceImpl implements ProductService {
         return products;
     }
 
+    /**
+     * 查询作品/商品信息。
+     */
     @Override
     public List<Product> getApprovedProductsByCraftTechnique(String craftTechnique, Long viewerId) {
         List<Product> products = productMapper.findAll().stream()
@@ -186,6 +232,9 @@ public class ProductServiceImpl implements ProductService {
         return products;
     }
 
+    /**
+     * 查询作品/商品信息。
+     */
     @Override
     public List<Product> getApprovedProductsByCreatorId(Long creatorId, Long viewerId) {
         List<Product> products = productMapper.findByCreatorId(creatorId).stream()
@@ -196,6 +245,9 @@ public class ProductServiceImpl implements ProductService {
         return products;
     }
 
+    /**
+     * 创建作品/商品。
+     */
     @Override
     public Product createInitialProduct() {
         Product p = new Product();
@@ -210,14 +262,41 @@ public class ProductServiceImpl implements ProductService {
         return saved;
     }
 
-    private void ensureArtisanCreator(Product product) {
-        Long creatorId = product.getCreatorId();
-        if (creatorId == null && product.getCreator() != null) {
-            creatorId = userMapper.findByUsername(product.getCreator()).map(User::getId).orElse(null);
+    /**
+     * 执行 resolveCreatorId 相关逻辑。
+     */
+    private Long resolveCreatorId(Product product) {
+        if (product.getCreatorId() != null) {
+            return product.getCreatorId();
         }
+        if (product.getCreator() != null) {
+            return userMapper.findByUsername(product.getCreator()).map(User::getId).orElse(null);
+        }
+        return null;
+    }
+
+    /** 旧数据可能只有 creator 用户名，补全 creatorId 便于后续校验与关联 */
+    private void backfillCreatorId(Product product) {
+        if (product.getCreatorId() != null) {
+            return;
+        }
+        Long resolved = resolveCreatorId(product);
+        if (resolved != null) {
+            product.setCreatorId(resolved);
+        }
+    }
+
+    /**
+     * 执行 ensureArtisanCreator 相关逻辑。
+     */
+    private void ensureArtisanCreator(Product product) {
+        Long creatorId = resolveCreatorId(product);
         ensureArtisanCreator(creatorId);
     }
 
+    /**
+     * 执行 ensureArtisanCreator 相关逻辑。
+     */
     private void ensureArtisanCreator(Long creatorId) {
         if (creatorId == null) {
             throw new RuntimeException("缺少创作者信息");
@@ -229,6 +308,9 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
+    /**
+     * 保存作品/商品。
+     */
     @Override
     public Product saveProduct(Product product) {
         assertCanPublishProduct(product);
@@ -254,6 +336,9 @@ public class ProductServiceImpl implements ProductService {
         return saved;
     }
 
+    /**
+     * 切换作品/商品状态。
+     */
     @Override
     @Transactional
     public LikeToggleResult toggleLikeProduct(Long id, Long userId) {
@@ -265,6 +350,9 @@ public class ProductServiceImpl implements ProductService {
         return new LikeToggleResult(liked, product.getLikes());
     }
 
+    /**
+     * 切换作品/商品状态。
+     */
     @Override
     @Transactional
     public FavoriteToggleResult toggleFavoriteProduct(Long id, Long userId) {
@@ -273,11 +361,17 @@ public class ProductServiceImpl implements ProductService {
         return new FavoriteToggleResult(favorited);
     }
 
+    /**
+     * 删除作品/商品。
+     */
     @Override
     public void deleteProduct(Long id) {
         productMapper.deleteById(id);
     }
 
+    /**
+     * 审核作品/商品。
+     */
     @Override
     public Product auditProduct(Long id, String status) {
         Product product = productMapper.findById(id).orElseThrow(() -> new RuntimeException("商品不存在"));
@@ -288,6 +382,9 @@ public class ProductServiceImpl implements ProductService {
         return saved;
     }
 
+    /**
+     * 执行 batchAuditProducts 相关逻辑。
+     */
     @Override
     public int batchAuditProducts(List<Long> ids, String status) {
         if (ids == null || ids.isEmpty()) {
@@ -310,18 +407,38 @@ public class ProductServiceImpl implements ProductService {
         return count;
     }
 
+    /**
+     * 更新作品/商品。
+     */
     @Override
-    public Product updateProduct(Long id, Product product) {
+    public Product updateProduct(Long id, Product product, Long operatorUserId) {
         Product existing = productMapper.findById(id).orElseThrow(() -> new RuntimeException("商品不存在"));
+        backfillCreatorId(existing);
         assertCanPublishProduct(existing);
-        ensureArtisanCreator(existing.getCreatorId());
+        ensureArtisanCreator(existing);
+        assertProductOwner(existing, operatorUserId);
+
         boolean requiresReview = hasContentChanges(existing, product);
-        existing.setTitle(product.getTitle());
-        existing.setPrice(product.getPrice());
-        existing.setType(product.getType());
-        existing.setCategory(product.getCategory());
-        existing.setCraftTechnique(product.getCraftTechnique());
-        existing.setDescription(product.getDescription());
+        if (product.getTitle() != null) {
+            sensitiveWordService.validateText(product.getTitle(), "作品标题");
+            existing.setTitle(product.getTitle());
+        }
+        if (product.getPrice() != null) {
+            existing.setPrice(product.getPrice());
+        }
+        if (product.getType() != null) {
+            existing.setType(product.getType());
+        }
+        if (product.getCategory() != null) {
+            existing.setCategory(product.getCategory());
+        }
+        if (product.getCraftTechnique() != null) {
+            existing.setCraftTechnique(product.getCraftTechnique());
+        }
+        if (product.getDescription() != null) {
+            sensitiveWordService.validateText(product.getDescription(), "作品描述");
+            existing.setDescription(product.getDescription());
+        }
         if (product.getDetailImages() != null) {
             existing.setDetailImages(product.getDetailImages());
         }
@@ -342,6 +459,25 @@ public class ProductServiceImpl implements ProductService {
         return saved;
     }
 
+    /**
+     * 断言业务条件，不满足则抛异常。
+     */
+    private void assertProductOwner(Product existing, Long operatorUserId) {
+        if (operatorUserId == null) {
+            throw new RuntimeException("请先登录");
+        }
+        if (AuthContext.isAdmin()) {
+            return;
+        }
+        Long ownerId = resolveCreatorId(existing);
+        if (ownerId == null || !ownerId.equals(operatorUserId)) {
+            throw new RuntimeException("无权修改该作品");
+        }
+    }
+
+    /**
+     * 更新作品/商品。
+     */
     @Override
     public Product updateStock(Long id, Integer stock) {
         if (stock == null || stock < 0) {
@@ -354,6 +490,9 @@ public class ProductServiceImpl implements ProductService {
         return saved;
     }
 
+    /**
+     * 判断是否包含/拥有。
+     */
     private boolean hasContentChanges(Product existing, Product incoming) {
         if (incoming.getTitle() != null && !incoming.getTitle().equals(existing.getTitle())) return true;
         if (incoming.getPrice() != null && !incoming.getPrice().equals(existing.getPrice())) return true;
@@ -372,6 +511,9 @@ public class ProductServiceImpl implements ProductService {
         return false;
     }
 
+    /**
+     * 搜索作品/商品。
+     */
     @Override
     public List<Product> searchApprovedProducts(String q, int limit, Long viewerId) {
         if (q == null || q.trim().isEmpty()) {
@@ -385,6 +527,9 @@ public class ProductServiceImpl implements ProductService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 查询作品/商品信息。
+     */
     @Override
     public List<Product> getHotProducts(int limit, Long viewerId) {
         int cap = limit > 0 ? limit : 8;
@@ -394,6 +539,9 @@ public class ProductServiceImpl implements ProductService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 查询作品/商品信息。
+     */
     @Override
     public List<Product> getSimilarProducts(Long id, int limit, Long viewerId) {
         Product base = getProductById(id, viewerId);
@@ -406,6 +554,9 @@ public class ProductServiceImpl implements ProductService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 执行 matchesKeyword 相关逻辑。
+     */
     private boolean matchesKeyword(Product p, String kw) {
         return contains(p.getTitle(), kw)
                 || contains(p.getDescription(), kw)
@@ -414,10 +565,16 @@ public class ProductServiceImpl implements ProductService {
                 || contains(p.getCreator(), kw);
     }
 
+    /**
+     * 执行 contains 相关逻辑。
+     */
     private boolean contains(String text, String kw) {
         return text != null && text.toLowerCase().contains(kw);
     }
 
+    /**
+     * 执行 similarTo 相关逻辑。
+     */
     private boolean similarTo(Product base, Product other) {
         if (base.getCategory() != null && base.getCategory().equals(other.getCategory())) return true;
         if (base.getCraftTechnique() != null && base.getCraftTechnique().equals(other.getCraftTechnique())) return true;
@@ -425,6 +582,9 @@ public class ProductServiceImpl implements ProductService {
         return false;
     }
 
+    /**
+     * 执行 similarityScore 相关逻辑。
+     */
     private int similarityScore(Product base, Product other) {
         int score = 0;
         if (base.getCategory() != null && base.getCategory().equals(other.getCategory())) score += 3;
@@ -434,6 +594,9 @@ public class ProductServiceImpl implements ProductService {
         return score;
     }
 
+    /**
+     * 发送通知。
+     */
     private void notifyAuditResult(Product product, String status) {
         if (product.getCreatorId() == null) return;
         boolean approved = "APPROVED".equals(status);
@@ -449,6 +612,9 @@ public class ProductServiceImpl implements ProductService {
                 "/artisan-dashboard?menu=my-products");
     }
 
+    /**
+     * 查询作品/商品信息。
+     */
     @Override
     public List<Product> getFavoriteProducts(Long userId) {
         if (userId == null) {
@@ -474,11 +640,11 @@ public class ProductServiceImpl implements ProductService {
         return result;
     }
 
+    /**
+     * 断言业务条件，不满足则抛异常。
+     */
     private void assertCanPublishProduct(Product product) {
-        Long creatorId = product.getCreatorId();
-        if (creatorId == null && product.getCreator() != null) {
-            creatorId = userMapper.findByUsername(product.getCreator()).map(User::getId).orElse(null);
-        }
+        Long creatorId = resolveCreatorId(product);
         if (creatorId != null) {
             userPunishmentService.assertNotPunished(creatorId, UserPunishmentType.NO_PRODUCT, "您已被禁止上架商品");
         }

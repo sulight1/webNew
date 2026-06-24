@@ -1,7 +1,7 @@
 const { customRequestApi } = require('../../services/api');
 const auth = require('../../utils/auth');
 const { formatImageUrl } = require('../../utils/format');
-const { getCraftCoverImage, DEFAULT_CRAFT_COVER } = require('../../utils/craftCoverImages');
+const { getCraftCoverImage, getCraftCoverFallback, inferCraftCategoryFromText } = require('../../utils/craftCoverImages');
 const {
   CATEGORY_FILTER_OPTIONS,
   REQUEST_SORT_TABS,
@@ -13,11 +13,13 @@ const PAGE_SIZE = 12;
 function mapRequestItem(item) {
   const status = item.status || 'OPEN';
   let statusClass = 'ended';
-  if (status === 'OPEN') statusClass = 'open';
+  if (status === 'PENDING') statusClass = 'pending';
+  else if (status === 'REJECTED') statusClass = 'rejected';
+  else if (status === 'OPEN') statusClass = 'open';
   else if (status === 'MATCHED') statusClass = 'matched';
   const coverImage = item.referenceImage
     ? formatImageUrl(item.referenceImage)
-    : getCraftCoverImage(item.category);
+    : getCraftCoverImage(item.category, item.title, item.description);
   const user = auth.getUser();
   const buyerId = item.buyer ? item.buyer.id : item.buyerId;
   return {
@@ -35,6 +37,7 @@ function mapRequestItem(item) {
     buyerName: item.buyer ? item.buyer.username : (item.buyerName || ''),
     buyerId,
     coverImage,
+    coverCategory: inferCraftCategoryFromText(item.category, item.title, item.description),
     statusLabel: getRequestStatusLabel(status),
     statusClass,
     isOwn: user && buyerId === user.id,
@@ -71,9 +74,21 @@ Page({
     detailItem: null,
   },
 
+  onLoad(options) {
+    if (options && options.scope === 'mine') {
+      this.setData({ scope: 'mine' });
+    }
+  },
+
   onShow() {
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
       this.getTabBar().setData({ selected: 2 });
+    }
+    const app = getApp();
+    if (app.globalData.pendingCustomScope === 'mine') {
+      app.globalData.pendingCustomScope = null;
+      this.setData({ scope: 'mine' }, () => this.loadList(true));
+      return;
     }
     this.loadList(true);
   },
@@ -122,8 +137,16 @@ Page({
 
   onCoverError(e) {
     const index = e.currentTarget.dataset.index;
-    const key = `list[${index}].coverImage`;
-    this.setData({ [key]: DEFAULT_CRAFT_COVER });
+    const category = e.currentTarget.dataset.category || '其它';
+    const title = e.currentTarget.dataset.title || '';
+    const description = e.currentTarget.dataset.description || '';
+    if (index == null) return;
+    const item = this.data.list[index];
+    const stage = ((item && item.coverFallbackStage) || 0) + 1;
+    this.setData({
+      [`list[${index}].coverImage`]: getCraftCoverFallback(category, stage, title, description),
+      [`list[${index}].coverFallbackStage`]: stage,
+    });
   },
 
   async loadList(resetPage) {

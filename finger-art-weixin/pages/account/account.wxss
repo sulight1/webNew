@@ -26,6 +26,16 @@
   min-width: 0;
 }
 
+.notify-badge {
+  display: inline-block;
+  margin-top: 8rpx;
+  padding: 4rpx 16rpx;
+  border-radius: 999rpx;
+  background: #fff1f0;
+  color: #eb2f96;
+  font-size: 22rpx;
+}
+
 .profile-header .avatar-lg {
   border-radius: 50%;
   border: 4rpx solid #fff;

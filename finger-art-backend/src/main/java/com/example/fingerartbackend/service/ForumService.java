@@ -7,6 +7,9 @@ import com.example.fingerartbackend.entity.ForumReply;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 论坛服务接口，定义业务能力（业务服务接口）。
+ */
 public interface ForumService {
     List<ForumPost> listPosts(String sort, Long viewerId);
 

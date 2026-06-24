@@ -13,6 +13,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * 工艺技法服务实现类。
+ */
 @Service
 public class CraftTechniqueServiceImpl implements CraftTechniqueService {
 
@@ -21,24 +24,36 @@ public class CraftTechniqueServiceImpl implements CraftTechniqueService {
 
     private volatile boolean defaultsReady = false;
 
+    /**
+     * 查询工艺技法信息。
+     */
     @Override
     public List<CraftTechnique> getTechniquesByCategory(String category) {
         ensureDefaultTechniquesOnce();
         return deduplicate(craftTechniqueMapper.findByCategory(category));
     }
 
+    /**
+     * 查询工艺技法信息。
+     */
     @Override
     public List<CraftTechnique> getAllTechniques() {
         ensureDefaultTechniquesOnce();
         return deduplicate(craftTechniqueMapper.findAllByOrderByCategoryAsc());
     }
 
+    /**
+     * 执行 initSampleData 相关逻辑。
+     */
     @Override
     public List<CraftTechnique> initSampleData() {
         ensureDefaultTechniquesOnce();
         return deduplicate(craftTechniqueMapper.findAllByOrderByCategoryAsc());
     }
 
+    /**
+     * 执行 ensureDefaultTechniquesOnce 相关逻辑。
+     */
     private void ensureDefaultTechniquesOnce() {
         if (defaultsReady) {
             return;
@@ -77,6 +92,9 @@ public class CraftTechniqueServiceImpl implements CraftTechniqueService {
         }
     }
 
+    /**
+     * 执行 seedMissingDefaults 相关逻辑。
+     */
     private void seedMissingDefaults() {
         List<CraftTechnique> existing = craftTechniqueMapper.findAll();
         for (CraftTechnique t : buildDefaultTechniques()) {
@@ -89,6 +107,9 @@ public class CraftTechniqueServiceImpl implements CraftTechniqueService {
         }
     }
 
+    /**
+     * 执行 deduplicate 相关逻辑。
+     */
     private List<CraftTechnique> deduplicate(List<CraftTechnique> list) {
         Map<String, CraftTechnique> unique = new LinkedHashMap<>();
         for (CraftTechnique t : list) {
@@ -97,10 +118,16 @@ public class CraftTechniqueServiceImpl implements CraftTechniqueService {
         return new ArrayList<>(unique.values());
     }
 
+    /**
+     * 执行 techniqueKey 相关逻辑。
+     */
     private String techniqueKey(String category, String name) {
         return category + "\0" + name;
     }
 
+    /**
+     * 构建响应对象。
+     */
     private List<CraftTechnique> buildDefaultTechniques() {
         return Arrays.asList(
                 // 钩织系列
@@ -162,10 +189,23 @@ public class CraftTechniqueServiceImpl implements CraftTechniqueService {
                 // 纸艺衍纸
                 create("paper", "衍纸", "📄 衍纸艺术"),
                 create("paper", "剪纸", "✂️ 手工剪纸"),
-                create("paper", "纸雕", "🗂️ 立体纸雕")
+                create("paper", "纸雕", "🗂️ 立体纸雕"),
+
+                // 手绘团扇
+                create("tuanshan", "手绘团扇", "🪭 手绘团扇"),
+                create("tuanshan", "绢面绘扇", "🎨 绢面绘扇"),
+                create("tuanshan", "流苏团扇", "🎀 流苏团扇"),
+
+                // 传统花灯
+                create("lantern", "花灯", "🏮 传统花灯"),
+                create("lantern", "走马灯", "✨ 走马灯"),
+                create("lantern", "纸灯笼", "🏮 纸艺灯笼")
         );
     }
 
+    /**
+     * 创建工艺技法。
+     */
     private CraftTechnique create(String category, String name, String label) {
         CraftTechnique t = new CraftTechnique();
         t.setCategory(category);

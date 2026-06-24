@@ -12,12 +12,18 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * 点赞服务实现类。
+ */
 @Service
 public class LikeServiceImpl implements LikeService {
 
     @Autowired
     private UserLikeMapper userLikeMapper;
 
+    /**
+     * 切换点赞状态。
+     */
     @Override
     @Transactional
     public boolean toggle(Long userId, String targetType, Long targetId) {
@@ -39,6 +45,9 @@ public class LikeServiceImpl implements LikeService {
                 });
     }
 
+    /**
+     * 判断条件是否成立。
+     */
     @Override
     public boolean isLiked(Long userId, String targetType, Long targetId) {
         if (userId == null || targetId == null) {
@@ -47,6 +56,9 @@ public class LikeServiceImpl implements LikeService {
         return userLikeMapper.findByUserIdAndTargetTypeAndTargetId(userId, targetType, targetId).isPresent();
     }
 
+    /**
+     * 查询点赞信息。
+     */
     @Override
     public Set<Long> getLikedTargetIds(Long userId, String targetType, Collection<Long> targetIds) {
         if (userId == null || targetIds == null || targetIds.isEmpty()) {

@@ -1,5 +1,7 @@
 package com.example.fingerartbackend.service;
 
+import com.example.fingerartbackend.dto.BatchCheckoutRequest;
+import com.example.fingerartbackend.dto.BatchCheckoutResult;
 import com.example.fingerartbackend.entity.CustomOrder;
 import com.example.fingerartbackend.entity.EscrowTransaction;
 import com.example.fingerartbackend.entity.OrderMilestone;
@@ -7,6 +9,9 @@ import com.example.fingerartbackend.entity.OrderMilestone;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 订单服务接口，定义业务能力（业务服务接口）。
+ */
 public interface OrderService {
     CustomOrder createOrder(CustomOrder order);
     List<CustomOrder> getArtisanOrders(Long artisanId);
@@ -28,4 +33,6 @@ public interface OrderService {
     CustomOrder approveCancel(Long orderId, Long artisanId);
     CustomOrder rejectCancel(Long orderId, Long artisanId, String reason);
     void deleteOrder(Long id);
+
+    BatchCheckoutResult batchCheckoutReadyMade(BatchCheckoutRequest request);
 }

@@ -167,7 +167,7 @@
         </view>
       </view>
       <view class="card">
-        <view class="section-title">人气作品 Top5</view>
+        <view class="section-title">人气作品 Top3</view>
         <text wx:if="{{analytics.topProducts.length}}" class="status-hint">点击作品查看详情</text>
         <view wx:if="{{!analytics.topProducts || analytics.topProducts.length === 0}}" class="top-empty">
           <text class="text-muted">还没有作品数据</text>

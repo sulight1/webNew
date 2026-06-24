@@ -4,7 +4,12 @@
       <text class="title">订单 #{{order.id}}</text>
       <text class="tag">{{order.statusLabel}}</text>
     </view>
-    <text class="text-muted">{{order.productTitle}}</text>
+    <text
+      wx:if="{{order.productId}}"
+      class="product-link"
+      bindtap="goProduct"
+    >{{order.productTitle}} › 查看作品</text>
+    <text wx:else class="text-muted">{{order.productTitle}}</text>
     <view class="price-row flex-between" wx:if="{{order.quantity > 1}}">
       <text>购买数量</text>
       <text>× {{order.quantity}}</text>

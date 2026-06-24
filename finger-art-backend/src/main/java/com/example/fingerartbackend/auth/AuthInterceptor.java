@@ -15,9 +15,23 @@ import com.example.fingerartbackend.service.UserPunishmentService;
 
 import java.util.regex.Pattern;
 
+/**
+ * 认证与鉴权拦截器。
+ * <p>
+ * 在 {@link JwtAuthFilter} 解析 Token 之后执行，负责：
+ * <ol>
+ *   <li>放行公开接口（登录、注册、作品浏览等）</li>
+ *   <li>校验受保护接口是否已登录（401）</li>
+ *   <li>校验管理员专属接口权限（403）</li>
+ *   <li>校验非管理员账号是否被封禁（403）</li>
+ * </ol>
+ * 可通过 {@link AuthProperties#isEnforce()} 关闭强制校验（开发调试用）。
+ * </p>
+ */
 @Component
 public class AuthInterceptor implements HandlerInterceptor {
 
+    /** 公开用户资料接口路径模式：{@code /users/{id}/public} */
     private static final Pattern PUBLIC_USER_PROFILE = Pattern.compile("^/users/\\d+/public$");
 
     @Autowired
@@ -29,6 +43,11 @@ public class AuthInterceptor implements HandlerInterceptor {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    /**
+     * 请求前置鉴权：公开路径放行，受保护路径校验登录、角色与封禁状态。
+     *
+     * @return {@code true} 放行，{@code false} 拦截并返回 JSON 错误
+     */
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
             throws Exception {
@@ -66,6 +85,9 @@ public class AuthInterceptor implements HandlerInterceptor {
         return true;
     }
 
+    /**
+     * 判断接口是否为公开访问（无需登录）。
+     */
     private boolean isPublic(String method, String path) {
         if (path.startsWith("/uploads/")) {
             return true;
@@ -82,7 +104,10 @@ public class AuthInterceptor implements HandlerInterceptor {
             if ("/custom-requests".equals(path) || path.matches("^/custom-requests/\\d+$")) {
                 return true;
             }
-            if ("/skills".equals(path) || path.startsWith("/skills/")) {
+            if ("/skills".equals(path)) {
+                return true;
+            }
+            if (path.startsWith("/skills/") && !"/skills/mine".equals(path)) {
                 return true;
             }
             if ("/search".equals(path)) {
@@ -114,10 +139,16 @@ public class AuthInterceptor implements HandlerInterceptor {
         return false;
     }
 
+    /**
+     * 判断用户是否为已通过 TOTP 的特权管理员。
+     */
     private boolean isPrivilegedAdmin(AuthUser user) {
         return user != null && "ADMIN".equals(user.role()) && user.adminSession();
     }
 
+    /**
+     * 判断接口是否需要管理员权限。
+     */
     private boolean requiresAdmin(String method, String path) {
         if ("GET".equals(method) && "/users".equals(path)) {
             return true;
@@ -162,12 +193,18 @@ public class AuthInterceptor implements HandlerInterceptor {
         if ("PATCH".equals(method) && path.matches("^/skills/\\d+/audit$")) {
             return true;
         }
+        if ("POST".equals(method) && path.matches("^/custom-requests/\\d+/audit$")) {
+            return true;
+        }
         if ("POST".equals(method) && path.matches("^/orders/\\d+/resolve-dispute$")) {
             return true;
         }
         return false;
     }
 
+    /**
+     * 向客户端写入 JSON 格式的错误响应。
+     */
     private void writeJson(HttpServletResponse response, int status, Result<?> body) throws Exception {
         response.setStatus(status);
         response.setCharacterEncoding("UTF-8");

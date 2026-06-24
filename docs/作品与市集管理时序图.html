@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>作品与市集管理模块时序图 - 指尖造物</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "SimSun", "宋体", serif;
+      padding: 32px 24px;
+      background: #fff;
+      color: #000;
+    }
+    h1 {
+      text-align: center;
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    .caption {
+      text-align: center;
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+    .diagram-wrap {
+      max-width: 920px;
+      margin: 0 auto;
+      overflow-x: auto;
+    }
+    svg {
+      display: block;
+      margin: 0 auto;
+      font-family: "SimSun", "宋体", serif;
+    }
+    .note {
+      max-width: 900px;
+      margin: 24px auto 0;
+      font-size: 13px;
+      line-height: 1.8;
+      border-top: 1px solid #ccc;
+      padding-top: 16px;
+    }
+    .note h2 { font-size: 14px; margin-bottom: 8px; }
+    .note ol { padding-left: 1.5em; }
+    .note li { margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+  <h1>图 3-1 作品与市集管理模块时序图</h1>
+  <p class="caption">指尖造物手作定制与技能交换平台</p>
+
+  <div class="diagram-wrap">
+    <svg width="880" height="720" viewBox="0 0 880 720" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow-solid" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 Z" fill="#000" stroke="none"/>
+        </marker>
+        <marker id="arrow-open" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8" fill="none" stroke="#000" stroke-width="1"/>
+        </marker>
+      </defs>
+
+      <!-- 手作达人（左侧 Actor） -->
+      <g transform="translate(70, 28)">
+        <circle cx="0" cy="-18" r="10" fill="none" stroke="#000" stroke-width="1.2"/>
+        <line x1="0" y1="-8" x2="0" y2="14" stroke="#000" stroke-width="1.2"/>
+        <line x1="-14" y1="2" x2="14" y2="2" stroke="#000" stroke-width="1.2"/>
+        <line x1="0" y1="14" x2="-11" y2="36" stroke="#000" stroke-width="1.2"/>
+        <line x1="0" y1="14" x2="11" y2="36" stroke="#000" stroke-width="1.2"/>
+        <text x="0" y="58" text-anchor="middle" font-size="13">手作达人</text>
+      </g>
+
+      <!-- 中间参与者 -->
+      <rect x="146" y="18" width="108" height="36" fill="#fff" stroke="#000" stroke-width="1.2"/>
+      <text x="200" y="41" text-anchor="middle" font-size="13">作品信息管理</text>
+
+      <rect x="286" y="18" width="88" height="36" fill="#fff" stroke="#000" stroke-width="1.2"/>
+      <text x="330" y="41" text-anchor="middle" font-size="13">分类管理</text>
+
+      <rect x="416" y="18" width="108" height="36" fill="#fff" stroke="#000" stroke-width="1.2"/>
+      <text x="470" y="41" text-anchor="middle" font-size="13">作品审核管理</text>
+
+      <rect x="556" y="18" width="108" height="36" fill="#fff" stroke="#000" stroke-width="1.2"/>
+      <text x="610" y="41" text-anchor="middle" font-size="13">服务器数据库</text>
+
+      <!-- 管理员（右侧 Actor） -->
+      <g transform="translate(770, 28)">
+        <circle cx="0" cy="-18" r="10" fill="none" stroke="#000" stroke-width="1.2"/>
+        <line x1="0" y1="-8" x2="0" y2="14" stroke="#000" stroke-width="1.2"/>
+        <line x1="-14" y1="2" x2="14" y2="2" stroke="#000" stroke-width="1.2"/>
+        <line x1="0" y1="14" x2="-11" y2="36" stroke="#000" stroke-width="1.2"/>
+        <line x1="0" y1="14" x2="11" y2="36" stroke="#000" stroke-width="1.2"/>
+        <text x="0" y="58" text-anchor="middle" font-size="13">管理员</text>
+      </g>
+
+      <!-- 生命线 -->
+      <line x1="70" y1="86" x2="70" y2="680" stroke="#000" stroke-width="1" stroke-dasharray="6 4"/>
+      <line x1="200" y1="54" x2="200" y2="680" stroke="#000" stroke-width="1" stroke-dasharray="6 4"/>
+      <line x1="330" y1="54" x2="330" y2="680" stroke="#000" stroke-width="1" stroke-dasharray="6 4"/>
+      <line x1="470" y1="54" x2="470" y2="680" stroke="#000" stroke-width="1" stroke-dasharray="6 4"/>
+      <line x1="610" y1="54" x2="610" y2="680" stroke="#000" stroke-width="1" stroke-dasharray="6 4"/>
+      <line x1="770" y1="86" x2="770" y2="680" stroke="#000" stroke-width="1" stroke-dasharray="6 4"/>
+
+      <!-- ===== ① 作品信息管理（手作达人） ===== -->
+      <rect x="194" y="118" width="12" height="118" fill="#fff" stroke="#000" stroke-width="1"/>
+      <rect x="604" y="148" width="12" height="28" fill="#fff" stroke="#000" stroke-width="1"/>
+
+      <line x1="70" y1="128" x2="194" y2="128" stroke="#000" stroke-width="1.2" marker-end="url(#arrow-solid)"/>
+      <text x="132" y="120" text-anchor="middle" font-size="12">新增、编辑、删除作品</text>
+
+      <line x1="206" y1="168" x2="604" y2="168" stroke="#000" stroke-width="1.2" marker-end="url(#arrow-solid)"/>
+      <text x="405" y="160" text-anchor="middle" font-size="12">访问数据库，修改作品信息</text>
+
+      <line x1="604" y1="208" x2="206" y2="208" stroke="#000" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arrow-open)"/>
+      <text x="405" y="200" text-anchor="middle" font-size="12">修改成功，返回成功信息</text>
+
+      <line x1="194" y1="248" x2="70" y2="248" stroke="#000" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arrow-open)"/>
+      <text x="132" y="240" text-anchor="middle" font-size="12">返回成功信息</text>
+
+      <!-- ===== ② 分类管理（管理员） ===== -->
+      <rect x="324" y="298" width="12" height="118" fill="#fff" stroke="#000" stroke-width="1"/>
+      <rect x="604" y="328" width="12" height="28" fill="#fff" stroke="#000" stroke-width="1"/>
+
+      <line x1="758" y1="308" x2="336" y2="308" stroke="#000" stroke-width="1.2" marker-end="url(#arrow-solid)"/>
+      <text x="548" y="300" text-anchor="middle" font-size="12">新增、编辑、删除分类</text>
+
+      <line x1="324" y1="348" x2="604" y2="348" stroke="#000" stroke-width="1.2" marker-end="url(#arrow-solid)"/>
+      <text x="464" y="340" text-anchor="middle" font-size="12">访问数据库，修改分类信息</text>
+
+      <line x1="604" y1="388" x2="336" y2="388" stroke="#000" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arrow-open)"/>
+      <text x="470" y="380" text-anchor="middle" font-size="12">修改成功，返回成功信息</text>
+
+      <line x1="324" y1="428" x2="758" y2="428" stroke="#000" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arrow-open)"/>
+      <text x="548" y="420" text-anchor="middle" font-size="12">返回成功信息</text>
+
+      <!-- ===== ③ 作品审核管理（管理员） ===== -->
+      <rect x="464" y="478" width="12" height="118" fill="#fff" stroke="#000" stroke-width="1"/>
+      <rect x="604" y="508" width="12" height="28" fill="#fff" stroke="#000" stroke-width="1"/>
+
+      <line x1="758" y1="488" x2="476" y2="488" stroke="#000" stroke-width="1.2" marker-end="url(#arrow-solid)"/>
+      <text x="618" y="480" text-anchor="middle" font-size="12">审核通过/拒绝待审作品</text>
+
+      <line x1="464" y1="528" x2="604" y2="528" stroke="#000" stroke-width="1.2" marker-end="url(#arrow-solid)"/>
+      <text x="534" y="520" text-anchor="middle" font-size="12">访问数据库，更新审核状态</text>
+
+      <line x1="604" y1="568" x2="476" y2="568" stroke="#000" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arrow-open)"/>
+      <text x="540" y="560" text-anchor="middle" font-size="12">修改成功，返回成功信息</text>
+
+      <line x1="464" y1="608" x2="758" y2="608" stroke="#000" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arrow-open)"/>
+      <text x="618" y="600" text-anchor="middle" font-size="12">操作完成</text>
+    </svg>
+  </div>
+
+  <div class="note">
+    <h2>说明</h2>
+    <ol>
+      <li><strong>作品信息管理（步骤 1～4）：</strong>手作达人在工作台发布或维护作品，作品信息管理模块写入数据库，新作品初始状态为「待审核」。</li>
+      <li><strong>分类管理（步骤 5～8）：</strong>管理员维护工艺分类，分类管理模块更新数据库中的分类配置信息。</li>
+      <li><strong>作品审核管理（步骤 9～12）：</strong>管理员审核待审作品，作品审核管理模块将状态更新为「已通过」或「已拒绝」，通过后作品在市集展示。</li>
+    </ol>
+  </div>
+</body>
+</html>

@@ -15,6 +15,8 @@ Page({
     menuItems: [
       { key: 'cart', title: '购物车', url: '/pages/cart/cart' },
       { key: 'orders', title: '我的订单', url: '/pages/orders/orders' },
+      { key: 'my-requests', title: '我的定制需求', action: 'customMine' },
+      { key: 'my-exchanges', title: '我的技能交换', url: '/pages/my-skills/my-skills' },
       { key: 'favorites', title: '我的收藏', url: '/pages/favorites/favorites' },
       { key: 'inspiration', title: '我的灵感本', url: '/pages/inspiration-notebook/inspiration-notebook' },
       { key: 'wallet', title: '造物币钱包', url: '/pages/wallet/wallet' },
@@ -27,7 +29,19 @@ Page({
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
       this.getTabBar().setData({ selected: 4 });
     }
+    this._onRealtimeBound = (event) => this._onRealtimeEvent(event);
+    getApp().registerRealtimeHandler('account', this._onRealtimeBound);
     this.refreshProfile();
+  },
+
+  onHide() {
+    getApp().unregisterRealtimeHandler('account');
+  },
+
+  _onRealtimeEvent(event) {
+    if (event.type === 'NOTIFICATION') {
+      this.setData({ unreadCount: (this.data.unreadCount || 0) + 1 });
+    }
   },
 
   async refreshProfile() {
@@ -43,7 +57,7 @@ Page({
       let unreadCount = 0;
       try {
         const notes = await notificationApi.list(user.id);
-        unreadCount = (notes || []).filter((n) => !n.read).length;
+        unreadCount = (notes || []).filter((n) => !(n.isRead || n.read)).length;
       } catch (_) {}
       const menuItems = this.data.menuItems.map((item) => {
         if (item.key === 'studio') {
@@ -132,8 +146,14 @@ Page({
       wx.navigateTo({ url: '/pages/login/login' });
       return;
     }
+    const action = e.currentTarget.dataset.action;
+    if (action === 'customMine') {
+      getApp().globalData.pendingCustomScope = 'mine';
+      wx.switchTab({ url: '/pages/custom-request/custom-request' });
+      return;
+    }
     const url = e.currentTarget.dataset.url;
-    wx.navigateTo({ url });
+    if (url) wx.navigateTo({ url });
   },
 
   goPublicProfile() {

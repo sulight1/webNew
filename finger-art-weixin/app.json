@@ -9,6 +9,7 @@
     "pages/product-detail/product-detail",
     "pages/cart/cart",
     "pages/checkout/checkout",
+    "pages/cart-checkout/cart-checkout",
     "pages/artisan-profile/artisan-profile",
     "pages/studio/studio",
     "pages/order-detail/order-detail",
@@ -16,10 +17,12 @@
     "pages/favorites/favorites",
     "pages/wallet/wallet",
     "pages/messages/messages",
+    "pages/chat/chat",
     "pages/publish-product/publish-product",
     "pages/publish-request/publish-request",
     "pages/inspiration-gacha/inspiration-gacha",
-    "pages/inspiration-notebook/inspiration-notebook"
+    "pages/inspiration-notebook/inspiration-notebook",
+    "pages/my-skills/my-skills"
   ],
   "window": {
     "navigationBarTextStyle": "black",

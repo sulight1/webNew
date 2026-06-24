@@ -9,12 +9,18 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * 排期服务实现类。
+ */
 @Service
 public class ScheduleSlotServiceImpl implements ScheduleSlotService {
 
     @Autowired
     private ScheduleSlotMapper slotMapper;
 
+    /**
+     * 查询排期信息。
+     */
     @Override
     public List<ScheduleSlot> getSlotsByUserIdAndMonth(Long userId, int year, int month) {
         LocalDate start = LocalDate.of(year, month, 1);
@@ -22,6 +28,9 @@ public class ScheduleSlotServiceImpl implements ScheduleSlotService {
         return slotMapper.findByUserIdAndDateBetween(userId, start, end);
     }
 
+    /**
+     * 保存排期。
+     */
     @Override
     public ScheduleSlot saveOrUpdateSlot(Long userId, LocalDate date, String status, String remark) {
         List<ScheduleSlot> existing = slotMapper.findByUserIdAndDate(userId, date);

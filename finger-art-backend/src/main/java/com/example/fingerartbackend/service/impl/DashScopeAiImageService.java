@@ -19,6 +19,9 @@ import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * AI 图像服务接口，定义业务能力（业务服务实现）。
+ */
 @Service
 @ConditionalOnProperty(name = "ai.image.provider", havingValue = "dashscope", matchIfMissing = true)
 public class DashScopeAiImageService implements AiImageService {
@@ -29,9 +32,14 @@ public class DashScopeAiImageService implements AiImageService {
     @Autowired
     private AiImageProperties properties;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    @Autowired
+    private RestTemplate restTemplate;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    /**
+     * 生成令牌或数据。
+     */
     @Override
     public String generateAndSave(String prompt) {
         AiImageProperties.DashScope cfg = properties.getDashscope();
@@ -47,6 +55,9 @@ public class DashScopeAiImageService implements AiImageService {
         return saveRemoteImage(remoteUrl);
     }
 
+    /**
+     * 创建AI 图像。
+     */
     private String createTask(String prompt, AiImageProperties.DashScope cfg) {
         String url = cfg.getBaseUrl() + "/api/v1/services/aigc/text2image/image-synthesis";
 
@@ -80,6 +91,9 @@ public class DashScopeAiImageService implements AiImageService {
         }
     }
 
+    /**
+     * 执行 pollTaskResult 相关逻辑。
+     */
     private String pollTaskResult(String taskId, AiImageProperties.DashScope cfg) {
         String url = cfg.getBaseUrl() + "/api/v1/tasks/" + taskId;
         HttpHeaders headers = authHeaders(cfg);
@@ -128,6 +142,9 @@ public class DashScopeAiImageService implements AiImageService {
         throw new RuntimeException("通义万相生图超时，请稍后重试");
     }
 
+    /**
+     * 执行 authHeaders 相关逻辑。
+     */
     private HttpHeaders authHeaders(AiImageProperties.DashScope cfg) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -135,6 +152,9 @@ public class DashScopeAiImageService implements AiImageService {
         return headers;
     }
 
+    /**
+     * 保存AI 图像。
+     */
     private String saveRemoteImage(String remoteUrl) {
         byte[] bytes = downloadSignedUrl(remoteUrl);
         if (bytes == null || bytes.length == 0) {

@@ -182,6 +182,18 @@ function hasCompleteShippingAddress(user) {
     && String(user.shippingAddress || '').trim());
 }
 
+function exchangeStatusText(status) {
+  const map = {
+    REQUESTED: '待接单',
+    ACCEPTED: '待确认预约',
+    CONFIRMED: '预约已锁定',
+    COMPLETED: '已完成',
+    NO_SHOW: '爽约',
+    CANCELLED: '已取消',
+  };
+  return map[status] || status || '—';
+}
+
 module.exports = {
   formatImageUrl,
   formatMoney,
@@ -189,4 +201,5 @@ module.exports = {
   artisanOrderStatusText,
   buildOrderStatusDistribution,
   hasCompleteShippingAddress,
+  exchangeStatusText,
 };

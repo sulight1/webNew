@@ -99,7 +99,7 @@ Page({
         referenceImage: imageUrl || '',
         buyerId: user.id,
       });
-      wx.showToast({ title: '发布成功', icon: 'success' });
+      wx.showToast({ title: '已提交审核', icon: 'success' });
       setTimeout(() => wx.navigateBack(), 500);
     } catch (e) {
       wx.showToast({ title: e.message || '发布失败', icon: 'none' });

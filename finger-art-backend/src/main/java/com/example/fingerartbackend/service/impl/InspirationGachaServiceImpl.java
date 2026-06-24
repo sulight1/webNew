@@ -14,6 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.*;
 
+/**
+ * 灵感扭蛋服务实现类。
+ */
 @Service
 public class InspirationGachaServiceImpl implements InspirationGachaService {
 
@@ -44,7 +47,9 @@ public class InspirationGachaServiceImpl implements InspirationGachaService {
             new CraftOption("embroidery", "刺绣布艺", "🪡"),
             new CraftOption("bead", "串珠饰品", "📿"),
             new CraftOption("candle", "香薰蜡烛", "🕯️"),
-            new CraftOption("paper", "纸艺衍纸", "📄")
+            new CraftOption("paper", "纸艺衍纸", "📄"),
+            new CraftOption("tuanshan", "手绘团扇", "🪭"),
+            new CraftOption("lantern", "传统花灯", "🏮")
     );
 
     private static final List<ColorPalette> PALETTES = List.of(
@@ -102,6 +107,9 @@ public class InspirationGachaServiceImpl implements InspirationGachaService {
 
     private final Random random = new Random();
 
+    /**
+     * 查询灵感扭蛋信息。
+     */
     @Override
     public Map<String, Object> getStatus(Long userId) {
         User user = userMapper.findById(userId).orElseThrow(() -> new RuntimeException("用户不存在"));
@@ -115,6 +123,9 @@ public class InspirationGachaServiceImpl implements InspirationGachaService {
         return status;
     }
 
+    /**
+     * 执行 draw 相关逻辑。
+     */
     @Override
     @Transactional
     public Map<String, Object> draw(Long userId, boolean useFree) {
@@ -149,6 +160,9 @@ public class InspirationGachaServiceImpl implements InspirationGachaService {
         return result;
     }
 
+    /**
+     * 生成令牌或数据。
+     */
     @Override
     @Transactional
     public Map<String, Object> generateImage(Long userId, String imagePrompt) {
@@ -174,6 +188,9 @@ public class InspirationGachaServiceImpl implements InspirationGachaService {
         }
     }
 
+    /**
+     * 执行 markFreeUsed 相关逻辑。
+     */
     private void markFreeUsed(Long userId, LocalDate today) {
         CoinTaskClaim claim = new CoinTaskClaim();
         claim.setUserId(userId);
@@ -183,6 +200,9 @@ public class InspirationGachaServiceImpl implements InspirationGachaService {
         claimMapper.save(claim);
     }
 
+    /**
+     * 构建响应对象。
+     */
     private Map<String, Object> buildRandomInspiration() {
         String styleKey = STYLE_KEYS.get(random.nextInt(STYLE_KEYS.size()));
         CraftOption craft = CRAFTS.get(random.nextInt(CRAFTS.size()));
@@ -213,6 +233,9 @@ public class InspirationGachaServiceImpl implements InspirationGachaService {
         return result;
     }
 
+    /**
+     * 构建响应对象。
+     */
     private String buildCopy(String styleKey, String craftLabel, String styleLabel, String paletteName) {
         List<String> templates = COPY_TEMPLATES.getOrDefault(styleKey, COPY_TEMPLATES.get("cute"));
         String template = templates.get(random.nextInt(templates.size()));
@@ -222,6 +245,9 @@ public class InspirationGachaServiceImpl implements InspirationGachaService {
                 .replace("{palette}", paletteName);
     }
 
+    /**
+     * 构建响应对象。
+     */
     private String buildTitle(CraftOption craft, String styleLabel, String paletteName) {
         List<String> titles = List.of(
                 "【灵感盲盒】" + craft.emoji() + craft.label() + " · " + styleLabel,
@@ -231,22 +257,32 @@ public class InspirationGachaServiceImpl implements InspirationGachaService {
         return titles.get(random.nextInt(titles.size()));
     }
 
+    /**
+     * 构建响应对象。
+     */
     private String buildDescription(CraftOption craft, String styleLabel, String paletteName, String copy) {
         return copy + " 推荐工艺：" + craft.label() + "；风格：" + styleLabel + "；主配色：" + paletteName
                 + "。可在指尖造物发布作品或定制需求，让灵感变成真实手作。";
     }
 
+    /**
+     * 构建响应对象。
+     */
     private String buildImagePrompt(CraftOption craft, String styleLabel, ColorPalette palette) {
         return "精美手工" + craft.label() + "作品，" + styleLabel + "风格，"
                 + palette.colorHint() + "配色，高清产品摄影，柔和自然光，白色背景，细节丰富，8k";
     }
 
+    /**
+     * 执行 suggestPrice 相关逻辑。
+     */
     private int suggestPrice(String categoryKey, String styleKey) {
         int base = switch (categoryKey) {
             case "nails" -> 68;
             case "resin", "bead" -> 58;
             case "crochet", "embroidery" -> 88;
-            case "clay", "flower" -> 78;
+            case "clay", "flower", "tuanshan" -> 78;
+            case "lantern" -> 98;
             default -> 65;
         };
         if ("luxury".equals(styleKey)) base += 30;
@@ -254,13 +290,22 @@ public class InspirationGachaServiceImpl implements InspirationGachaService {
         return base + random.nextInt(20);
     }
 
+    /**
+     * 构建响应对象。
+     */
     private List<String> buildTags(CraftOption craft, String styleLabel) {
         return List.of("灵感盲盒", craft.label(), styleLabel, "指尖造物");
     }
 
+    /**
+     * 执行 CraftOption 相关逻辑。
+     */
     private record CraftOption(String key, String label, String emoji) {
     }
 
+    /**
+     * 执行 ColorPalette 相关逻辑。
+     */
     private record ColorPalette(String name, String primary, String secondary, String accent) {
         String colorHint() {
             return name + "（" + primary + " / " + secondary + " / " + accent + "）";
@@ -274,6 +319,9 @@ public class InspirationGachaServiceImpl implements InspirationGachaService {
             );
         }
 
+        /**
+         * 执行 colorMap 相关逻辑。
+         */
         private Map<String, String> colorMap(String label, String hex) {
             Map<String, String> map = new LinkedHashMap<>();
             map.put("label", label);

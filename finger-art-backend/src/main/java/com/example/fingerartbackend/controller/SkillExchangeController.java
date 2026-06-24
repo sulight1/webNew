@@ -8,7 +8,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
-@CrossOrigin(origins = "*")
+/**
+ * 技能交换控制器。
+ * 管理技能交换的发起、接受、确认、完成及爽约上报，对应技能交换交易模块。
+ */
 @RestController
 @RequestMapping("/skill-exchange")
 public class SkillExchangeController {
@@ -16,6 +19,12 @@ public class SkillExchangeController {
     @Autowired
     private SkillExchangeService exchangeService;
 
+    /**
+     * 发起技能交换请求。
+     *
+     * @param payload 含 userAId、userBId、description、zaowuBiCost、scheduleDate 的请求体
+     * @return 创建的交换记录
+     */
     @PostMapping("/request")
     public Result<SkillExchange> requestExchange(@RequestBody Map<String, Object> payload) {
         try {
@@ -30,6 +39,13 @@ public class SkillExchangeController {
         }
     }
 
+    /**
+     * 接受技能交换请求。
+     *
+     * @param id   交换记录 ID
+     * @param body 含 userId 的请求体
+     * @return 更新后的交换记录
+     */
     @PatchMapping("/{id}/accept")
     public Result<SkillExchange> acceptExchange(@PathVariable Long id, @RequestBody Map<String, Long> body) {
         try {
@@ -39,6 +55,13 @@ public class SkillExchangeController {
         }
     }
 
+    /**
+     * 确认技能交换（双方确认见面/开始）。
+     *
+     * @param id   交换记录 ID
+     * @param body 含 userId 的请求体
+     * @return 更新后的交换记录
+     */
     @PatchMapping("/{id}/confirm")
     public Result<SkillExchange> confirmExchange(@PathVariable Long id, @RequestBody Map<String, Long> body) {
         try {
@@ -48,6 +71,13 @@ public class SkillExchangeController {
         }
     }
 
+    /**
+     * 标记技能交换已完成。
+     *
+     * @param id   交换记录 ID
+     * @param body 含 userId 的请求体
+     * @return 更新后的交换记录
+     */
     @PatchMapping("/{id}/complete")
     public Result<SkillExchange> completeExchange(@PathVariable Long id, @RequestBody Map<String, Long> body) {
         try {
@@ -61,6 +91,13 @@ public class SkillExchangeController {
         }
     }
 
+    /**
+     * 上报对方爽约（未到场）。
+     *
+     * @param id   交换记录 ID
+     * @param body 含 userId 的请求体
+     * @return 更新后的交换记录
+     */
     @PatchMapping("/{id}/no-show")
     public Result<SkillExchange> reportNoShow(@PathVariable Long id, @RequestBody Map<String, Long> body) {
         try {
@@ -70,6 +107,12 @@ public class SkillExchangeController {
         }
     }
 
+    /**
+     * 查询用户参与的全部技能交换记录。
+     *
+     * @param userId 用户 ID
+     * @return 交换记录列表
+     */
     @GetMapping("/my")
     public Result<List<SkillExchange>> getMyExchanges(@RequestParam Long userId) {
         try {

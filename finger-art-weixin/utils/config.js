@@ -45,10 +45,16 @@ function resolveMediaBase() {
   return `http://${DEV_LAN_IP}:${PORT}`;
 }
 
+/** WebSocket 基址（与 resolveApiBase 同 host，协议 ws） */
+function resolveWsBase() {
+  return resolveApiBase().replace(/^http/, 'ws');
+}
+
 module.exports = {
   DEV_LAN_IP,
   PORT,
   isDevtoolsSimulator,
   resolveApiBase,
   resolveMediaBase,
+  resolveWsBase,
 };

@@ -61,8 +61,8 @@
 }
 
 .pay-option.active {
-  border-color: #07c160;
-  background: #f6ffed;
+  border-color: #eb2f96;
+  background: #fff5fb;
 }
 
 .pay-icon {
@@ -77,8 +77,8 @@
   font-size: 28rpx;
 }
 
-.pay-icon.wechat {
-  background: #07c160;
+.pay-icon.coin {
+  background: linear-gradient(135deg, #eb2f96, #722ed1);
 }
 
 .pay-main {
@@ -99,7 +99,7 @@
 }
 
 .pay-check {
-  color: #07c160;
+  color: #eb2f96;
   font-weight: 700;
   font-size: 32rpx;
 }

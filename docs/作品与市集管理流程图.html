@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>作品与市集管理流程图 - 指尖造物</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "SimSun", "宋体", serif;
+      padding: 32px 24px;
+      background: #fff;
+      color: #000;
+    }
+    h1 {
+      text-align: center;
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    .caption {
+      text-align: center;
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+    .diagram-wrap {
+      max-width: 340px;
+      margin: 0 auto;
+    }
+    svg {
+      display: block;
+      margin: 0 auto;
+      font-family: "SimSun", "宋体", serif;
+    }
+    .shape { fill: #fff; stroke: #000; stroke-width: 1; }
+    .arrow-line { stroke: #000; stroke-width: 1; fill: none; }
+    .arrow-head { fill: #000; stroke: none; }
+    .label { font-size: 13px; text-anchor: middle; dominant-baseline: middle; }
+    .label-sm { font-size: 12px; }
+  </style>
+</head>
+<body>
+  <h1>图 4-1 作品与市集管理流程图</h1>
+  <p class="caption">指尖造物手作定制与技能交换平台</p>
+
+  <div class="diagram-wrap">
+    <!-- Word 流程图风格：扁椭圆起止符 + 直线 + 实心宽三角箭头 -->
+    <svg width="300" height="580" viewBox="0 0 300 580" xmlns="http://www.w3.org/2000/svg">
+      <!-- 主轴线 cx=105 -->
+
+      <!-- 开始（扁椭圆，Word 起止符样式） -->
+      <ellipse class="shape" cx="105" cy="28" rx="56" ry="14"/>
+      <text class="label" x="105" y="28">开始</text>
+      <!-- 箭头 ↓ -->
+      <line class="arrow-line" x1="105" y1="42" x2="105" y2="58"/>
+      <polygon class="arrow-head" points="105,64 100,56 110,56"/>
+
+      <!-- 新增，编辑作品 -->
+      <polygon class="shape" points="30,64 180,64 168,98 18,98"/>
+      <text class="label" x="105" y="81">新增，编辑作品</text>
+      <line class="arrow-line" x1="105" y1="98" x2="105" y2="114"/>
+      <polygon class="arrow-head" points="105,120 100,112 110,112"/>
+
+      <!-- 选择工艺分类 -->
+      <polygon class="shape" points="30,120 180,120 168,154 18,154"/>
+      <text class="label" x="105" y="137">选择工艺分类</text>
+      <line class="arrow-line" x1="105" y1="154" x2="105" y2="170"/>
+      <polygon class="arrow-head" points="105,176 100,168 110,168"/>
+
+      <!-- 选择工艺标签 -->
+      <polygon class="shape" points="30,176 180,176 168,210 18,210"/>
+      <text class="label" x="105" y="193">选择工艺标签</text>
+      <line class="arrow-line" x1="105" y1="210" x2="105" y2="228"/>
+      <polygon class="arrow-head" points="105,234 100,226 110,226"/>
+
+      <!-- 填写信息是否正确 -->
+      <polygon class="shape" points="105,234 175,264 105,294 35,264"/>
+      <text class="label label-sm" x="105" y="258">填写信息</text>
+      <text class="label label-sm" x="105" y="272">是否正确</text>
+
+      <!-- 是 ↓ -->
+      <text class="label-sm" x="118" y="308">是</text>
+      <line class="arrow-line" x1="105" y1="294" x2="105" y2="318"/>
+      <polygon class="arrow-head" points="105,324 100,316 110,316"/>
+
+      <!-- 操作成功 -->
+      <rect class="shape" x="40" y="324" width="130" height="34"/>
+      <text class="label" x="105" y="341">操作成功</text>
+      <line class="arrow-line" x1="105" y1="358" x2="105" y2="382"/>
+      <polygon class="arrow-head" points="105,388 100,380 110,380"/>
+
+      <!-- 结束（扁椭圆） -->
+      <ellipse class="shape" cx="105" cy="404" rx="56" ry="14"/>
+      <text class="label" x="105" y="404">结束</text>
+
+      <!-- 否 → 操作失败（右侧独立框，与老师一致） -->
+      <text class="label-sm" x="188" y="258">否</text>
+      <rect class="shape" x="192" y="246" width="92" height="34"/>
+      <text class="label" x="238" y="263">操作失败</text>
+    </svg>
+  </div>
+</body>
+</html>

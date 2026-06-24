@@ -3,7 +3,7 @@ const auth = require('../../utils/auth');
 const cartUtil = require('../../utils/cart');
 const { formatImageUrl, hasCompleteShippingAddress } = require('../../utils/format');
 
-const WECHAT_CHANNEL = 'MOCK_WECHAT';
+const COIN_CHANNEL = 'ZAOWU_COIN';
 
 Page({
   data: {
@@ -12,6 +12,7 @@ Page({
     checkoutQuantity: 1,
     unitPrice: 0,
     totalAmount: 0,
+    coinBalance: '0.00',
     loading: true,
     submitting: false,
   },
@@ -65,6 +66,7 @@ Page({
       const checkoutQuantity = Math.min(this.initialQty, maxStock);
       const unitPrice = Number(product.price) || 0;
       const totalAmount = Math.round(unitPrice * checkoutQuantity * 100) / 100;
+      const coinBalance = Number(buyer.zaowuBiBalance ?? 0).toFixed(2);
 
       this.setData({
         product,
@@ -72,6 +74,7 @@ Page({
         checkoutQuantity,
         unitPrice,
         totalAmount,
+        coinBalance,
       });
     } catch (e) {
       wx.showToast({ title: e.message || '加载失败', icon: 'none' });
@@ -85,8 +88,12 @@ Page({
     wx.switchTab({ url: '/pages/account/account' });
   },
 
+  goWallet() {
+    wx.navigateTo({ url: '/pages/wallet/wallet' });
+  },
+
   async submitPayment() {
-    const { product, buyer, checkoutQuantity, totalAmount } = this.data;
+    const { product, buyer, checkoutQuantity, totalAmount, coinBalance } = this.data;
     if (!product || !buyer) return;
 
     if (!hasCompleteShippingAddress(buyer)) {
@@ -96,6 +103,18 @@ Page({
         confirmText: '去填写',
         success: (r) => {
           if (r.confirm) this.goEditAddress();
+        },
+      });
+      return;
+    }
+
+    if (Number(coinBalance) < Number(totalAmount)) {
+      wx.showModal({
+        title: '造物币余额不足',
+        content: '请先在钱包充值后再购买',
+        confirmText: '去充值',
+        success: (r) => {
+          if (r.confirm) this.goWallet();
         },
       });
       return;
@@ -117,12 +136,16 @@ Page({
         productId: product.id,
         requirements: `正式购买请求: ${product.title} × ${checkoutQuantity}`,
       });
-      await orderApi.payDeposit(order.id, user.id, WECHAT_CHANNEL);
+      await orderApi.payDeposit(order.id, user.id, COIN_CHANNEL);
+      try {
+        const profile = await userApi.getProfile(user.id);
+        getApp().setUser(profile);
+      } catch (_) {}
       cartUtil.removeItem(product.id);
       wx.hideLoading();
       wx.showModal({
         title: '支付成功',
-        content: '已通过微信支付完成，请等待卖家发货',
+        content: '已使用造物币支付，资金平台托管，请等待卖家发货',
         showCancel: false,
         success: () => {
           wx.redirectTo({ url: '/pages/orders/orders' });
@@ -130,7 +153,19 @@ Page({
       });
     } catch (e) {
       wx.hideLoading();
-      wx.showToast({ title: e.message || '支付失败', icon: 'none' });
+      const msg = e.message || '支付失败';
+      if (msg.includes('余额不足')) {
+        wx.showModal({
+          title: '造物币余额不足',
+          content: '请先在钱包充值后再购买',
+          confirmText: '去充值',
+          success: (r) => {
+            if (r.confirm) this.goWallet();
+          },
+        });
+        return;
+      }
+      wx.showToast({ title: msg, icon: 'none' });
     } finally {
       this.setData({ submitting: false });
     }

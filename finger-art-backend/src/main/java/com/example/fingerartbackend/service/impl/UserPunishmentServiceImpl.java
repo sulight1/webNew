@@ -20,6 +20,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+/**
+ * 用户服务实现类。
+ */
 @Service
 public class UserPunishmentServiceImpl implements UserPunishmentService {
 
@@ -40,6 +43,9 @@ public class UserPunishmentServiceImpl implements UserPunishmentService {
     @Autowired
     private NotificationService notificationService;
 
+    /**
+     * 查询用户信息。
+     */
     @Override
     public List<UserPunishmentView> getActiveViews(Long userId) {
         return punishmentMapper.findActiveByUserId(userId, LocalDateTime.now()).stream()
@@ -47,6 +53,9 @@ public class UserPunishmentServiceImpl implements UserPunishmentService {
                 .toList();
     }
 
+    /**
+     * 执行 applyPunishments 相关逻辑。
+     */
     @Override
     @Transactional
     public List<UserPunishment> applyPunishments(Long userId, Long adminId, ApplyUserPunishmentRequest request) {
@@ -84,6 +93,9 @@ public class UserPunishmentServiceImpl implements UserPunishmentService {
         return saved;
     }
 
+    /**
+     * 执行 liftPunishment 相关逻辑。
+     */
     @Override
     @Transactional
     public void liftPunishment(Long userId, String type, Long adminId) {
@@ -95,6 +107,9 @@ public class UserPunishmentServiceImpl implements UserPunishmentService {
         notifyLift(userId, type);
     }
 
+    /**
+     * 执行 liftPunishments 相关逻辑。
+     */
     @Override
     @Transactional
     public void liftPunishments(Long userId, List<String> types, Long adminId) {
@@ -111,6 +126,9 @@ public class UserPunishmentServiceImpl implements UserPunishmentService {
         }
     }
 
+    /**
+     * 执行 liftAllPunishments 相关逻辑。
+     */
     @Override
     @Transactional
     public void liftAllPunishments(Long userId, Long adminId) {
@@ -128,6 +146,9 @@ public class UserPunishmentServiceImpl implements UserPunishmentService {
                 "/account");
     }
 
+    /**
+     * 判断条件是否成立。
+     */
     @Override
     public boolean isPunished(Long userId, String type) {
         if (userId == null || type == null) {
@@ -137,11 +158,17 @@ public class UserPunishmentServiceImpl implements UserPunishmentService {
                 .anyMatch(p -> type.equals(p.getType()));
     }
 
+    /**
+     * 判断条件是否成立。
+     */
     @Override
     public boolean isAccountBanned(Long userId) {
         return isPunished(userId, UserPunishmentType.ACCOUNT_BAN);
     }
 
+    /**
+     * 断言业务条件，不满足则抛异常。
+     */
     @Override
     public void assertNotPunished(Long userId, String type, String message) {
         if (isPunished(userId, type)) {
@@ -149,6 +176,9 @@ public class UserPunishmentServiceImpl implements UserPunishmentService {
         }
     }
 
+    /**
+     * 执行 toView 相关逻辑。
+     */
     private UserPunishmentView toView(UserPunishment punishment) {
         UserPunishmentView view = new UserPunishmentView();
         view.setId(punishment.getId());
@@ -161,6 +191,9 @@ public class UserPunishmentServiceImpl implements UserPunishmentService {
         return view;
     }
 
+    /**
+     * 发送通知。
+     */
     private void notifyLift(Long userId, String type) {
         notificationService.notify(
                 userId,
@@ -170,6 +203,9 @@ public class UserPunishmentServiceImpl implements UserPunishmentService {
                 "/account");
     }
 
+    /**
+     * 发送通知。
+     */
     private void notifyUser(Long userId, String type, LocalDateTime endAt, String reason) {
         String label = UserPunishmentType.label(type);
         String durationText = endAt == null

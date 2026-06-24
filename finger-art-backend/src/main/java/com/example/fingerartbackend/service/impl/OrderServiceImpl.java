@@ -7,6 +7,9 @@ import com.example.fingerartbackend.service.NotificationService;
 import com.example.fingerartbackend.service.OrderService;
 import com.example.fingerartbackend.service.UserPunishmentService;
 import com.example.fingerartbackend.constant.UserPunishmentType;
+import com.example.fingerartbackend.dto.BatchCheckoutItemRequest;
+import com.example.fingerartbackend.dto.BatchCheckoutRequest;
+import com.example.fingerartbackend.dto.BatchCheckoutResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -15,6 +18,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.*;
 
+/**
+ * 订单服务实现类。
+ */
 @Service
 public class OrderServiceImpl implements OrderService {
 
@@ -37,6 +43,9 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private UserPunishmentService userPunishmentService;
 
+    /**
+     * 创建订单。
+     */
     @Override
     @Transactional
     public CustomOrder createOrder(CustomOrder order) {
@@ -97,6 +106,9 @@ public class OrderServiceImpl implements OrderService {
         return saved;
     }
 
+    /**
+     * 查询订单信息。
+     */
     @Override
     public List<CustomOrder> getAllOrders(String status) {
         if (status != null && !status.isEmpty()) {
@@ -105,22 +117,34 @@ public class OrderServiceImpl implements OrderService {
         return orderMapper.findAll(Sort.by(Sort.Direction.DESC, "createTime"));
     }
 
+    /**
+     * 查询订单信息。
+     */
     @Override
     public CustomOrder getOrder(Long id) {
         CustomOrder order = orderMapper.findById(id).orElseThrow(() -> new RuntimeException("订单不存在"));
         return normalizeOrderForRead(order);
     }
 
+    /**
+     * 查询订单信息。
+     */
     @Override
     public List<CustomOrder> getArtisanOrders(Long artisanId) {
         return orderMapper.findByArtisanId(artisanId).stream().map(this::normalizeOrderForRead).toList();
     }
 
+    /**
+     * 查询订单信息。
+     */
     @Override
     public List<CustomOrder> getBuyerOrders(Long buyerId) {
         return orderMapper.findByBuyerIdOrderByCreateTimeDesc(buyerId).stream().map(this::normalizeOrderForRead).toList();
     }
 
+    /**
+     * 确认操作。
+     */
     @Override
     @Transactional
     public CustomOrder confirmOrder(Long orderId, Long artisanId) {
@@ -140,6 +164,9 @@ public class OrderServiceImpl implements OrderService {
         return saved;
     }
 
+    /**
+     * 执行 payDeposit 相关逻辑。
+     */
     @Override
     @Transactional
     public CustomOrder payDeposit(Long orderId, Long buyerId, String paymentChannel) {
@@ -189,6 +216,9 @@ public class OrderServiceImpl implements OrderService {
         return saved;
     }
 
+    /**
+     * 确认操作。
+     */
     @Override
     @Transactional
     public CustomOrder confirmReceipt(Long orderId, Long buyerId) {
@@ -220,6 +250,9 @@ public class OrderServiceImpl implements OrderService {
         return saved;
     }
 
+    /**
+     * 执行 payBalance 相关逻辑。
+     */
     @Override
     @Transactional
     public CustomOrder payBalance(Long orderId, Long buyerId) {
@@ -252,6 +285,9 @@ public class OrderServiceImpl implements OrderService {
         return saved;
     }
 
+    /**
+     * 更新订单。
+     */
     @Override
     @Transactional
     public CustomOrder updateStatus(Long orderId, String status, Long operatorId, String operatorName) {
@@ -269,6 +305,9 @@ public class OrderServiceImpl implements OrderService {
         return saved;
     }
 
+    /**
+     * 订单发货。
+     */
     @Override
     @Transactional
     public CustomOrder shipOrder(Long orderId, Long artisanId, String shippingCompany, String trackingNumber, String operatorName) {
@@ -299,6 +338,9 @@ public class OrderServiceImpl implements OrderService {
         return saved;
     }
 
+    /**
+     * 新增订单。
+     */
     @Override
     @Transactional
     public CustomOrder addMilestone(Long orderId, Map<String, String> payload, Long operatorId, String operatorName) {
@@ -310,16 +352,25 @@ public class OrderServiceImpl implements OrderService {
         return order;
     }
 
+    /**
+     * 查询订单信息。
+     */
     @Override
     public List<OrderMilestone> getMilestones(Long orderId) {
         return milestoneMapper.findByOrderIdOrderByCreatedAtAsc(orderId);
     }
 
+    /**
+     * 查询订单信息。
+     */
     @Override
     public List<EscrowTransaction> getEscrowTransactions(Long orderId) {
         return escrowMapper.findByOrderIdOrderByCreatedAtAsc(orderId);
     }
 
+    /**
+     * 执行 openDispute 相关逻辑。
+     */
     @Override
     @Transactional
     public CustomOrder openDispute(Long orderId, Long userId, String reason) {
@@ -335,6 +386,9 @@ public class OrderServiceImpl implements OrderService {
         return saved;
     }
 
+    /**
+     * 执行 resolveDispute 相关逻辑。
+     */
     @Override
     @Transactional
     public CustomOrder resolveDispute(Long orderId, boolean releaseToArtisan) {
@@ -357,12 +411,18 @@ public class OrderServiceImpl implements OrderService {
         return orderMapper.save(order);
     }
 
+    /**
+     * 删除订单。
+     */
     @Override
     @Transactional
     public void deleteOrder(Long id) {
         orderMapper.deleteById(id);
     }
 
+    /**
+     * 执行 requestCancel 相关逻辑。
+     */
     @Override
     @Transactional
     public CustomOrder requestCancel(Long orderId, Long buyerId, String reason) {
@@ -387,6 +447,9 @@ public class OrderServiceImpl implements OrderService {
         return saved;
     }
 
+    /**
+     * 通过订单审核。
+     */
     @Override
     @Transactional
     public CustomOrder approveCancel(Long orderId, Long artisanId) {
@@ -405,6 +468,9 @@ public class OrderServiceImpl implements OrderService {
         return saved;
     }
 
+    /**
+     * 拒绝订单。
+     */
     @Override
     @Transactional
     public CustomOrder rejectCancel(Long orderId, Long artisanId, String reason) {
@@ -427,6 +493,9 @@ public class OrderServiceImpl implements OrderService {
         return saved;
     }
 
+    /**
+     * 执行 finishCancelWithRefund 相关逻辑。
+     */
     private void finishCancelWithRefund(CustomOrder order, Long operatorId, String operatorName, String actionLabel) {
         double refundAmount = order.getEscrowAmount() != null ? order.getEscrowAmount() : 0.0;
         if (refundAmount > 0 && ("HELD".equals(order.getEscrowStatus()) || "FROZEN".equals(order.getEscrowStatus()))) {
@@ -444,18 +513,30 @@ public class OrderServiceImpl implements OrderService {
         addMilestoneRecord(order.getId(), "CANCEL", "订单取消", note, null, operatorId, operatorName);
     }
 
+    /**
+     * 判断条件是否成立。
+     */
     private boolean isCancellableStatus(String status) {
         return status != null && !Set.of("COMPLETED", "CANCELLED", "DISPUTED").contains(status);
     }
 
+    /**
+     * 执行 normalizeCancelStatus 相关逻辑。
+     */
     private String normalizeCancelStatus(String status) {
         return status == null || status.isBlank() ? "NONE" : status;
     }
 
+    /**
+     * 执行 refundEscrowToBuyer 相关逻辑。
+     */
     private void refundEscrowToBuyer(CustomOrder order) {
         refundEscrowToBuyer(order, "纠纷退款给买家");
     }
 
+    /**
+     * 执行 refundEscrowToBuyer 相关逻辑。
+     */
     private void refundEscrowToBuyer(CustomOrder order, String remark) {
         double total = order.getEscrowAmount() != null ? order.getEscrowAmount() : 0.0;
         if (total <= 0) return;
@@ -466,6 +547,9 @@ public class OrderServiceImpl implements OrderService {
         recordEscrow(order.getId(), order.getBuyerId(), total, "REFUND", remark);
     }
 
+    /**
+     * 执行 holdEscrow 相关逻辑。
+     */
     private void holdEscrow(CustomOrder order, Long buyerId, double amount, String type, String remark) {
         User buyer = userMapper.findById(buyerId).orElseThrow(() -> new RuntimeException("用户不存在"));
         double balance = buyer.getZaowuBiBalance() != null ? buyer.getZaowuBiBalance() : 0.0;
@@ -478,6 +562,9 @@ public class OrderServiceImpl implements OrderService {
         recordEscrow(order.getId(), buyerId, amount, type, remark);
     }
 
+    /**
+     * 执行 releaseEscrowToArtisan 相关逻辑。
+     */
     private void releaseEscrowToArtisan(CustomOrder order) {
         double total = order.getEscrowAmount() != null ? order.getEscrowAmount() : 0.0;
         if (total <= 0) return;
@@ -488,6 +575,9 @@ public class OrderServiceImpl implements OrderService {
         recordEscrow(order.getId(), order.getArtisanId(), total, "RELEASE", "托管款释放给手作人");
     }
 
+    /**
+     * 执行 recordEscrow 相关逻辑。
+     */
     private void recordEscrow(Long orderId, Long userId, double amount, String type, String remark) {
         EscrowTransaction tx = new EscrowTransaction();
         tx.setOrderId(orderId);
@@ -498,6 +588,9 @@ public class OrderServiceImpl implements OrderService {
         escrowMapper.save(tx);
     }
 
+    /**
+     * 新增订单。
+     */
     private void addMilestoneRecord(Long orderId, String stageKey, String stageLabel, String note, String imageUrl, Long operatorId, String operatorName) {
         OrderMilestone m = new OrderMilestone();
         m.setOrderId(orderId);
@@ -510,6 +603,9 @@ public class OrderServiceImpl implements OrderService {
         milestoneMapper.save(m);
     }
 
+    /**
+     * 执行 incrementCompletedOrders 相关逻辑。
+     */
     private void incrementCompletedOrders(Long userId) {
         if (userId == null) return;
         userMapper.findById(userId).ifPresent(u -> {
@@ -519,6 +615,9 @@ public class OrderServiceImpl implements OrderService {
         });
     }
 
+    /**
+     * 校验数据。
+     */
     private void validateTransition(String from, String to) {
         Set<String> allowed = transitionMap.getOrDefault(from, Collections.emptySet());
         if (!allowed.contains(to) && !from.equals(to)) {
@@ -539,6 +638,9 @@ public class OrderServiceImpl implements OrderService {
         transitionMap.put("DISPUTED", Set.of("COMPLETED", "CANCELLED"));
     }
 
+    /**
+     * 执行 mapStatusToStage 相关逻辑。
+     */
     private String mapStatusToStage(String status) {
         switch (status) {
             case "PENDING_CONFIRM": return "CONFIRM";
@@ -555,6 +657,9 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+    /**
+     * 执行 statusLabel 相关逻辑。
+     */
     private String statusLabel(String status) {
         switch (status) {
             case "PENDING_CONFIRM": return "待确认";
@@ -571,10 +676,16 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+    /**
+     * 执行 round 相关逻辑。
+     */
     private double round(double v) {
         return Math.round(v * 100.0) / 100.0;
     }
 
+    /**
+     * 执行 normalizePaymentChannel 相关逻辑。
+     */
     private String normalizePaymentChannel(String paymentChannel) {
         if (paymentChannel == null || paymentChannel.isBlank()) {
             return "ZAOWU_COIN";
@@ -586,6 +697,9 @@ public class OrderServiceImpl implements OrderService {
         };
     }
 
+    /**
+     * 执行 paymentChannelLabel 相关逻辑。
+     */
     private String paymentChannelLabel(String channel) {
         return switch (channel) {
             case "MOCK_WECHAT" -> "微信";
@@ -594,10 +708,16 @@ public class OrderServiceImpl implements OrderService {
         };
     }
 
+    /**
+     * 执行 orderQuantity 相关逻辑。
+     */
     private int orderQuantity(CustomOrder order) {
         return order.getQuantity() != null && order.getQuantity() > 0 ? order.getQuantity() : 1;
     }
 
+    /**
+     * 校验数据。
+     */
     private void validateProductStock(CustomOrder order) {
         if (order.getProductId() == null) return;
         Product product = productMapper.findById(order.getProductId()).orElse(null);
@@ -609,6 +729,9 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+    /**
+     * 执行 deductProductStock 相关逻辑。
+     */
     private void deductProductStock(CustomOrder order) {
         if (order.getProductId() == null) return;
         Product product = productMapper.findById(order.getProductId()).orElse(null);
@@ -622,6 +745,9 @@ public class OrderServiceImpl implements OrderService {
         productMapper.save(product);
     }
 
+    /**
+     * 执行 restoreProductStock 相关逻辑。
+     */
     private void restoreProductStock(CustomOrder order) {
         if (order.getProductId() == null) return;
         Product product = productMapper.findById(order.getProductId()).orElse(null);
@@ -631,16 +757,25 @@ public class OrderServiceImpl implements OrderService {
         productMapper.save(product);
     }
 
+    /**
+     * 发送通知。
+     */
     private void notifyArtisan(CustomOrder order, String title, String content) {
         if (order.getArtisanId() == null) return;
         notificationService.notify(order.getArtisanId(), "ORDER", title, content, "/artisan-dashboard?menu=orders");
     }
 
+    /**
+     * 发送通知。
+     */
     private void notifyBuyer(CustomOrder order, String title, String content) {
         if (order.getBuyerId() == null) return;
         notificationService.notify(order.getBuyerId(), "ORDER", title, content, "/artisan-dashboard?menu=buyer-orders");
     }
 
+    /**
+     * 发送通知。
+     */
     private void notifyOrderStatusChange(CustomOrder order, Long operatorId, String label) {
         String content = "「" + safeTitle(order) + "」进入「" + label + "」阶段";
         if (Objects.equals(operatorId, order.getBuyerId())) {
@@ -650,14 +785,23 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+    /**
+     * 执行 safeTitle 相关逻辑。
+     */
     private String safeTitle(CustomOrder order) {
         return order.getProductTitle() != null ? order.getProductTitle() : "定制订单";
     }
 
+    /**
+     * 执行 safeName 相关逻辑。
+     */
     private String safeName(String name) {
         return name != null ? name : "买家";
     }
 
+    /**
+     * 构建响应对象。
+     */
     private String buildCustomRequirementsMilestoneNote(String requirements) {
         if (requirements == null || requirements.isBlank()) {
             return "订单已创建，等待手作人确认（买家未填写详细定制描述）";
@@ -665,6 +809,9 @@ public class OrderServiceImpl implements OrderService {
         return "买家定制需求：" + requirements.trim();
     }
 
+    /**
+     * 构建响应对象。
+     */
     private String buildCustomOrderNotifyContent(CustomOrder order) {
         String content = "买家「" + safeName(order.getBuyerName()) + "」下单「" + safeTitle(order) + "」";
         if (order.getRequirements() != null && !order.getRequirements().isBlank()) {
@@ -677,6 +824,9 @@ public class OrderServiceImpl implements OrderService {
         return content;
     }
 
+    /**
+     * 判断条件是否成立。
+     */
     private boolean isReadyMadeOrder(CustomOrder order) {
         if ("READY_MADE".equals(order.getProductType())) {
             return true;
@@ -736,12 +886,18 @@ public class OrderServiceImpl implements OrderService {
         return changed;
     }
 
+    /**
+     * 判断是否包含/拥有。
+     */
     private boolean hasPaidEscrow(CustomOrder order) {
         return "HELD".equals(order.getEscrowStatus())
                 || "FROZEN".equals(order.getEscrowStatus())
                 || (order.getEscrowAmount() != null && order.getEscrowAmount() > 0);
     }
 
+    /**
+     * 执行 normalizeOrderForRead 相关逻辑。
+     */
     private CustomOrder normalizeOrderForRead(CustomOrder order) {
         boolean paymentChanged = normalizeReadyMadePayment(order);
         boolean statusChanged = normalizeReadyMadeStatus(order);
@@ -751,6 +907,9 @@ public class OrderServiceImpl implements OrderService {
         return order;
     }
 
+    /**
+     * 执行 applyShippingFromBuyer 相关逻辑。
+     */
     private void applyShippingFromBuyer(CustomOrder order) {
         if (hasOrderShippingAddress(order) || order.getBuyerId() == null) {
             return;
@@ -768,15 +927,118 @@ public class OrderServiceImpl implements OrderService {
         });
     }
 
+    /**
+     * 执行 requireOrderShippingAddress 相关逻辑。
+     */
     private void requireOrderShippingAddress(CustomOrder order) {
         if (!hasOrderShippingAddress(order)) {
             throw new RuntimeException("请先在个人信息中填写收货地址");
         }
     }
 
+    /**
+     * 判断是否包含/拥有。
+     */
     private boolean hasOrderShippingAddress(CustomOrder order) {
         return order.getShippingName() != null && !order.getShippingName().isBlank()
                 && order.getShippingPhone() != null && !order.getShippingPhone().isBlank()
                 && order.getShippingAddress() != null && !order.getShippingAddress().isBlank();
+    }
+
+    /**
+     * 执行 batchCheckoutReadyMade 相关逻辑。
+     */
+    @Override
+    @Transactional
+    public BatchCheckoutResult batchCheckoutReadyMade(BatchCheckoutRequest request) {
+        if (request == null || request.getItems() == null || request.getItems().isEmpty()) {
+            throw new RuntimeException("请选择要结算的商品");
+        }
+        Long buyerId = request.getBuyerId();
+        if (buyerId == null) {
+            throw new RuntimeException("买家信息无效");
+        }
+        userPunishmentService.assertNotPunished(buyerId, UserPunishmentType.NO_ORDER, "您已被禁止下单");
+        User buyer = userMapper.findById(buyerId).orElseThrow(() -> new RuntimeException("用户不存在"));
+
+        CustomOrder shippingProbe = new CustomOrder();
+        shippingProbe.setBuyerId(buyerId);
+        applyShippingFromBuyer(shippingProbe);
+        requireOrderShippingAddress(shippingProbe);
+
+        double totalAmount = 0;
+        List<CustomOrder> drafts = new ArrayList<>();
+
+        for (BatchCheckoutItemRequest item : request.getItems()) {
+            if (item.getProductId() == null) {
+                throw new RuntimeException("商品信息无效");
+            }
+            int qty = item.getQuantity() != null && item.getQuantity() > 0 ? item.getQuantity() : 1;
+
+            Product product = productMapper.findById(item.getProductId())
+                    .orElseThrow(() -> new RuntimeException("商品不存在"));
+            if (!"READY_MADE".equals(product.getType())) {
+                throw new RuntimeException("「" + safeProductTitle(product) + "」为定制类商品，请单独发起定制");
+            }
+            if (product.getStatus() != null && !"APPROVED".equals(product.getStatus())) {
+                throw new RuntimeException("「" + safeProductTitle(product) + "」暂不可购买");
+            }
+            if (Objects.equals(product.getCreatorId(), buyerId)) {
+                throw new RuntimeException("不能购买自己的作品「" + safeProductTitle(product) + "」");
+            }
+            int stock = product.getStock() != null ? product.getStock() : 0;
+            if (stock < qty) {
+                throw new RuntimeException(stock <= 0
+                        ? "「" + safeProductTitle(product) + "」已售罄"
+                        : "「" + safeProductTitle(product) + "」库存不足，仅剩 " + stock + " 件");
+            }
+
+            double unitPrice = product.getPrice() != null ? product.getPrice() : 0.0;
+            double lineTotal = round(unitPrice * qty);
+            totalAmount += lineTotal;
+
+            CustomOrder order = new CustomOrder();
+            order.setBuyerId(buyerId);
+            order.setBuyerName(request.getBuyerName() != null && !request.getBuyerName().isBlank()
+                    ? request.getBuyerName()
+                    : buyer.getUsername());
+            order.setArtisanId(product.getCreatorId());
+            order.setArtisanName(product.getCreator());
+            order.setProductId(product.getId());
+            order.setProductTitle(product.getTitle());
+            order.setProductType("READY_MADE");
+            order.setPrice(lineTotal);
+            order.setQuantity(qty);
+            order.setRequirements("正式购买请求: " + safeProductTitle(product) + " × " + qty);
+            order.setStatus("PENDING_PAY");
+            drafts.add(order);
+        }
+
+        double balance = buyer.getZaowuBiBalance() != null ? buyer.getZaowuBiBalance() : 0.0;
+        if (balance < totalAmount) {
+            throw new RuntimeException("造物币余额不足，需 " + round(totalAmount) + " 币，当前余额 " + round(balance) + " 币");
+        }
+
+        String channel = request.getPaymentChannel() != null && !request.getPaymentChannel().isBlank()
+                ? request.getPaymentChannel()
+                : "ZAOWU_COIN";
+        List<CustomOrder> paidOrders = new ArrayList<>();
+        for (CustomOrder draft : drafts) {
+            CustomOrder created = createOrder(draft);
+            paidOrders.add(payDeposit(created.getId(), buyerId, channel));
+        }
+
+        BatchCheckoutResult result = new BatchCheckoutResult();
+        result.setOrders(paidOrders);
+        result.setTotalAmount(round(totalAmount));
+        result.setOrderCount(paidOrders.size());
+        return result;
+    }
+
+    /**
+     * 执行 safeProductTitle 相关逻辑。
+     */
+    private String safeProductTitle(Product product) {
+        return product.getTitle() != null ? product.getTitle() : "手作作品";
     }
 }

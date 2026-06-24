@@ -11,6 +11,9 @@ import dev.samstevens.totp.exceptions.QrGenerationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+/**
+ * 管理端服务接口，定义业务能力（业务服务接口）。
+ */
 @Service
 public class AdminTotpService {
 
@@ -26,6 +29,9 @@ public class AdminTotpService {
     @Autowired
     private AdminAuditService adminAuditService;
 
+    /**
+     * 查询管理端信息。
+     */
     public TotpStatusResponse getStatus() {
         User admin = requireAdmin();
         TotpStatusResponse status = new TotpStatusResponse();
@@ -33,6 +39,9 @@ public class AdminTotpService {
         return status;
     }
 
+    /**
+     * 执行 setup 相关逻辑。
+     */
     public TotpSetupResponse setup() {
         User admin = requireAdmin();
         if (Boolean.TRUE.equals(admin.getTotpEnabled())) {
@@ -50,6 +59,9 @@ public class AdminTotpService {
         return response;
     }
 
+    /**
+     * 执行 enable 相关逻辑。
+     */
     public void enable(String secret, String code) {
         User admin = requireAdmin();
         if (Boolean.TRUE.equals(admin.getTotpEnabled())) {
@@ -67,6 +79,9 @@ public class AdminTotpService {
         adminAuditService.log("ENABLE_TOTP", "USER", admin.getId(), "启用 TOTP 二次验证");
     }
 
+    /**
+     * 执行 disable 相关逻辑。
+     */
     public void disable(String code) {
         User admin = requireAdmin();
         if (!Boolean.TRUE.equals(admin.getTotpEnabled())) {
@@ -81,6 +96,9 @@ public class AdminTotpService {
         adminAuditService.log("DISABLE_TOTP", "USER", admin.getId(), "关闭 TOTP 二次验证");
     }
 
+    /**
+     * 执行 verifyLoginTotp 相关逻辑。
+     */
     public User verifyLoginTotp(String preAuthToken, String code) {
         if (preAuthToken == null || preAuthToken.isBlank()) {
             throw new RuntimeException("预认证已失效，请重新登录");
@@ -103,6 +121,9 @@ public class AdminTotpService {
         return admin;
     }
 
+    /**
+     * 执行 requireAdmin 相关逻辑。
+     */
     private User requireAdmin() {
         AuthUser auth = AuthContext.get();
         if (auth == null || !"ADMIN".equals(auth.role())) {

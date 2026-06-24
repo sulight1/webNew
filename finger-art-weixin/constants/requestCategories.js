@@ -19,6 +19,8 @@ const REQUEST_SORT_TABS = [
 ];
 
 function getRequestStatusLabel(status) {
+  if (status === 'PENDING') return '审核中';
+  if (status === 'REJECTED') return '未通过';
   if (status === 'OPEN') return '招募中';
   if (status === 'MATCHED') return '已匹配';
   return '已结束';

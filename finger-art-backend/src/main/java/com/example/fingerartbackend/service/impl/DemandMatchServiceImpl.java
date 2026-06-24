@@ -27,6 +27,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * 需求匹配服务实现类。
+ */
 @Service
 public class DemandMatchServiceImpl implements DemandMatchService {
 
@@ -43,6 +46,9 @@ public class DemandMatchServiceImpl implements DemandMatchService {
     @Autowired
     private NotificationService notificationService;
 
+    /**
+     * 执行 matchArtisansForRequest 相关逻辑。
+     */
     @Override
     public List<DemandMatchResult> matchArtisansForRequest(Long requestId, int limit) {
         CustomRequest request = requestMapper.findById(requestId)
@@ -50,11 +56,15 @@ public class DemandMatchServiceImpl implements DemandMatchService {
         return scoreArtisans(request).stream().limit(limit).collect(Collectors.toList());
     }
 
+    /**
+     * 执行 matchRequestsForArtisan 相关逻辑。
+     */
     @Override
     public List<DemandMatchResult> matchRequestsForArtisan(Long artisanId, int limit) {
         User artisan = userMapper.findById(artisanId).orElseThrow(() -> new RuntimeException("手作人不存在"));
         List<CustomRequest> openRequests = requestMapper.findAll().stream()
                 .filter(r -> "OPEN".equals(r.getStatus()))
+                .filter(r -> r.getBuyer() == null || !artisan.getId().equals(r.getBuyer().getId()))
                 .collect(Collectors.toList());
 
         List<DemandMatchResult> results = new ArrayList<>();
@@ -74,6 +84,9 @@ public class DemandMatchServiceImpl implements DemandMatchService {
         return results.stream().limit(limit).collect(Collectors.toList());
     }
 
+    /**
+     * 发送通知。
+     */
     @Override
     public void notifyMatchedArtisans(CustomRequest request) {
         List<DemandMatchResult> matches = scoreArtisans(request).stream()
@@ -91,6 +104,9 @@ public class DemandMatchServiceImpl implements DemandMatchService {
         }
     }
 
+    /**
+     * 执行 scoreArtisans 相关逻辑。
+     */
     private List<DemandMatchResult> scoreArtisans(CustomRequest request) {
         Map<Long, DemandMatchResult> map = new HashMap<>();
         List<User> users = userMapper.findAll().stream()
@@ -109,6 +125,9 @@ public class DemandMatchServiceImpl implements DemandMatchService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 执行 scoreArtisanForRequest 相关逻辑。
+     */
     private DemandMatchResult scoreArtisanForRequest(User artisan, CustomRequest request) {
         DemandMatchResult result = new DemandMatchResult();
         result.setArtisanId(artisan.getId());
@@ -178,6 +197,9 @@ public class DemandMatchServiceImpl implements DemandMatchService {
         return result;
     }
 
+    /**
+     * 判断是否包含/拥有。
+     */
     private boolean hasFreeSlotBeforeDeadline(Long userId, String deadline) {
         if (deadline == null || deadline.isBlank()) return true;
         LocalDate target;

@@ -8,7 +8,7 @@ const PRODUCT_STATUS = {
   REJECTED: '未通过',
 };
 
-const TOP_RANK_LABELS = ['🥇', '🥈', '🥉', '4', '5'];
+const TOP_RANK_LABELS = ['🥇', '🥈', '🥉'];
 
 function isCustomOrder(order) {
   if (order.productType === 'CUSTOMIZABLE' || order.productType === 'CUSTOM') return true;

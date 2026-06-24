@@ -6,14 +6,25 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
-@CrossOrigin(origins = "*")
+/**
+ * AI控制器，对外提供 HTTP 接口（REST 控制器）。
+ */
 @RestController
 @RequestMapping("/ai")
 public class AIController {
 
     private static final List<String> ALL_STYLES = Arrays.asList("newChinese", "y2k", "dopamine", "retro", "cute", "luxury");
 
+    @Autowired
+    private com.example.fingerartbackend.service.AiChatService aiChatService;
+
+    @Autowired
+    private com.example.fingerartbackend.service.AiImageService aiImageService;
+
     // ====== 测试接口 ======
+    /**
+     * 执行 test 相关逻辑。
+     */
     @GetMapping("/test")
     public Result<Map<String, Object>> test() {
         Map<String, Object> data = new HashMap<>();
@@ -23,9 +34,9 @@ public class AIController {
     }
 
     // ====== AI 绘画（通义万相，国内） ======
-    @Autowired
-    private com.example.fingerartbackend.service.AiImageService aiImageService;
-
+    /**
+     * 生成令牌或数据。
+     */
     @PostMapping("/generate-drawing")
     public Result<Map<String, Object>> generateDrawing(@RequestBody Map<String, String> payload) {
         String prompt = payload.get("prompt");
@@ -49,6 +60,9 @@ public class AIController {
     }
 
     // ====== AI 文案生成 ======
+    /**
+     * 生成令牌或数据。
+     */
     @PostMapping("/generate-copywriting")
     public Result<Map<String, Object>> generateCopywriting(@RequestBody Map<String, String> payload) {
         String keywords = payload.get("keywords");
@@ -73,6 +87,9 @@ public class AIController {
     }
 
     // ====== 定制需求结构化助手 ======
+    /**
+     * 执行 structureCustomRequest 相关逻辑。
+     */
     @PostMapping("/structure-custom-request")
     public Result<Map<String, Object>> structureCustomRequest(@RequestBody Map<String, String> payload) {
         String brief = payload.get("brief");
@@ -105,6 +122,9 @@ public class AIController {
     }
 
     // ====== 作品上架助手 ======
+    /**
+     * 查询AI列表。
+     */
     @PostMapping("/listing-assistant")
     public Result<Map<String, Object>> listingAssistant(@RequestBody Map<String, String> payload) {
         String keywords = payload.get("keywords");
@@ -114,9 +134,16 @@ public class AIController {
         String style = payload.get("style");
         if (style == null || style.isEmpty()) style = "auto";
         String detectedStyle = style.equals("auto") ? detectStyle(keywords) : style;
-        String category = detectProductCategory(keywords);
-        String craftTechnique = suggestCraftTechnique(category, keywords);
-        int suggestedPrice = suggestPrice(category, keywords);
+        Map<String, Object> categoryResult = aiChatService.classifyProductCategory(
+                keywords.trim(), payload.get("imageUrl"));
+        String category = categoryResult.get("category") != null
+                ? categoryResult.get("category").toString()
+                : "";
+        String categorySource = categoryResult.get("source") != null
+                ? categoryResult.get("source").toString()
+                : "fallback";
+        String craftTechnique = category.isBlank() ? "" : suggestCraftTechnique(category, keywords);
+        int suggestedPrice = suggestPrice(category.isBlank() ? "clay" : category, keywords);
 
         Map<String, Object> data = new HashMap<>();
         data.put("title", generateTitle(keywords, detectedStyle));
@@ -124,12 +151,16 @@ public class AIController {
         data.put("tags", generateTags(keywords, detectedStyle));
         data.put("style", detectedStyle);
         data.put("category", category);
+        data.put("categorySource", categorySource);
         data.put("craftTechnique", craftTechnique);
         data.put("suggestedPrice", suggestedPrice);
         return Result.success(data);
     }
 
     // ====== 技能发布助手 ======
+    /**
+     * 执行 skillAssistant 相关逻辑。
+     */
     @PostMapping("/skill-assistant")
     public Result<Map<String, Object>> skillAssistant(@RequestBody Map<String, String> payload) {
         String keywords = payload.get("keywords");
@@ -152,10 +183,10 @@ public class AIController {
         return Result.success(data);
     }
 
-    @Autowired
-    private com.example.fingerartbackend.service.AiChatService aiChatService;
-
     // ====== AI 造物管家聊天 ======
+    /**
+     * 执行 chat 相关逻辑。
+     */
     @PostMapping("/chat")
     public Result<Map<String, Object>> chat(@RequestBody Map<String, Object> payload) {
         @SuppressWarnings("unchecked")
@@ -188,6 +219,9 @@ public class AIController {
     }
 
     // ====== AI 智能推荐 ======
+    /**
+     * 执行 recommend 相关逻辑。
+     */
     @PostMapping("/recommend")
     public Result<Map<String, Object>> recommend(@RequestBody Map<String, Object> payload) {
         String query = payload.get("query") != null ? payload.get("query").toString() : "";
@@ -204,6 +238,9 @@ public class AIController {
     }
 
     // ====== 风格检测 ======
+    /**
+     * 执行 detectStyle 相关逻辑。
+     */
     private static String detectStyle(String keywords) {
         String lowerKw = keywords.toLowerCase();
 
@@ -217,6 +254,9 @@ public class AIController {
         return ALL_STYLES.get(new Random().nextInt(ALL_STYLES.size()));
     }
 
+    /**
+     * 执行 containsAny 相关逻辑。
+     */
     private static boolean containsAny(String text, String... keywords) {
         for (String kw : keywords) {
             if (text.contains(kw)) return true;
@@ -225,6 +265,9 @@ public class AIController {
     }
 
     // ====== 标题生成 ======
+    /**
+     * 生成令牌或数据。
+     */
     private static String generateTitle(String keywords, String style) {
         Map<String, List<String>> templates = new HashMap<>();
         templates.put("newChinese", Arrays.asList(
@@ -263,6 +306,9 @@ public class AIController {
     }
 
     // ====== 描述生成 ======
+    /**
+     * 生成令牌或数据。
+     */
     private static String generateDescription(String keywords, String style) {
         Map<String, List<String>> templates = new HashMap<>();
         templates.put("newChinese", Arrays.asList(
@@ -295,6 +341,9 @@ public class AIController {
     }
 
     // ====== 标签生成 ======
+    /**
+     * 生成令牌或数据。
+     */
     private static List<String> generateTags(String keywords, String style) {
         List<String> baseTags = Arrays.asList("指尖造物", "原创手作");
 
@@ -319,19 +368,27 @@ public class AIController {
         return result.size() > 8 ? result.subList(0, 8) : result;
     }
 
+    /**
+     * 执行 detectRequestCategory 相关逻辑。
+     */
     private static String detectRequestCategory(String text) {
         String lower = text.toLowerCase();
         if (containsAny(lower, "钩织", "钩针", "毛线", "编织")) return "钩织";
         if (containsAny(lower, "滴胶", "干花", "树脂")) return "滴胶";
         if (containsAny(lower, "穿戴甲", "美甲", "指甲")) return "穿戴甲";
         if (containsAny(lower, "粘土", "黏土", "软陶")) return "粘土";
-        if (containsAny(lower, "缠花", "团扇", "发簪")) return "缠花";
+        if (containsAny(lower, "缠花", "发簪")) return "缠花";
+        if (containsAny(lower, "团扇")) return "团扇";
+        if (containsAny(lower, "花灯", "灯笼")) return "花灯";
         if (containsAny(lower, "拼豆", "像素")) return "拼豆";
         if (containsAny(lower, "刺绣", "绣")) return "刺绣";
         if (containsAny(lower, "串珠", "手链", "项链")) return "串珠";
         return "其它";
     }
 
+    /**
+     * 执行 detectMaterial 相关逻辑。
+     */
     private static String detectMaterial(String text, String category) {
         String lower = text.toLowerCase();
         if (containsAny(lower, "棉线", "牛奶棉", "毛线")) return "牛奶棉 / 5股棉线";
@@ -345,6 +402,8 @@ public class AIController {
             case "穿戴甲" -> "甲片 + 光疗胶";
             case "粘土" -> "超轻粘土 / 软陶";
             case "缠花" -> "蚕丝线 + 铜丝";
+            case "团扇" -> "绢面 + 竹骨 + 颜料";
+            case "花灯" -> "竹篾 + 彩纸 + LED灯珠";
             case "拼豆" -> "融合豆";
             case "刺绣" -> "绣线 + 亚麻布";
             case "串珠" -> "玻璃珠 / 天然石";
@@ -352,6 +411,9 @@ public class AIController {
         };
     }
 
+    /**
+     * 执行 detectSize 相关逻辑。
+     */
     private static String detectSize(String text, String category) {
         String lower = text.toLowerCase();
         if (containsAny(lower, "cm", "厘米", "毫米", "mm")) {
@@ -368,11 +430,16 @@ public class AIController {
             case "穿戴甲" -> "标准甲型 S/M";
             case "粘土" -> "高约 10-12cm";
             case "缠花" -> "发簪长约 18cm";
+            case "团扇" -> "扇面直径约 20-25cm";
+            case "花灯" -> "高约 30-40cm（可定制）";
             case "拼豆" -> "15×15 格（约 12cm）";
             default -> "按沟通确认尺寸";
         };
     }
 
+    /**
+     * 执行 suggestBudget 相关逻辑。
+     */
     private static int[] suggestBudget(String category, String text) {
         String lower = text.toLowerCase();
         int min = 80, max = 200;
@@ -384,12 +451,17 @@ public class AIController {
             case "穿戴甲" -> { min = 99; max = 199; }
             case "粘土" -> { min = 68; max = 158; }
             case "缠花" -> { min = 120; max = 280; }
+            case "团扇" -> { min = 98; max = 228; }
+            case "花灯" -> { min = 128; max = 298; }
             case "拼豆" -> { min = 39; max = 99; }
             default -> { min = 80; max = 200; }
         }
         return new int[]{min, max};
     }
 
+    /**
+     * 执行 suggestLeadDays 相关逻辑。
+     */
     private static int suggestLeadDays(String category, String text) {
         String lower = text.toLowerCase();
         if (containsAny(lower, "急", "尽快", "加急")) return 7;
@@ -402,11 +474,17 @@ public class AIController {
         };
     }
 
+    /**
+     * 构建响应对象。
+     */
     private static String buildRequestTitle(String brief, String category) {
         String core = brief.length() > 18 ? brief.substring(0, 18) + "…" : brief;
         return "【定制】" + category + " · " + core;
     }
 
+    /**
+     * 构建响应对象。
+     */
     private static String buildStructuredDescription(String brief, String category, String size,
                                                      String material, String imagePrompt) {
         StringBuilder sb = new StringBuilder();
@@ -421,13 +499,18 @@ public class AIController {
         return sb.toString();
     }
 
+    /**
+     * 执行 detectProductCategory 相关逻辑。
+     */
     private static String detectProductCategory(String keywords) {
         String lower = keywords.toLowerCase();
         if (containsAny(lower, "钩织", "钩针", "毛线")) return "crochet";
         if (containsAny(lower, "滴胶", "干花", "树脂")) return "resin";
         if (containsAny(lower, "穿戴甲", "美甲")) return "nails";
         if (containsAny(lower, "粘土", "软陶")) return "clay";
-        if (containsAny(lower, "缠花", "团扇", "发簪")) return "flower";
+        if (containsAny(lower, "缠花", "发簪")) return "flower";
+        if (containsAny(lower, "团扇")) return "tuanshan";
+        if (containsAny(lower, "花灯", "灯笼")) return "lantern";
         if (containsAny(lower, "拼豆")) return "perler";
         if (containsAny(lower, "刺绣", "绣")) return "embroidery";
         if (containsAny(lower, "串珠", "手链")) return "bead";
@@ -438,6 +521,9 @@ public class AIController {
         return "crochet";
     }
 
+    /**
+     * 执行 suggestCraftTechnique 相关逻辑。
+     */
     private static String suggestCraftTechnique(String category, String keywords) {
         return switch (category) {
             case "crochet" -> "钩针编织";
@@ -452,10 +538,15 @@ public class AIController {
             case "wood" -> "木雕";
             case "candle" -> "香薰蜡烛";
             case "paper" -> "衍纸";
+            case "tuanshan" -> "手绘团扇";
+            case "lantern" -> "传统花灯";
             default -> "";
         };
     }
 
+    /**
+     * 执行 suggestPrice 相关逻辑。
+     */
     private static int suggestPrice(String category, String keywords) {
         String lower = keywords.toLowerCase();
         int base = switch (category) {
@@ -471,6 +562,8 @@ public class AIController {
             case "wood" -> 228;
             case "candle" -> 68;
             case "paper" -> 88;
+            case "tuanshan" -> 158;
+            case "lantern" -> 188;
             default -> 99;
         };
         if (containsAny(lower, "复杂", "高级", "定制", "婚礼")) base = (int) (base * 1.4);
@@ -478,16 +571,24 @@ public class AIController {
         return Math.max(29, (base / 10) * 10 - 1);
     }
 
+    /**
+     * 执行 detectSkillCategory 相关逻辑。
+     */
     private static String detectSkillCategory(String text) {
         String lower = text.toLowerCase();
         if (containsAny(lower, "摄影", "拍照", "修图", "人像")) return "摄影";
         if (containsAny(lower, "设计", "排版", "logo", "海报", "ui")) return "设计";
         if (containsAny(lower, "钩织", "钩针", "毛线", "编织")) return "钩织";
         if (containsAny(lower, "滴胶", "干花", "树脂")) return "滴胶";
-        if (containsAny(lower, "缠花", "团扇", "发簪")) return "缠花";
+        if (containsAny(lower, "缠花", "发簪")) return "缠花";
+        if (containsAny(lower, "团扇")) return "团扇";
+        if (containsAny(lower, "花灯", "灯笼")) return "花灯";
         return "钩织";
     }
 
+    /**
+     * 执行 suggestSkillDuration 相关逻辑。
+     */
     private static String suggestSkillDuration(String category, String text) {
         String lower = text.toLowerCase();
         if (containsAny(lower, "入门", "基础", "零基础")) {
@@ -512,6 +613,9 @@ public class AIController {
         };
     }
 
+    /**
+     * 执行 suggestSkillCost 相关逻辑。
+     */
     private static int suggestSkillCost(String category, String text) {
         String lower = text.toLowerCase();
         int base = switch (category) {
@@ -527,6 +631,9 @@ public class AIController {
         return Math.min(100, Math.max(5, base));
     }
 
+    /**
+     * 构建响应对象。
+     */
     private static String buildSkillTitle(String keywords, String category) {
         String core = keywords.length() > 16 ? keywords.substring(0, 16) + "…" : keywords;
         return switch (category) {
@@ -536,6 +643,9 @@ public class AIController {
         };
     }
 
+    /**
+     * 构建响应对象。
+     */
     private static String buildSkillDescription(String keywords, String category, String duration) {
         return "我可以提供【" + category + "】相关的技能交换服务，主题围绕「" + keywords.trim() + "」。"
                 + "服务时长约 " + duration + "，支持线上/线下沟通（具体可协商）。"

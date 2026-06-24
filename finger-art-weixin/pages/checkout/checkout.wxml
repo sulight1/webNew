@@ -26,10 +26,10 @@
   <view class="card">
     <view class="section-title">支付方式</view>
     <view class="pay-option active">
-      <view class="pay-icon wechat">微</view>
+      <view class="pay-icon coin">币</view>
       <view class="pay-main">
-        <text class="pay-label">微信支付</text>
-        <text class="pay-desc">演示环境，不会真实扣款</text>
+        <text class="pay-label">造物币支付</text>
+        <text class="pay-desc">可用余额 {{coinBalance}} 币 · 平台托管至确认收货</text>
       </view>
       <text class="pay-check">✓</text>
     </view>
@@ -41,7 +41,7 @@
       <text class="text-price total">¥{{totalAmount}}</text>
     </view>
     <button class="btn-primary pay-btn" loading="{{submitting}}" disabled="{{submitting}}" bindtap="submitPayment">
-      微信支付 ¥{{totalAmount}}
+      造物币支付 ¥{{totalAmount}}
     </button>
   </view>
 </view>

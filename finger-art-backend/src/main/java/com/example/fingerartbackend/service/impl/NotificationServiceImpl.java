@@ -10,6 +10,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/**
+ * 通知服务实现类。
+ */
 @Service
 public class NotificationServiceImpl implements NotificationService {
 
@@ -19,6 +22,9 @@ public class NotificationServiceImpl implements NotificationService {
     @Autowired
     private RealtimePushService pushService;
 
+    /**
+     * 发送通知。
+     */
     @Override
     @Transactional
     public PlatformNotification notify(Long userId, String type, String title, String content, String linkUrl) {
@@ -33,16 +39,25 @@ public class NotificationServiceImpl implements NotificationService {
         return saved;
     }
 
+    /**
+     * 查询通知信息。
+     */
     @Override
     public List<PlatformNotification> getUserNotifications(Long userId) {
         return notificationMapper.findByUserIdOrderByCreatedAtDesc(userId);
     }
 
+    /**
+     * 查询通知信息。
+     */
     @Override
     public long getUnreadCount(Long userId) {
         return notificationMapper.countByUserIdAndIsReadFalse(userId);
     }
 
+    /**
+     * 执行 markRead 相关逻辑。
+     */
     @Override
     @Transactional
     public void markRead(Long notificationId, Long userId) {
@@ -55,6 +70,9 @@ public class NotificationServiceImpl implements NotificationService {
         notificationMapper.save(n);
     }
 
+    /**
+     * 执行 markAllRead 相关逻辑。
+     */
     @Override
     @Transactional
     public void markAllRead(Long userId) {
@@ -64,6 +82,9 @@ public class NotificationServiceImpl implements NotificationService {
         });
     }
 
+    /**
+     * 删除通知。
+     */
     @Override
     @Transactional
     public int deleteAllRead(Long userId) {

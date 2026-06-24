@@ -7,6 +7,7 @@ import com.example.fingerartbackend.entity.Product;
 import com.example.fingerartbackend.service.AiChatService;
 import com.example.fingerartbackend.service.OrderService;
 import com.example.fingerartbackend.service.ProductService;
+import com.example.fingerartbackend.util.ProductCategoryInferrer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,9 @@ import org.springframework.web.client.RestTemplate;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * AI 对话服务实现类。
+ */
 @Service
 public class AiChatServiceImpl implements AiChatService {
 
@@ -48,9 +52,14 @@ public class AiChatServiceImpl implements AiChatService {
     @Autowired
     private OrderService orderService;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    @Autowired
+    private RestTemplate restTemplate;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    /**
+     * 执行 chat 相关逻辑。
+     */
     @Override
     public Map<String, Object> chat(List<Map<String, String>> messages, Long userId, String pageContext) {
         if (messages == null || messages.isEmpty()) {
@@ -109,6 +118,9 @@ public class AiChatServiceImpl implements AiChatService {
         return data;
     }
 
+    /**
+     * 执行 recommend 相关逻辑。
+     */
     @Override
     public Map<String, Object> recommend(String query, int limit) {
         int cap = limit > 0 ? Math.min(limit, 10) : 5;
@@ -132,11 +144,105 @@ public class AiChatServiceImpl implements AiChatService {
         return data;
     }
 
+    /**
+     * 执行 classifyProductCategory 相关逻辑。
+     */
+    @Override
+    public Map<String, Object> classifyProductCategory(String keywords, String imageUrl) {
+        String ruleKey = ProductCategoryInferrer.inferKey(keywords);
+
+        if (ProductCategoryInferrer.isConfidentMatch(keywords, ruleKey)) {
+            return categoryResult(ruleKey, "rules");
+        }
+
+        if (chatProperties.isEnabled() && hasApiKey()) {
+            try {
+                String aiKey = callQwenCategory(keywords, imageUrl);
+                if (ProductCategoryInferrer.isValidKey(aiKey)) {
+                    return categoryResult(aiKey, "qwen");
+                }
+            } catch (Exception e) {
+                System.err.println("AI 作品分类失败，使用规则推断: " + e.getMessage());
+            }
+        }
+
+        if (ProductCategoryInferrer.isValidKey(ruleKey)) {
+            return categoryResult(ruleKey, "rules");
+        }
+
+        return categoryResult("", "fallback");
+    }
+
+    /**
+     * 执行 categoryResult 相关逻辑。
+     */
+    private Map<String, Object> categoryResult(String category, String source) {
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("category", category != null ? category : "");
+        data.put("source", source);
+        return data;
+    }
+
+    /**
+     * 执行 callQwenCategory 相关逻辑。
+     */
+    private String callQwenCategory(String keywords, String imageUrl) throws Exception {
+        String systemPrompt = """
+                你是指尖造物平台的作品分类助手。根据用户描述，从下列 category key 中选择唯一最合适的一项。
+                只输出 key 本身，不要解释、不要标点、不要 markdown、不要 JSON。
+                可选 key：crochet, resin, nails, clay, flower, perler, embroidery, bead, leather, wood, candle, paper, tuanshan, lantern
+
+                分类含义：
+                crochet=钩织毛线  resin=滴胶干花  nails=穿戴甲  clay=软陶粘土  flower=缠花发簪头饰
+                perler=拼豆  embroidery=刺绣布艺  bead=串珠饰品  leather=皮艺皮雕  wood=木工雕绘
+                candle=香薰蜡烛  paper=纸艺衍纸  tuanshan=手绘团扇  lantern=传统花灯
+                """;
+
+        StringBuilder userContent = new StringBuilder(keywords != null ? keywords.trim() : "");
+        if (imageUrl != null && !imageUrl.isBlank()) {
+            userContent.append("\n（用户已上传作品参考图，请结合文字描述综合判断分类）");
+        }
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("model", chatProperties.getModel());
+        body.put("messages", List.of(
+                Map.of("role", "system", "content", systemPrompt),
+                Map.of("role", "user", "content", userContent.toString())
+        ));
+        body.put("max_tokens", 32);
+        body.put("temperature", 0.1);
+
+        String url = chatProperties.getBaseUrl() + "/compatible-mode/v1/chat/completions";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(resolveApiKey());
+
+        ResponseEntity<String> response = restTemplate.exchange(
+                url, HttpMethod.POST, new HttpEntity<>(body, headers), String.class);
+
+        if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+            throw new RuntimeException("通义千问分类请求失败：" + response.getStatusCode());
+        }
+
+        JsonNode root = objectMapper.readTree(response.getBody());
+        if (root.has("error")) {
+            throw new RuntimeException("通义千问分类错误：" + root.path("error").path("message").asText("未知错误"));
+        }
+        String content = root.path("choices").path(0).path("message").path("content").asText(null);
+        return ProductCategoryInferrer.sanitizeKey(content);
+    }
+
+    /**
+     * 判断是否包含/拥有。
+     */
     private boolean hasApiKey() {
         String key = resolveApiKey();
         return key != null && !key.isBlank();
     }
 
+    /**
+     * 执行 resolveApiKey 相关逻辑。
+     */
     private String resolveApiKey() {
         if (chatProperties.getApiKey() != null && !chatProperties.getApiKey().isBlank()) {
             return chatProperties.getApiKey();
@@ -144,6 +250,9 @@ public class AiChatServiceImpl implements AiChatService {
         return imageProperties.getDashscope().getApiKey();
     }
 
+    /**
+     * 执行 callQwen 相关逻辑。
+     */
     private String callQwen(String systemPrompt, List<Map<String, String>> messages) throws Exception {
         String url = chatProperties.getBaseUrl() + "/compatible-mode/v1/chat/completions";
 
@@ -186,6 +295,9 @@ public class AiChatServiceImpl implements AiChatService {
         return content.trim();
     }
 
+    /**
+     * 构建响应对象。
+     */
     private String buildSystemPrompt(String orderContext, List<Map<String, Object>> recommendations,
                                      String pageContext) {
         StringBuilder sb = new StringBuilder();
@@ -221,6 +333,9 @@ public class AiChatServiceImpl implements AiChatService {
         return sb.toString();
     }
 
+    /**
+     * 构建响应对象。
+     */
     private String buildOrderContext(Long userId) {
         List<CustomOrder> orders = orderService.getBuyerOrders(userId);
         if (orders == null || orders.isEmpty()) {
@@ -261,11 +376,17 @@ public class AiChatServiceImpl implements AiChatService {
         return sb.toString();
     }
 
+    /**
+     * 执行 formatOrderStatus 相关逻辑。
+     */
     private String formatOrderStatus(String status) {
         if (status == null) return "未知";
         return ORDER_STATUS_LABELS.getOrDefault(status, status);
     }
 
+    /**
+     * 搜索AI 对话。
+     */
     private List<Product> searchProductsForMessage(String message, int limit) {
         LinkedHashSet<Long> seen = new LinkedHashSet<>();
         List<Product> result = new ArrayList<>();
@@ -289,6 +410,9 @@ public class AiChatServiceImpl implements AiChatService {
         return result;
     }
 
+    /**
+     * 执行 extractSearchKeywords 相关逻辑。
+     */
     private List<String> extractSearchKeywords(String message) {
         LinkedHashSet<String> keywords = new LinkedHashSet<>();
         String lower = message.toLowerCase();
@@ -308,6 +432,9 @@ public class AiChatServiceImpl implements AiChatService {
         return new ArrayList<>(keywords);
     }
 
+    /**
+     * 新增AI 对话。
+     */
     private void addSynonymKeywords(Set<String> keywords, String lower) {
         if (containsAny(lower, "汉服", "头饰", "发簪", "发饰", "新中式", "国风", "古风", "东方")) {
             keywords.add("缠花");
@@ -333,11 +460,17 @@ public class AiChatServiceImpl implements AiChatService {
         if (containsAny(lower, "团扇")) keywords.add("团扇");
     }
 
+    /**
+     * 判断条件是否成立。
+     */
     private boolean isStopWord(String word) {
         return containsAny(word.toLowerCase(),
                 "我想", "想要", "帮我", "推荐", "有没有", "什么", "怎么", "可以", "适合", "请问", "一下", "吗", "呢", "的");
     }
 
+    /**
+     * 执行 toRecommendationList 相关逻辑。
+     */
     private List<Map<String, Object>> toRecommendationList(List<Product> products) {
         if (products == null || products.isEmpty()) return List.of();
         return products.stream().map(p -> {
@@ -350,6 +483,9 @@ public class AiChatServiceImpl implements AiChatService {
         }).collect(Collectors.toList());
     }
 
+    /**
+     * 执行 resolveImage 相关逻辑。
+     */
     private String resolveImage(Product p) {
         if (p.getImage() != null && !p.getImage().isBlank()) {
             return p.getImage();
@@ -357,6 +493,9 @@ public class AiChatServiceImpl implements AiChatService {
         return DEFAULT_PRODUCT_IMAGE;
     }
 
+    /**
+     * 构建响应对象。
+     */
     private String buildRecommendReason(Product p, List<String> keywords) {
         for (String kw : keywords) {
             if (p.getTitle() != null && p.getTitle().toLowerCase().contains(kw.toLowerCase())) {
@@ -372,6 +511,9 @@ public class AiChatServiceImpl implements AiChatService {
         return "为你精选的手作好物";
     }
 
+    /**
+     * 构建响应对象。
+     */
     private List<Map<String, String>> buildActions(String message, boolean orderQuery,
                                                    boolean productQuery, Long userId) {
         List<Map<String, String>> actions = new ArrayList<>();
@@ -399,10 +541,16 @@ public class AiChatServiceImpl implements AiChatService {
         return actions;
     }
 
+    /**
+     * 执行 action 相关逻辑。
+     */
     private Map<String, String> action(String label, String path) {
         return Map.of("label", label, "path", path);
     }
 
+    /**
+     * 构建响应对象。
+     */
     private String buildFallbackReply(String message, String orderContext,
                                       List<Map<String, Object>> recommendations) {
         String lower = message.toLowerCase();
@@ -444,11 +592,17 @@ public class AiChatServiceImpl implements AiChatService {
         return "收到！你可以告诉我风格（如新中式、Y2K）、预算或使用场景，我来帮你推荐；也可以问订单进度、定制流程或造物币规则。";
     }
 
+    /**
+     * 判断条件是否成立。
+     */
     private boolean isOrderQuery(String message) {
         String lower = message.toLowerCase();
         return containsAny(lower, "订单", "发货", "物流", "进度", "做到哪", "什么时候", "到哪了", "快递");
     }
 
+    /**
+     * 判断条件是否成立。
+     */
     private boolean isProductQuery(String message) {
         String lower = message.toLowerCase();
         if (isOrderQuery(message)) return false;
@@ -458,6 +612,9 @@ public class AiChatServiceImpl implements AiChatService {
                 "串珠", "市集", "作品", "商品", "适合", "搭配", "音乐节", "辣妹", "y2k");
     }
 
+    /**
+     * 执行 containsAny 相关逻辑。
+     */
     private boolean containsAny(String text, String... keywords) {
         for (String kw : keywords) {
             if (text.contains(kw)) return true;

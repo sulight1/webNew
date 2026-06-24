@@ -26,8 +26,19 @@
       </view>
     </view>
     <text class="line-total" wx:if="{{product.type !== 'CUSTOMIZABLE' && !isSoldOut}}">小计 ¥{{lineTotal}}</text>
-    <view class="creator flex-between" bindtap="goArtisan">
-      <text>{{product.creator}}</text>
+    <view wx:if="{{fromOrderId}}" class="from-order-banner" bindtap="goBackToOrder">
+      <text>来自订单 #{{fromOrderId}}</text>
+      <text class="from-order-link">返回查看交易进度 ›</text>
+    </view>
+    <view class="creator flex-between">
+      <view class="creator-main" bindtap="goArtisan">
+        <image wx:if="{{product.creatorAvatar}}" class="creator-avatar" src="{{product.creatorAvatar}}" mode="aspectFill" />
+        <view wx:else class="creator-avatar creator-avatar-placeholder">匠</view>
+        <view class="creator-text">
+          <text class="creator-name">{{product.creator}}</text>
+          <text class="creator-hint">点击查看手作人主页</text>
+        </view>
+      </view>
       <button class="btn-outline mini-btn" catchtap="onFollow">{{isFollowing ? '已关注' : '+ 关注'}}</button>
     </view>
     <text class="desc">{{product.description || '暂无描述'}}</text>
@@ -57,6 +68,14 @@
         <text class="icon-action-symbol">{{isFavorited ? '★' : '☆'}}</text>
         <text class="icon-action-label">收藏</text>
       </view>
+      <view class="icon-action" bindtap="onContactCreator">
+        <text class="icon-action-symbol contact-symbol">💬</text>
+        <text class="icon-action-label">咨询</text>
+      </view>
+      <button class="icon-action share-action" open-type="share">
+        <text class="icon-action-symbol share-symbol">↗</text>
+        <text class="icon-action-label">分享</text>
+      </button>
     </view>
     <view class="bottom-actions">
       <button wx:if="{{canAddToCart}}" class="btn-outline cart-add-btn" bindtap="onAddToCart">加入购物车</button>

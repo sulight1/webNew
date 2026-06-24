@@ -4,6 +4,9 @@ import com.example.fingerartbackend.entity.PlatformNotification;
 
 import java.util.List;
 
+/**
+ * 通知服务接口，定义业务能力（业务服务接口）。
+ */
 public interface NotificationService {
     PlatformNotification notify(Long userId, String type, String title, String content, String linkUrl);
 

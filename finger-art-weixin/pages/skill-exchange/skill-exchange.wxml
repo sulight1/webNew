@@ -72,7 +72,7 @@
       bindtap="openDetail"
     >
       <view class="feed-cover">
-        <image src="{{item.coverImage}}" mode="aspectFill" lazy-load />
+        <image src="{{item.coverImage}}" mode="aspectFill" lazy-load data-index="{{index}}" data-category="{{item.coverCategory || item.category}}" data-title="{{item.title}}" data-description="{{item.description}}" binderror="onCoverError" />
         <text class="feed-cover-cost">{{item.zaowuBiCost}} 币</text>
         <view class="feed-cover-badges">
           <text class="feed-cover-tag">{{item.category}}</text>
@@ -93,7 +93,7 @@
   <view class="detail-mask" wx:if="{{showDetail}}" bindtap="closeDetail">
     <view class="detail-panel" catchtap="stopPropagation">
       <view class="detail-cover" wx:if="{{detailSkill}}">
-        <image src="{{detailSkill.coverImage}}" mode="aspectFill" />
+        <image src="{{detailSkill.coverImage}}" mode="aspectFill" binderror="onDetailCoverError" />
       </view>
       <text class="detail-title">{{detailSkill.title}}</text>
       <text class="tag">{{detailSkill.category}} · {{detailSkill.zaowuBiCost}} 造物币</text>
@@ -103,22 +103,135 @@
       </view>
       <text class="detail-desc">{{detailSkill.description}}</text>
       <view class="detail-actions">
-        <button class="btn-primary" bindtap="onExchangeFromDetail">申请交换</button>
+        <button class="btn-primary" bindtap="openExchangeBook">申请交换</button>
       </view>
       <button class="btn-outline" style="margin-top:16rpx;width:100%" bindtap="closeDetail">关闭</button>
     </view>
   </view>
 
+  <!-- 发起交换 -->
+  <view class="detail-mask" wx:if="{{showExchangeBook}}" bindtap="closeExchangeBook">
+    <view class="detail-panel exchange-book-panel" catchtap="stopPropagation">
+      <text class="section-title">发起技能交换</text>
+      <text class="exchange-book-target" wx:if="{{exchangeTarget}}">向 {{exchangeTarget.username}} 申请「{{exchangeTarget.title}}」</text>
+      <text class="exchange-book-cost">费用：{{exchangeTarget.zaowuBiCost || 10}} 造物币</text>
+      <view class="exchange-book-field">
+        <text class="field-label">预约日期</text>
+        <picker mode="date" value="{{bookScheduleDate}}" start="{{minScheduleDate}}" bindchange="onBookDateChange">
+          <view class="toolbar-picker">{{bookScheduleDate || '选择日期（可选）'}} ▾</view>
+        </picker>
+      </view>
+      <view class="exchange-book-field">
+        <text class="field-label">附言</text>
+        <textarea
+          class="exchange-book-textarea"
+          placeholder="说明你的需求或期望时间..."
+          maxlength="200"
+          value="{{bookMessage}}"
+          bindinput="onBookMessageInput"
+        />
+      </view>
+      <button class="btn-primary" loading="{{bookSubmitting}}" bindtap="submitExchangeBook">发送申请</button>
+      <button class="btn-outline" style="margin-top:16rpx;width:100%" bindtap="closeExchangeBook">取消</button>
+    </view>
+  </view>
+
   <!-- 交换记录 -->
   <view class="detail-mask" wx:if="{{showExchanges}}" bindtap="hideExchanges">
-    <view class="detail-panel" catchtap="stopPropagation">
+    <view class="detail-panel exchange-history-panel" catchtap="stopPropagation">
       <text class="section-title">我的交换记录</text>
-      <view wx:if="{{exchanges.length === 0}}" class="empty">暂无记录</view>
-      <view wx:for="{{exchanges}}" wx:key="id" class="exchange-item">
-        <text>{{item.description || '技能交换'}}</text>
-        <text class="tag">{{item.status}}</text>
+      <view wx:if="{{exchangesLoading}}" class="exchange-loading">加载中...</view>
+      <view wx:elif="{{exchanges.length === 0}}" class="empty">暂无记录</view>
+      <scroll-view wx:else scroll-y class="exchange-scroll">
+        <view wx:for="{{exchanges}}" wx:key="id" class="exchange-card">
+          <view class="exchange-card-head">
+            <text class="exchange-partner" catchtap="goUserProfile" data-userid="{{item.partnerId}}">
+              与 <text class="partner-name">{{item.partnerName}}</text> 的交换 ›
+            </text>
+            <text class="tag exchange-status-tag">{{item.statusLabel}}</text>
+          </view>
+          <text class="exchange-desc">{{item.description || '技能交换'}}</text>
+          <view class="exchange-meta-row">
+            <text class="exchange-meta">{{item.costText}} 造物币</text>
+            <text wx:if="{{item.scheduleText}}" class="exchange-meta">{{item.scheduleText}}</text>
+          </view>
+          <text wx:if="{{item.confirmText && !item.isCompleted}}" class="exchange-meta">{{item.confirmText}}</text>
+          <text wx:if="{{item.waitHint}}" class="exchange-wait-hint">{{item.waitHint}}</text>
+          <text wx:if="{{item.isCompleted}}" class="exchange-reward">已完成 · 双方各得完成奖励</text>
+          <view class="exchange-actions">
+            <button
+              wx:if="{{item.canAccept === true}}"
+              class="exchange-action-btn primary"
+              size="mini"
+              loading="{{actionLoadingId === item.id}}"
+              data-id="{{item.id}}"
+              data-action="accept"
+              bindtap="onExchangeAction"
+            >接受请求</button>
+            <button
+              wx:if="{{item.canConfirm === true}}"
+              class="exchange-action-btn"
+              size="mini"
+              loading="{{actionLoadingId === item.id}}"
+              data-id="{{item.id}}"
+              data-action="confirm"
+              bindtap="onExchangeAction"
+            >确认预约</button>
+            <button
+              wx:if="{{item.canComplete === true}}"
+              class="exchange-action-btn primary"
+              size="mini"
+              loading="{{actionLoadingId === item.id}}"
+              data-id="{{item.id}}"
+              data-action="complete"
+              bindtap="onExchangeAction"
+            >确认完成并收款</button>
+            <button
+              wx:if="{{item.canReview === true}}"
+              class="exchange-action-btn"
+              size="mini"
+              data-id="{{item.id}}"
+              data-partner-id="{{item.partnerId}}"
+              bindtap="openReview"
+            >评价对方</button>
+            <button
+              wx:if="{{item.canReportNoShow === true}}"
+              class="exchange-action-btn danger"
+              size="mini"
+              loading="{{actionLoadingId === item.id}}"
+              data-id="{{item.id}}"
+              data-action="noShow"
+              bindtap="onExchangeAction"
+            >标记爽约</button>
+          </view>
+        </view>
+      </scroll-view>
+      <button class="btn-outline exchange-close-btn" bindtap="hideExchanges">关闭</button>
+    </view>
+  </view>
+
+  <!-- 评价 -->
+  <view class="detail-mask" wx:if="{{showReview}}" bindtap="closeReview">
+    <view class="detail-panel" catchtap="stopPropagation">
+      <text class="section-title">评价交换体验</text>
+      <view class="review-stars">
+        <text
+          wx:for="{{reviewStars}}"
+          wx:key="*this"
+          class="review-star {{reviewScore >= item ? 'active' : ''}}"
+          data-score="{{item}}"
+          bindtap="onReviewScoreTap"
+        >★</text>
       </view>
-      <button class="btn-outline" style="margin-top:24rpx;width:100%" bindtap="hideExchanges">关闭</button>
+      <textarea
+        class="exchange-book-textarea"
+        placeholder="说说这次技能交换的体验..."
+        maxlength="300"
+        value="{{reviewContent}}"
+        bindinput="onReviewContentInput"
+      />
+      <button class="btn-primary" loading="{{reviewSubmitting}}" bindtap="submitReview">提交评价</button>
+      <button class="btn-outline" style="margin-top:16rpx;width:100%" bindtap="closeReview">取消</button>
     </view>
   </view>
 </view>

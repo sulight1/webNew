@@ -23,6 +23,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * 举报服务实现类。
+ */
 @Service
 public class ReportServiceImpl implements ReportService {
 
@@ -43,6 +46,9 @@ public class ReportServiceImpl implements ReportService {
     @Autowired
     private SensitiveWordService sensitiveWordService;
 
+    /**
+     * 提交举报。
+     */
     @Override
     @Transactional
     public ContentReport submitReport(ContentReport report) {
@@ -83,6 +89,9 @@ public class ReportServiceImpl implements ReportService {
         return saved;
     }
 
+    /**
+     * 查询举报列表。
+     */
     @Override
     public List<ContentReport> listReports(String status) {
         if (status != null && !status.isBlank()) {
@@ -91,6 +100,9 @@ public class ReportServiceImpl implements ReportService {
         return reportMapper.findAllByOrderByCreatedAtDesc();
     }
 
+    /**
+     * 处理请求或事件。
+     */
     @Override
     @Transactional
     public ContentReport handleReport(Long id, Long handlerId, String action, String handleNote) {
@@ -123,11 +135,17 @@ public class ReportServiceImpl implements ReportService {
         return saved;
     }
 
+    /**
+     * 执行 countPending 相关逻辑。
+     */
     @Override
     public long countPending() {
         return reportMapper.countByStatus("PENDING");
     }
 
+    /**
+     * 执行 applyModerationAction 相关逻辑。
+     */
     private void applyModerationAction(ContentReport report, String action) {
         String type = report.getTargetType();
         Long targetId = report.getTargetId();
@@ -165,6 +183,9 @@ public class ReportServiceImpl implements ReportService {
         }
     }
 
+    /**
+     * 执行 resolveTargetTitle 相关逻辑。
+     */
     private String resolveTargetTitle(String type, Long id) {
         if ("PRODUCT".equals(type)) {
             return productMapper.findById(id).map(Product::getTitle).orElse("作品#" + id);

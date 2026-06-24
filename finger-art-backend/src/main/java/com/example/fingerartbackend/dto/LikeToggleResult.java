@@ -5,6 +5,10 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * 点赞切换结果 DTO。
+ * 用于作品或帖子点赞/取消点赞接口的响应。
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

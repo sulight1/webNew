@@ -12,6 +12,9 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * 数据分析服务实现类。
+ */
 @Service
 public class AnalyticsServiceImpl implements AnalyticsService {
 
@@ -30,6 +33,9 @@ public class AnalyticsServiceImpl implements AnalyticsService {
     @Autowired
     private ContentReportMapper reportMapper;
 
+    /**
+     * 查询数据分析信息。
+     */
     @Override
     public Map<String, Object> getPlatformAnalytics() {
         Map<String, Object> data = new HashMap<>();
@@ -65,6 +71,9 @@ public class AnalyticsServiceImpl implements AnalyticsService {
         return data;
     }
 
+    /**
+     * 查询数据分析信息。
+     */
     @Override
     public Map<String, Object> getArtisanAnalytics(Long userId) {
         User user = userMapper.findById(userId).orElseThrow(() -> new RuntimeException("用户不存在"));
@@ -97,7 +106,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                 .collect(Collectors.groupingBy(o -> o.getStatus() != null ? o.getStatus() : "UNKNOWN", Collectors.counting())));
         data.put("topProducts", myProducts.stream()
                 .sorted(Comparator.comparingInt((Product p) -> p.getLikes() != null ? p.getLikes() : 0).reversed())
-                .limit(5)
+                .limit(3)
                 .map(p -> {
                     Map<String, Object> m = new HashMap<>();
                     m.put("id", p.getId());
@@ -114,6 +123,9 @@ public class AnalyticsServiceImpl implements AnalyticsService {
         return data;
     }
 
+    /**
+     * 执行 countByField 相关逻辑。
+     */
     private <T> List<Map<String, Object>> countByField(List<T> items, java.util.function.Function<T, String> getter) {
         Map<String, Long> counts = items.stream()
                 .map(getter)

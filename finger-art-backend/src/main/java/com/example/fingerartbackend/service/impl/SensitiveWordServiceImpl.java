@@ -13,6 +13,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * 敏感词服务实现类。
+ */
 @Service
 public class SensitiveWordServiceImpl implements SensitiveWordService {
 
@@ -23,6 +26,9 @@ public class SensitiveWordServiceImpl implements SensitiveWordService {
     @Autowired
     private SensitiveWordMapper sensitiveWordMapper;
 
+    /**
+     * 执行 initDefaults 相关逻辑。
+     */
     @PostConstruct
     @Override
     public void initDefaults() {
@@ -35,6 +41,9 @@ public class SensitiveWordServiceImpl implements SensitiveWordService {
         }
     }
 
+    /**
+     * 校验数据。
+     */
     @Override
     public void validateText(String text, String fieldLabel) {
         if (text == null || text.isBlank()) return;
@@ -46,6 +55,9 @@ public class SensitiveWordServiceImpl implements SensitiveWordService {
         }
     }
 
+    /**
+     * 查询敏感词列表。
+     */
     @Override
     public List<Map<String, Object>> listWordDetails() {
         return sensitiveWordMapper.findByEnabledTrue().stream()
@@ -58,6 +70,9 @@ public class SensitiveWordServiceImpl implements SensitiveWordService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 查询敏感词列表。
+     */
     @Override
     public List<String> listWords() {
         return sensitiveWordMapper.findByEnabledTrue().stream()
@@ -65,6 +80,9 @@ public class SensitiveWordServiceImpl implements SensitiveWordService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 新增敏感词。
+     */
     @Override
     public void addWord(String word) {
         if (word == null || word.isBlank()) return;
@@ -74,6 +92,9 @@ public class SensitiveWordServiceImpl implements SensitiveWordService {
         sensitiveWordMapper.save(entity);
     }
 
+    /**
+     * 移除敏感词。
+     */
     @Override
     public void removeWord(Long id) {
         sensitiveWordMapper.deleteById(id);

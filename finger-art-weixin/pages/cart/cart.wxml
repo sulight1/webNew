@@ -29,17 +29,17 @@
           <text class="text-price">¥{{item.subtotal}}</text>
         </view>
         <view class="cart-btns flex-row">
-          <button class="btn-outline mini" data-id="{{item.productId}}" bindtap="onRemove">删除</button>
-          <button class="btn-primary mini checkout-btn" data-id="{{item.productId}}" data-qty="{{item.quantity}}" bindtap="goCheckout">去结算</button>
+          <button class="btn-outline mini remove-btn" data-id="{{item.productId}}" bindtap="onRemove">删除</button>
         </view>
       </view>
     </view>
 
     <view class="card cart-footer">
-      <view class="flex-between">
+      <view class="flex-between footer-row">
         <text>合计</text>
         <text class="text-price footer-total">¥{{totalAmount}}</text>
       </view>
+      <button class="btn-primary footer-checkout-btn" bindtap="goCheckout">去结算</button>
     </view>
   </view>
 </view>

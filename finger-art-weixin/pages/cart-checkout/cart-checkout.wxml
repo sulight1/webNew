@@ -1,0 +1,50 @@
+<view class="container" wx:if="{{!loading && items.length}}">
+  <view class="page-tip">共 {{items.length}} 件成品，一次支付生成 {{items.length}} 笔订单</view>
+
+  <view class="card">
+    <view class="section-title">商品清单</view>
+    <view class="product-row flex-row batch-item" wx:for="{{items}}" wx:key="productId">
+      <image class="product-thumb" src="{{item.image}}" mode="aspectFill" />
+      <view class="product-info">
+        <text class="product-title">{{item.title}}</text>
+        <text class="text-muted">手作人：{{item.creator}}</text>
+        <text class="text-muted">单价 ¥{{item.price}} × {{item.quantity}}</text>
+        <text class="text-price">¥{{item.subtotal}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">收货信息</view>
+    <view wx:if="{{buyer.shippingAddress}}">
+      <text class="ship-name">{{buyer.shippingName}} {{buyer.shippingPhone}}</text>
+      <text class="ship-address">{{buyer.shippingAddress}}</text>
+    </view>
+    <view wx:else class="empty-tip">请先完善收货地址</view>
+    <text class="edit-link" bindtap="goEditAddress">修改收货地址 ›</text>
+  </view>
+
+  <view class="card">
+    <view class="section-title">支付方式</view>
+    <view class="pay-option active">
+      <view class="pay-icon coin">币</view>
+      <view class="pay-main">
+        <text class="pay-label">造物币支付</text>
+        <text class="pay-desc">可用余额 {{coinBalance}} 币</text>
+      </view>
+      <text class="pay-check">✓</text>
+    </view>
+  </view>
+
+  <view class="summary card">
+    <view class="flex-between summary-row">
+      <text>应付合计</text>
+      <text class="text-price total">¥{{totalAmount}}</text>
+    </view>
+    <button class="btn-primary pay-btn" loading="{{submitting}}" disabled="{{submitting}}" bindtap="submitPayment">
+      造物币支付 ¥{{totalAmount}}
+    </button>
+  </view>
+</view>
+<view wx:elif="{{loading}}" class="empty">加载中...</view>
+<view wx:else class="empty">没有可结算的成品</view>

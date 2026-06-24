@@ -25,7 +25,20 @@ function clearAuth() {
 }
 
 function isLoggedIn() {
-  return !!getToken() && !!getUser();
+  const token = getToken();
+  if (!token || !getUser()) return false;
+  try {
+    const segment = token.split('.')[1];
+    if (!segment) return false;
+    const payload = JSON.parse(decodeURIComponent(escape(atob(segment.replace(/-/g, '+').replace(/_/g, '/')))));
+    if (payload.exp && Date.now() >= payload.exp * 1000) {
+      clearAuth();
+      return false;
+    }
+    return true;
+  } catch (e) {
+    return !!token && !!getUser();
+  }
 }
 
 function isArtisan(user) {

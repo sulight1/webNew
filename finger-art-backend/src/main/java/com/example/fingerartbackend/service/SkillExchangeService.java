@@ -4,6 +4,9 @@ import com.example.fingerartbackend.entity.SkillExchange;
 
 import java.util.List;
 
+/**
+ * 技能服务接口，定义业务能力（业务服务接口）。
+ */
 public interface SkillExchangeService {
     SkillExchange requestExchange(Long userAId, Long userBId, String description, Integer cost, String scheduleDate);
     SkillExchange acceptExchange(Long exchangeId, Long userId);

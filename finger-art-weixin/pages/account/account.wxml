@@ -14,6 +14,7 @@
         </view>
         <text class="account-line" wx:if="{{user.account}}">账号 {{user.account}}</text>
         <text class="text-muted">信用 {{user.creditScore || 100}} · 评分 {{user.rating || 5}}</text>
+        <text wx:if="{{unreadCount > 0}}" class="notify-badge">{{unreadCount}} 条未读通知</text>
         <text class="profile-link" bindtap="goPublicProfile">公开主页 ›</text>
         <text class="bio" bindtap="editProfile">{{user.bio || '点击编辑简介'}}</text>
       </view>
@@ -48,6 +49,7 @@
       wx:for="{{menuItems}}"
       wx:key="key"
       data-url="{{item.url}}"
+      data-action="{{item.action}}"
       bindtap="onMenuTap"
     >
       <text>{{item.title}}</text>

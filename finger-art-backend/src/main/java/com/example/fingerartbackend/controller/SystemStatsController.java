@@ -6,7 +6,6 @@ import com.example.fingerartbackend.mapper.CustomRequestMapper;
 import com.example.fingerartbackend.mapper.UserMapper;
 import com.example.fingerartbackend.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,7 +13,10 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.HashMap;
 import java.util.Map;
 
-@CrossOrigin(origins = "*")
+/**
+ * 系统概览统计控制器。
+ * 聚合平台核心运营指标（需求、订单、达人、技能交换等），对应首页/大屏数据模块。
+ */
 @RestController
 @RequestMapping("/stats")
 public class SystemStatsController {
@@ -34,6 +36,11 @@ public class SystemStatsController {
     @Autowired
     private com.example.fingerartbackend.mapper.SkillExchangeRepository skillExchangeRepository;
 
+    /**
+     * 获取平台系统概览统计数据。
+     *
+     * @return 含活跃需求数、达人数、订单完成率、技能数、平均评分等指标
+     */
     @GetMapping("/summary")
     public Result<Map<String, Object>> getSystemSummary() {
         Map<String, Object> stats = new HashMap<>();

@@ -4,6 +4,9 @@ import com.example.fingerartbackend.dto.WalletOperationResult;
 import com.example.fingerartbackend.entity.WalletTransaction;
 import org.springframework.data.domain.Page;
 
+/**
+ * 钱包服务接口，定义业务能力（业务服务接口）。
+ */
 public interface WalletService {
     WalletOperationResult recharge(Long userId, Double amount, String channel);
 

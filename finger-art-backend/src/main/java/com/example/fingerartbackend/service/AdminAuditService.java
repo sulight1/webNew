@@ -13,12 +13,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+/**
+ * 管理端服务接口，定义业务能力（业务服务接口）。
+ */
 @Service
 public class AdminAuditService {
 
     @Autowired
     private AdminOperationLogMapper logMapper;
 
+    /**
+     * 执行 log 相关逻辑。
+     */
     public void log(String action, String targetType, Long targetId, String detail) {
         AuthUser admin = AuthContext.get();
         if (admin == null || !"ADMIN".equals(admin.role())) {
@@ -36,6 +42,9 @@ public class AdminAuditService {
         logMapper.save(entry);
     }
 
+    /**
+     * 查询管理端列表。
+     */
     public Page<AdminOperationLog> listLogs(int page, int size) {
         int safePage = Math.max(page, 0);
         int safeSize = Math.min(Math.max(size, 1), 100);
@@ -43,6 +52,9 @@ public class AdminAuditService {
         return logMapper.findAllByOrderByCreatedAtDesc(pageable);
     }
 
+    /**
+     * 执行 resolveClientIp 相关逻辑。
+     */
     private String resolveClientIp() {
         ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         if (attrs == null) {

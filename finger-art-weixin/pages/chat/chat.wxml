@@ -1,0 +1,33 @@
+<view class="chat-page">
+  <scroll-view
+    class="chat-scroll"
+    scroll-y
+    scroll-into-view="{{scrollIntoView}}"
+    scroll-with-animation
+  >
+    <view wx:if="{{loading}}" class="chat-empty">加载中...</view>
+    <view wx:elif="{{messages.length === 0}}" class="chat-empty">暂无消息，打个招呼吧</view>
+    <view
+      class="msg-row {{item.mine ? 'mine' : 'peer'}}"
+      wx:for="{{messages}}"
+      wx:key="id"
+      id="msg-{{item.id}}"
+    >
+      <view class="msg-bubble">{{item.content}}</view>
+      <text class="msg-time">{{item.timeLabel}}</text>
+    </view>
+  </scroll-view>
+
+  <view class="chat-input-bar safe-bottom">
+    <input
+      class="chat-input"
+      placeholder="输入消息..."
+      maxlength="500"
+      value="{{draft}}"
+      bindinput="onDraftInput"
+      confirm-type="send"
+      bindconfirm="onSend"
+    />
+    <button class="chat-send-btn" loading="{{sending}}" disabled="{{!canSend || sending}}" bindtap="onSend">发送</button>
+  </view>
+</view>

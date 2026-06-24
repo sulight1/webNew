@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>评价与社区管理模块时序图 - 指尖造物</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "SimSun", "宋体", serif;
+      padding: 32px 24px;
+      background: #fff;
+      color: #000;
+    }
+    h1 {
+      text-align: center;
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    .caption {
+      text-align: center;
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+    .diagram-wrap {
+      max-width: 920px;
+      margin: 0 auto;
+      overflow-x: auto;
+    }
+    svg {
+      display: block;
+      margin: 0 auto;
+      font-family: "SimSun", "宋体", serif;
+    }
+    .note {
+      max-width: 900px;
+      margin: 24px auto 0;
+      font-size: 13px;
+      line-height: 1.8;
+      border-top: 1px solid #ccc;
+      padding-top: 16px;
+    }
+    .note h2 { font-size: 14px; margin-bottom: 8px; }
+    .note ol { padding-left: 1.5em; }
+    .note li { margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+  <h1>图 3-6 评价与社区管理模块时序图</h1>
+  <p class="caption">指尖造物手作定制与技能交换平台</p>
+
+  <div class="diagram-wrap">
+    <svg width="880" height="720" viewBox="0 0 880 720" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow-solid" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 Z" fill="#000" stroke="none"/>
+        </marker>
+        <marker id="arrow-open" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8" fill="none" stroke="#000" stroke-width="1"/>
+        </marker>
+      </defs>
+
+      <!-- 普通用户（左侧 Actor） -->
+      <g transform="translate(70, 28)">
+        <circle cx="0" cy="-18" r="10" fill="none" stroke="#000" stroke-width="1.2"/>
+        <line x1="0" y1="-8" x2="0" y2="14" stroke="#000" stroke-width="1.2"/>
+        <line x1="-14" y1="2" x2="14" y2="2" stroke="#000" stroke-width="1.2"/>
+        <line x1="0" y1="14" x2="-11" y2="36" stroke="#000" stroke-width="1.2"/>
+        <line x1="0" y1="14" x2="11" y2="36" stroke="#000" stroke-width="1.2"/>
+        <text x="0" y="58" text-anchor="middle" font-size="13">普通用户</text>
+      </g>
+
+      <!-- 中间参与者 -->
+      <rect x="126" y="10" width="108" height="52" fill="#fff" stroke="#000" stroke-width="1.2"/>
+      <text x="180" y="32" text-anchor="middle" font-size="12">带图评价与</text>
+      <text x="180" y="48" text-anchor="middle" font-size="12">追评</text>
+
+      <rect x="266" y="18" width="108" height="36" fill="#fff" stroke="#000" stroke-width="1.2"/>
+      <text x="320" y="41" text-anchor="middle" font-size="13">论坛帖子互动</text>
+
+      <rect x="406" y="18" width="108" height="36" fill="#fff" stroke="#000" stroke-width="1.2"/>
+      <text x="460" y="41" text-anchor="middle" font-size="13">消息通知</text>
+
+      <rect x="546" y="18" width="108" height="36" fill="#fff" stroke="#000" stroke-width="1.2"/>
+      <text x="600" y="41" text-anchor="middle" font-size="13">服务器数据库</text>
+
+      <!-- 生命线 -->
+      <line x1="70" y1="86" x2="70" y2="680" stroke="#000" stroke-width="1" stroke-dasharray="6 4"/>
+      <line x1="180" y1="62" x2="180" y2="680" stroke="#000" stroke-width="1" stroke-dasharray="6 4"/>
+      <line x1="320" y1="54" x2="320" y2="680" stroke="#000" stroke-width="1" stroke-dasharray="6 4"/>
+      <line x1="460" y1="54" x2="460" y2="680" stroke="#000" stroke-width="1" stroke-dasharray="6 4"/>
+      <line x1="600" y1="54" x2="600" y2="680" stroke="#000" stroke-width="1" stroke-dasharray="6 4"/>
+
+      <!-- ===== ① 带图评价与追评（普通用户） ===== -->
+      <rect x="174" y="118" width="12" height="118" fill="#fff" stroke="#000" stroke-width="1"/>
+      <rect x="594" y="148" width="12" height="28" fill="#fff" stroke="#000" stroke-width="1"/>
+
+      <line x1="70" y1="128" x2="174" y2="128" stroke="#000" stroke-width="1.2" marker-end="url(#arrow-solid)"/>
+      <text x="122" y="120" text-anchor="middle" font-size="12">提交评价、追评</text>
+
+      <line x1="186" y1="168" x2="594" y2="168" stroke="#000" stroke-width="1.2" marker-end="url(#arrow-solid)"/>
+      <text x="390" y="160" text-anchor="middle" font-size="12">访问数据库，保存评价信息</text>
+
+      <line x1="594" y1="208" x2="186" y2="208" stroke="#000" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arrow-open)"/>
+      <text x="390" y="200" text-anchor="middle" font-size="12">保存成功，返回成功信息</text>
+
+      <line x1="174" y1="248" x2="70" y2="248" stroke="#000" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arrow-open)"/>
+      <text x="122" y="240" text-anchor="middle" font-size="12">返回评价提交结果</text>
+
+      <!-- ===== ② 论坛帖子互动（普通用户） ===== -->
+      <rect x="314" y="298" width="12" height="118" fill="#fff" stroke="#000" stroke-width="1"/>
+      <rect x="594" y="328" width="12" height="28" fill="#fff" stroke="#000" stroke-width="1"/>
+
+      <line x1="70" y1="308" x2="314" y2="308" stroke="#000" stroke-width="1.2" marker-end="url(#arrow-solid)"/>
+      <text x="192" y="300" text-anchor="middle" font-size="12">发布帖子、回复讨论</text>
+
+      <line x1="326" y1="348" x2="594" y2="348" stroke="#000" stroke-width="1.2" marker-end="url(#arrow-solid)"/>
+      <text x="460" y="340" text-anchor="middle" font-size="12">访问数据库，保存帖子与回复</text>
+
+      <line x1="594" y1="388" x2="326" y2="388" stroke="#000" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arrow-open)"/>
+      <text x="460" y="380" text-anchor="middle" font-size="12">保存成功，返回成功信息</text>
+
+      <line x1="314" y1="428" x2="70" y2="428" stroke="#000" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arrow-open)"/>
+      <text x="192" y="420" text-anchor="middle" font-size="12">返回发布成功信息</text>
+
+      <!-- ===== ③ 消息通知（普通用户） ===== -->
+      <rect x="454" y="478" width="12" height="118" fill="#fff" stroke="#000" stroke-width="1"/>
+      <rect x="594" y="508" width="12" height="28" fill="#fff" stroke="#000" stroke-width="1"/>
+
+      <line x1="70" y1="488" x2="454" y2="488" stroke="#000" stroke-width="1.2" marker-end="url(#arrow-solid)"/>
+      <text x="262" y="480" text-anchor="middle" font-size="12">查看通知、标记已读</text>
+
+      <line x1="466" y1="528" x2="594" y2="528" stroke="#000" stroke-width="1.2" marker-end="url(#arrow-solid)"/>
+      <text x="530" y="520" text-anchor="middle" font-size="12">访问数据库，读取/更新通知</text>
+
+      <line x1="594" y1="568" x2="466" y2="568" stroke="#000" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arrow-open)"/>
+      <text x="530" y="560" text-anchor="middle" font-size="12">返回通知列表数据</text>
+
+      <line x1="454" y1="608" x2="70" y2="608" stroke="#000" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arrow-open)"/>
+      <text x="262" y="600" text-anchor="middle" font-size="12">返回查询结果</text>
+    </svg>
+  </div>
+
+  <div class="note">
+    <h2>说明</h2>
+    <ol>
+      <li><strong>带图评价与追评：</strong>用户在订单完成或技能交换结束后提交星级评价与文字内容，可上传图片并追加追评，评价展示于作品详情页与达人主页。</li>
+      <li><strong>论坛帖子互动：</strong>用户发布带图帖子、浏览热门内容并回复讨论；管理员可对违规帖子或回复进行删除与恢复，维护社区秩序。</li>
+      <li><strong>消息通知：</strong>系统在订单、审核、定制匹配等业务节点自动推送通知，用户可在消息中心查看未读数量并标记已读或清理已读消息。</li>
+    </ol>
+  </div>
+</body>
+</html>

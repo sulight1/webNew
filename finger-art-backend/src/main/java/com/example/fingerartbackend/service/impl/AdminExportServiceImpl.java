@@ -17,6 +17,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 管理端服务实现类。
+ */
 @Service
 public class AdminExportServiceImpl implements AdminExportService {
 
@@ -54,6 +57,9 @@ public class AdminExportServiceImpl implements AdminExportService {
     @Autowired
     private OrderService orderService;
 
+    /**
+     * 执行 exportUsersExcel 相关逻辑。
+     */
     @Override
     public byte[] exportUsersExcel() {
         List<User> users = userMapper.findAll();
@@ -92,6 +98,9 @@ public class AdminExportServiceImpl implements AdminExportService {
         }
     }
 
+    /**
+     * 执行 exportOrdersExcel 相关逻辑。
+     */
     @Override
     public byte[] exportOrdersExcel() {
         List<CustomOrder> orders = orderService.getAllOrders(null);
@@ -132,6 +141,9 @@ public class AdminExportServiceImpl implements AdminExportService {
         }
     }
 
+    /**
+     * 创建管理端。
+     */
     private CellStyle createHeaderStyle(Workbook workbook) {
         CellStyle style = workbook.createCellStyle();
         Font font = workbook.createFont();
@@ -142,6 +154,9 @@ public class AdminExportServiceImpl implements AdminExportService {
         return style;
     }
 
+    /**
+     * 执行 writeHeader 相关逻辑。
+     */
     private void writeHeader(Sheet sheet, String[] headers, CellStyle headerStyle) {
         Row headerRow = sheet.createRow(0);
         for (int i = 0; i < headers.length; i++) {
@@ -151,6 +166,9 @@ public class AdminExportServiceImpl implements AdminExportService {
         }
     }
 
+    /**
+     * 执行 setCell 相关逻辑。
+     */
     private void setCell(Row row, int col, Object value) {
         Cell cell = row.createCell(col);
         if (value == null) {
@@ -164,6 +182,9 @@ public class AdminExportServiceImpl implements AdminExportService {
         cell.setCellValue(String.valueOf(value));
     }
 
+    /**
+     * 执行 autoSizeColumns 相关逻辑。
+     */
     private void autoSizeColumns(Sheet sheet, int columnCount) {
         for (int i = 0; i < columnCount; i++) {
             sheet.autoSizeColumn(i);
@@ -172,11 +193,17 @@ public class AdminExportServiceImpl implements AdminExportService {
         }
     }
 
+    /**
+     * 执行 labelRole 相关逻辑。
+     */
     private String labelRole(String role) {
         if (role == null || role.isBlank()) return "—";
         return ROLE_LABELS.getOrDefault(role, role);
     }
 
+    /**
+     * 执行 labelArtisanApply 相关逻辑。
+     */
     private String labelArtisanApply(String status) {
         if (status == null || "NONE".equals(status)) return "无";
         return switch (status) {
@@ -187,27 +214,42 @@ public class AdminExportServiceImpl implements AdminExportService {
         };
     }
 
+    /**
+     * 执行 labelPasswordReset 相关逻辑。
+     */
     private String labelPasswordReset(String status) {
         if (status == null || "NONE".equals(status)) return "无";
         return "PENDING".equals(status) ? "待处理" : status;
     }
 
+    /**
+     * 执行 labelProductType 相关逻辑。
+     */
     private String labelProductType(String type) {
         if ("READY_MADE".equals(type)) return "成品";
         if ("CUSTOMIZABLE".equals(type)) return "定制";
         return type != null ? type : "—";
     }
 
+    /**
+     * 执行 labelOrderStatus 相关逻辑。
+     */
     private String labelOrderStatus(String status) {
         if (status == null) return "—";
         return ORDER_STATUS_LABELS.getOrDefault(status, status);
     }
 
+    /**
+     * 执行 labelEscrowStatus 相关逻辑。
+     */
     private String labelEscrowStatus(String status) {
         if (status == null) return "—";
         return ESCROW_STATUS_LABELS.getOrDefault(status, status);
     }
 
+    /**
+     * 执行 formatDateTime 相关逻辑。
+     */
     private String formatDateTime(LocalDateTime time) {
         return time != null ? time.format(DT_FMT) : "—";
     }

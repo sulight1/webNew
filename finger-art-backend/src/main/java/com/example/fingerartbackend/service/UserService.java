@@ -4,6 +4,9 @@ import com.example.fingerartbackend.dto.RegisterRequest;
 import com.example.fingerartbackend.entity.User;
 import java.util.List;
 
+/**
+ * 用户服务接口，定义业务能力（业务服务接口）。
+ */
 public interface UserService {
     User register(RegisterRequest request);
     User applyArtisan(Long userId);

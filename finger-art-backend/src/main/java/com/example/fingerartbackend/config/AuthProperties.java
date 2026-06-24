@@ -4,6 +4,12 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+/**
+ * JWT 认证配置属性，绑定 {@code auth.jwt.*} 配置项。
+ * <p>
+ * 控制 Token 签发密钥、有效期及是否强制鉴权等行为。
+ * </p>
+ */
 @Data
 @Component
 @ConfigurationProperties(prefix = "auth.jwt")

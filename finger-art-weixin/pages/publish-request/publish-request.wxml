@@ -12,6 +12,6 @@
     <input placeholder="预算最低" type="digit" data-field="budgetMin" bindinput="onInput" value="{{form.budgetMin}}" />
     <input placeholder="预算最高" type="digit" data-field="budgetMax" bindinput="onInput" value="{{form.budgetMax}}" />
     <input placeholder="截止日期（选填）" data-field="deadline" bindinput="onInput" value="{{form.deadline}}" />
-    <button class="btn-primary" bindtap="submit">发布需求</button>
+    <button class="btn-primary" bindtap="submit">提交审核</button>
   </view>
 </view>

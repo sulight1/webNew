@@ -20,6 +20,9 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * 技能服务实现类。
+ */
 @Service
 public class SkillExchangeServiceImpl implements SkillExchangeService {
 
@@ -41,6 +44,9 @@ public class SkillExchangeServiceImpl implements SkillExchangeService {
     @Autowired
     private UserPunishmentService userPunishmentService;
 
+    /**
+     * 执行 requestExchange 相关逻辑。
+     */
     @Override
     @Transactional
     public SkillExchange requestExchange(Long userAId, Long userBId, String description, Integer cost, String scheduleDateStr) {
@@ -79,6 +85,9 @@ public class SkillExchangeServiceImpl implements SkillExchangeService {
         return saved;
     }
 
+    /**
+     * 执行 acceptExchange 相关逻辑。
+     */
     @Override
     @Transactional
     public SkillExchange acceptExchange(Long exchangeId, Long userId) {
@@ -101,6 +110,9 @@ public class SkillExchangeServiceImpl implements SkillExchangeService {
         return saved;
     }
 
+    /**
+     * 确认操作。
+     */
     @Override
     @Transactional
     public SkillExchange confirmExchange(Long exchangeId, Long userId) {
@@ -152,6 +164,9 @@ public class SkillExchangeServiceImpl implements SkillExchangeService {
         return exchangeRepository.save(exchange);
     }
 
+    /**
+     * 完成技能。
+     */
     @Override
     @Transactional
     public SkillExchange completeExchange(Long exchangeId, Long userId) {
@@ -202,6 +217,9 @@ public class SkillExchangeServiceImpl implements SkillExchangeService {
         return saved;
     }
 
+    /**
+     * 执行 reportNoShow 相关逻辑。
+     */
     @Override
     @Transactional
     public SkillExchange reportNoShow(Long exchangeId, Long reporterId) {
@@ -235,6 +253,9 @@ public class SkillExchangeServiceImpl implements SkillExchangeService {
         return saved;
     }
 
+    /**
+     * 查询技能信息。
+     */
     @Override
     public List<SkillExchange> getMyExchanges(Long userId) {
         User user = userMapper.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
@@ -242,6 +263,9 @@ public class SkillExchangeServiceImpl implements SkillExchangeService {
         return exchangeRepository.findByUser(user);
     }
 
+    /**
+     * 执行 processOverdueExchanges 相关逻辑。
+     */
     @Override
     @Transactional
     @Scheduled(cron = "0 0 8 * * ?")
@@ -277,11 +301,17 @@ public class SkillExchangeServiceImpl implements SkillExchangeService {
         }
     }
 
+    /**
+     * 查询技能信息。
+     */
     private SkillExchange getExchange(Long exchangeId) {
         return exchangeRepository.findById(exchangeId)
                 .orElseThrow(() -> new RuntimeException("Exchange not found"));
     }
 
+    /**
+     * 执行 markProviderSlot 相关逻辑。
+     */
     private void markProviderSlot(Long userId, LocalDate date, String status, String remark) {
         List<ScheduleSlot> slots = scheduleSlotMapper.findByUserIdAndDate(userId, date);
         ScheduleSlot slot = slots.isEmpty() ? new ScheduleSlot() : slots.get(0);
@@ -292,12 +322,18 @@ public class SkillExchangeServiceImpl implements SkillExchangeService {
         scheduleSlotMapper.save(slot);
     }
 
+    /**
+     * 执行 bumpCredit 相关逻辑。
+     */
     private void bumpCredit(User user) {
         user.setCreditScore((user.getCreditScore() != null ? user.getCreditScore() : 100) + 1);
         user.setCompletedOrders((user.getCompletedOrders() != null ? user.getCompletedOrders() : 0) + 1);
         userMapper.save(user);
     }
 
+    /**
+     * 执行 penalizeCredit 相关逻辑。
+     */
     private void penalizeCredit(User user, int amount) {
         int credit = user.getCreditScore() != null ? user.getCreditScore() : 100;
         user.setCreditScore(Math.max(0, credit - amount));

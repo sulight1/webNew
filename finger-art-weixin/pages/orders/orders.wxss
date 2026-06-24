@@ -21,6 +21,20 @@
   margin-bottom: 16rpx;
 }
 
+.order-title-link {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #262626;
+}
+
+.order-hint {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 22rpx;
+}
+
 .qty-text {
   font-size: 24rpx;
   color: #8c8c8c;

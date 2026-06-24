@@ -76,9 +76,27 @@ Page({
     });
   },
 
-  goCheckout(e) {
-    const { id, qty } = e.currentTarget.dataset;
-    wx.navigateTo({ url: `/pages/checkout/checkout?productId=${id}&qty=${qty}` });
+  goCheckout() {
+    const allItems = cartUtil.loadItems();
+    const readyItems = allItems.filter((item) => item.type !== 'CUSTOMIZABLE');
+    const customCount = allItems.length - readyItems.length;
+
+    if (!readyItems.length) {
+      wx.showToast({ title: '没有可结算的成品', icon: 'none' });
+      return;
+    }
+
+    if (customCount > 0) {
+      wx.showToast({ title: `已跳过${customCount}件定制商品`, icon: 'none' });
+    }
+
+    if (readyItems.length === 1) {
+      const item = readyItems[0];
+      wx.navigateTo({ url: `/pages/checkout/checkout?productId=${item.productId}&qty=${item.quantity}` });
+      return;
+    }
+
+    wx.navigateTo({ url: '/pages/cart-checkout/cart-checkout' });
   },
 
   goMarketplace() {

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>订单与交易管理模块时序图 - 指尖造物</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "SimSun", "宋体", serif;
+      padding: 32px 24px;
+      background: #fff;
+      color: #000;
+    }
+    h1 {
+      text-align: center;
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    .caption {
+      text-align: center;
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+    .diagram-wrap {
+      max-width: 920px;
+      margin: 0 auto;
+      overflow-x: auto;
+    }
+    svg {
+      display: block;
+      margin: 0 auto;
+      font-family: "SimSun", "宋体", serif;
+    }
+    .note {
+      max-width: 900px;
+      margin: 24px auto 0;
+      font-size: 13px;
+      line-height: 1.8;
+      border-top: 1px solid #ccc;
+      padding-top: 16px;
+    }
+    .note h2 { font-size: 14px; margin-bottom: 8px; }
+    .note ol { padding-left: 1.5em; }
+    .note li { margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+  <h1>图 3-3 订单与交易管理模块时序图</h1>
+  <p class="caption">指尖造物手作定制与技能交换平台</p>
+
+  <div class="diagram-wrap">
+    <svg width="880" height="720" viewBox="0 0 880 720" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow-solid" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 Z" fill="#000" stroke="none"/>
+        </marker>
+        <marker id="arrow-open" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8" fill="none" stroke="#000" stroke-width="1"/>
+        </marker>
+      </defs>
+
+      <!-- 买家（左侧 Actor） -->
+      <g transform="translate(70, 28)">
+        <circle cx="0" cy="-18" r="10" fill="none" stroke="#000" stroke-width="1.2"/>
+        <line x1="0" y1="-8" x2="0" y2="14" stroke="#000" stroke-width="1.2"/>
+        <line x1="-14" y1="2" x2="14" y2="2" stroke="#000" stroke-width="1.2"/>
+        <line x1="0" y1="14" x2="-11" y2="36" stroke="#000" stroke-width="1.2"/>
+        <line x1="0" y1="14" x2="11" y2="36" stroke="#000" stroke-width="1.2"/>
+        <text x="0" y="58" text-anchor="middle" font-size="13">买家</text>
+      </g>
+
+      <!-- 中间参与者 -->
+      <rect x="136" y="18" width="108" height="36" fill="#fff" stroke="#000" stroke-width="1.2"/>
+      <text x="190" y="41" text-anchor="middle" font-size="13">订单状态流转</text>
+
+      <rect x="276" y="18" width="128" height="36" fill="#fff" stroke="#000" stroke-width="1.2"/>
+      <text x="340" y="41" text-anchor="middle" font-size="13">支付与造物币托管</text>
+
+      <rect x="416" y="10" width="108" height="52" fill="#fff" stroke="#000" stroke-width="1.2"/>
+      <text x="470" y="32" text-anchor="middle" font-size="12">物流发货与</text>
+      <text x="470" y="48" text-anchor="middle" font-size="12">纠纷处理</text>
+
+      <rect x="556" y="18" width="108" height="36" fill="#fff" stroke="#000" stroke-width="1.2"/>
+      <text x="610" y="41" text-anchor="middle" font-size="13">服务器数据库</text>
+
+      <!-- 手作达人（右侧 Actor） -->
+      <g transform="translate(770, 28)">
+        <circle cx="0" cy="-18" r="10" fill="none" stroke="#000" stroke-width="1.2"/>
+        <line x1="0" y1="-8" x2="0" y2="14" stroke="#000" stroke-width="1.2"/>
+        <line x1="-14" y1="2" x2="14" y2="2" stroke="#000" stroke-width="1.2"/>
+        <line x1="0" y1="14" x2="-11" y2="36" stroke="#000" stroke-width="1.2"/>
+        <line x1="0" y1="14" x2="11" y2="36" stroke="#000" stroke-width="1.2"/>
+        <text x="0" y="58" text-anchor="middle" font-size="13">手作达人</text>
+      </g>
+
+      <!-- 生命线 -->
+      <line x1="70" y1="86" x2="70" y2="680" stroke="#000" stroke-width="1" stroke-dasharray="6 4"/>
+      <line x1="190" y1="54" x2="190" y2="680" stroke="#000" stroke-width="1" stroke-dasharray="6 4"/>
+      <line x1="340" y1="54" x2="340" y2="680" stroke="#000" stroke-width="1" stroke-dasharray="6 4"/>
+      <line x1="470" y1="62" x2="470" y2="680" stroke="#000" stroke-width="1" stroke-dasharray="6 4"/>
+      <line x1="610" y1="54" x2="610" y2="680" stroke="#000" stroke-width="1" stroke-dasharray="6 4"/>
+      <line x1="770" y1="86" x2="770" y2="680" stroke="#000" stroke-width="1" stroke-dasharray="6 4"/>
+
+      <!-- ===== ① 订单状态流转（买家） ===== -->
+      <rect x="184" y="118" width="12" height="118" fill="#fff" stroke="#000" stroke-width="1"/>
+      <rect x="604" y="148" width="12" height="28" fill="#fff" stroke="#000" stroke-width="1"/>
+
+      <line x1="70" y1="128" x2="184" y2="128" stroke="#000" stroke-width="1.2" marker-end="url(#arrow-solid)"/>
+      <text x="127" y="120" text-anchor="middle" font-size="12">创建订单、查询进度</text>
+
+      <line x1="196" y1="168" x2="604" y2="168" stroke="#000" stroke-width="1.2" marker-end="url(#arrow-solid)"/>
+      <text x="400" y="160" text-anchor="middle" font-size="12">访问数据库，保存/更新订单信息</text>
+
+      <line x1="604" y1="208" x2="196" y2="208" stroke="#000" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arrow-open)"/>
+      <text x="400" y="200" text-anchor="middle" font-size="12">返回成功，返回订单数据</text>
+
+      <line x1="184" y1="248" x2="70" y2="248" stroke="#000" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arrow-open)"/>
+      <text x="127" y="240" text-anchor="middle" font-size="12">返回订单创建/查询结果</text>
+
+      <!-- ===== ② 支付与造物币托管（买家） ===== -->
+      <rect x="334" y="298" width="12" height="118" fill="#fff" stroke="#000" stroke-width="1"/>
+      <rect x="604" y="328" width="12" height="28" fill="#fff" stroke="#000" stroke-width="1"/>
+
+      <line x1="70" y1="308" x2="334" y2="308" stroke="#000" stroke-width="1.2" marker-end="url(#arrow-solid)"/>
+      <text x="202" y="300" text-anchor="middle" font-size="12">支付定金/全款/尾款</text>
+
+      <line x1="346" y1="348" x2="604" y2="348" stroke="#000" stroke-width="1.2" marker-end="url(#arrow-solid)"/>
+      <text x="475" y="340" text-anchor="middle" font-size="12">访问数据库，记录托管流水</text>
+
+      <line x1="604" y1="388" x2="346" y2="388" stroke="#000" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arrow-open)"/>
+      <text x="475" y="380" text-anchor="middle" font-size="12">扣款成功，返回支付结果</text>
+
+      <line x1="334" y1="428" x2="70" y2="428" stroke="#000" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arrow-open)"/>
+      <text x="202" y="420" text-anchor="middle" font-size="12">返回支付成功信息</text>
+
+      <!-- ===== ③ 物流发货与纠纷处理（手作达人） ===== -->
+      <rect x="464" y="478" width="12" height="118" fill="#fff" stroke="#000" stroke-width="1"/>
+      <rect x="604" y="508" width="12" height="28" fill="#fff" stroke="#000" stroke-width="1"/>
+
+      <line x1="758" y1="488" x2="476" y2="488" stroke="#000" stroke-width="1.2" marker-end="url(#arrow-solid)"/>
+      <text x="618" y="480" text-anchor="middle" font-size="12">填写物流单号、确认发货</text>
+
+      <line x1="464" y1="528" x2="604" y2="528" stroke="#000" stroke-width="1.2" marker-end="url(#arrow-solid)"/>
+      <text x="534" y="520" text-anchor="middle" font-size="12">访问数据库，更新发货状态</text>
+
+      <line x1="604" y1="568" x2="476" y2="568" stroke="#000" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arrow-open)"/>
+      <text x="540" y="560" text-anchor="middle" font-size="12">修改成功，返回成功信息</text>
+
+      <line x1="464" y1="608" x2="758" y2="608" stroke="#000" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arrow-open)"/>
+      <text x="618" y="600" text-anchor="middle" font-size="12">操作完成</text>
+    </svg>
+  </div>
+
+  <div class="note">
+    <h2>说明</h2>
+    <ol>
+      <li><strong>订单状态流转：</strong>买家下单后系统生成订单并记录商品、金额及买卖双方信息，成品与定制订单按不同规则流转至待支付、制作中、待发货等状态。</li>
+      <li><strong>支付与造物币托管：</strong>买家使用造物币完成全款、定金或尾款支付，资金进入托管账户，待订单达到约定节点后释放给手作达人。</li>
+      <li><strong>物流发货与纠纷处理：</strong>手作达人填写物流信息完成发货，买家确认收货后订单完结；若产生争议，管理员可介入裁定托管资金释放方向。</li>
+    </ol>
+  </div>
+</body>
+</html>

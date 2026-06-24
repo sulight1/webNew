@@ -25,6 +25,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * 论坛服务实现类。
+ */
 @Service
 public class ForumServiceImpl implements ForumService {
 
@@ -49,6 +52,9 @@ public class ForumServiceImpl implements ForumService {
     @Autowired
     private UserPunishmentService userPunishmentService;
 
+    /**
+     * 执行 populateLikedStatus 相关逻辑。
+     */
     private void populateLikedStatus(List<ForumPost> posts, Long viewerId) {
         if (viewerId == null || posts.isEmpty()) {
             return;
@@ -58,6 +64,9 @@ public class ForumServiceImpl implements ForumService {
         posts.forEach(p -> p.setLiked(likedIds.contains(p.getId())));
     }
 
+    /**
+     * 查询论坛列表。
+     */
     @Override
     public List<ForumPost> listPosts(String sort, Long viewerId) {
         List<ForumPost> posts;
@@ -70,6 +79,9 @@ public class ForumServiceImpl implements ForumService {
         return posts;
     }
 
+    /**
+     * 查询论坛列表。
+     */
     @Override
     public List<ForumPost> listMyPosts(Long authorId) {
         if (authorId == null) {
@@ -80,6 +92,9 @@ public class ForumServiceImpl implements ForumService {
         return posts;
     }
 
+    /**
+     * 查询论坛信息。
+     */
     @Override
     @Transactional
     public ForumPost getPost(Long id, boolean incrementView) {
@@ -95,6 +110,9 @@ public class ForumServiceImpl implements ForumService {
         return post;
     }
 
+    /**
+     * 创建论坛。
+     */
     @Override
     @Transactional
     public ForumPost createPost(Long authorId, String title, String content, String imageUrl) {
@@ -124,6 +142,9 @@ public class ForumServiceImpl implements ForumService {
         return postMapper.save(post);
     }
 
+    /**
+     * 删除论坛。
+     */
     @Override
     @Transactional
     public void deletePost(Long id, Long operatorId) {
@@ -137,12 +158,18 @@ public class ForumServiceImpl implements ForumService {
         postMapper.save(post);
     }
 
+    /**
+     * 查询论坛列表。
+     */
     @Override
     public List<ForumReply> listReplies(Long postId) {
         getPost(postId, false);
         return replyMapper.findByPostIdAndStatusOrderByCreateTimeAsc(postId, "ACTIVE");
     }
 
+    /**
+     * 创建论坛。
+     */
     @Override
     @Transactional
     public ForumReply createReply(Long postId, Long authorId, String content) {
@@ -181,6 +208,9 @@ public class ForumServiceImpl implements ForumService {
         return saved;
     }
 
+    /**
+     * 切换论坛状态。
+     */
     @Override
     @Transactional
     public LikeToggleResult toggleLikePost(Long postId, Long userId) {
@@ -192,6 +222,9 @@ public class ForumServiceImpl implements ForumService {
         return new LikeToggleResult(liked, post.getLikeCount());
     }
 
+    /**
+     * 查询论坛信息。
+     */
     @Override
     public Map<String, Object> getPostDetail(Long id, Long viewerId) {
         ForumPost post = getPost(id, true);
@@ -207,6 +240,9 @@ public class ForumServiceImpl implements ForumService {
         return data;
     }
 
+    /**
+     * 查询论坛列表。
+     */
     @Override
     public List<ForumPost> listPostsForAdmin(String status, String keyword) {
         List<ForumPost> posts = postMapper.findAllByOrderByCreateTimeDesc();
@@ -226,6 +262,9 @@ public class ForumServiceImpl implements ForumService {
         return posts;
     }
 
+    /**
+     * 查询论坛信息。
+     */
     @Override
     public Map<String, Object> getPostDetailForAdmin(Long id) {
         ForumPost post = postMapper.findById(id)
@@ -237,6 +276,9 @@ public class ForumServiceImpl implements ForumService {
         return data;
     }
 
+    /**
+     * 删除论坛。
+     */
     @Override
     @Transactional
     public void deleteReply(Long id, Long operatorId) {
@@ -263,6 +305,9 @@ public class ForumServiceImpl implements ForumService {
         postMapper.save(post);
     }
 
+    /**
+     * 执行 restorePost 相关逻辑。
+     */
     @Override
     @Transactional
     public void restorePost(Long id) {
@@ -278,6 +323,9 @@ public class ForumServiceImpl implements ForumService {
         postMapper.save(post);
     }
 
+    /**
+     * 执行 containsIgnoreCase 相关逻辑。
+     */
     private boolean containsIgnoreCase(String text, String kw) {
         return text != null && text.toLowerCase().contains(kw);
     }

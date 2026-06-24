@@ -1,0 +1,13 @@
+@import '../checkout/checkout.wxss';
+
+.page-tip {
+  margin-bottom: 20rpx;
+  font-size: 24rpx;
+  color: #8c8c8c;
+}
+
+.batch-item + .batch-item {
+  margin-top: 20rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx dashed #f0f0f0;
+}

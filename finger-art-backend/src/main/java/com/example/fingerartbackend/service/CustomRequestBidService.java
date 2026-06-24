@@ -6,6 +6,9 @@ import com.example.fingerartbackend.entity.CustomRequestBid;
 
 import java.util.List;
 
+/**
+ * 定制需求服务接口，定义业务能力（业务服务接口）。
+ */
 public interface CustomRequestBidService {
 
     CustomRequestBid submitBid(Long requestId, Long artisanId, String message);

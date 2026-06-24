@@ -24,6 +24,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * 用户服务实现类。
+ */
 @Service
 public class UserServiceImpl implements UserService {
 
@@ -48,6 +51,9 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private UserPunishmentService userPunishmentService;
 
+    /**
+     * 用户注册。
+     */
     @Override
     public User register(RegisterRequest request) {
         if (request == null) {
@@ -79,6 +85,9 @@ public class UserServiceImpl implements UserService {
         return userMapper.save(user);
     }
 
+    /**
+     * 执行 applyArtisan 相关逻辑。
+     */
     @Override
     @Transactional
     public User applyArtisan(Long userId) {
@@ -105,6 +114,9 @@ public class UserServiceImpl implements UserService {
         return saved;
     }
 
+    /**
+     * 通过用户审核。
+     */
     @Override
     @Transactional
     public User approveArtisan(Long userId) {
@@ -120,6 +132,9 @@ public class UserServiceImpl implements UserService {
         return saved;
     }
 
+    /**
+     * 拒绝用户。
+     */
     @Override
     @Transactional
     public User rejectArtisan(Long userId) {
@@ -134,6 +149,9 @@ public class UserServiceImpl implements UserService {
         return saved;
     }
 
+    /**
+     * 查询用户列表。
+     */
     @Override
     public List<User> listPendingArtisanApplications() {
         return userMapper.findAll().stream()
@@ -141,6 +159,9 @@ public class UserServiceImpl implements UserService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 执行 normalizeRole 相关逻辑。
+     */
     private void normalizeRole(User user) {
         if (user.getArtisanApplyStatus() == null || user.getArtisanApplyStatus().isBlank()) {
             user.setArtisanApplyStatus("ARTISAN".equals(user.getRole()) ? "APPROVED" : "NONE");
@@ -154,6 +175,9 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    /**
+     * 用户登录。
+     */
     @Override
     public User login(String account, String password) {
         if (account == null || account.isBlank()) {
@@ -180,16 +204,25 @@ public class UserServiceImpl implements UserService {
         return user;
     }
 
+    /**
+     * 查询用户信息。
+     */
     @Override
     public List<User> getAllUsers() {
         return userMapper.findAll();
     }
 
+    /**
+     * 删除用户。
+     */
     @Override
     public void deleteUser(Long id) {
         userMapper.deleteById(id);
     }
 
+    /**
+     * 更新用户。
+     */
     @Override
     @Transactional
     public User updateUser(Long id, User user) {
@@ -266,6 +299,9 @@ public class UserServiceImpl implements UserService {
         return updatedUser;
     }
 
+    /**
+     * 执行 resetPassword 相关逻辑。
+     */
     @Override
     public User resetPassword(Long id, String newPassword) {
         if (newPassword == null || newPassword.isBlank()) {
@@ -281,6 +317,9 @@ public class UserServiceImpl implements UserService {
         return userMapper.save(existing);
     }
 
+    /**
+     * 执行 requestPasswordReset 相关逻辑。
+     */
     @Override
     @Transactional
     public void requestPasswordReset(String account) {
@@ -304,6 +343,9 @@ public class UserServiceImpl implements UserService {
                         "/admin"));
     }
 
+    /**
+     * 新增用户。
+     */
     @Override
     public User addZaoWuBi(Long userId, Double amount) {
         User user = getUserById(userId);
@@ -316,12 +358,18 @@ public class UserServiceImpl implements UserService {
         return userMapper.save(user);
     }
 
+    /**
+     * 查询用户信息。
+     */
     @Override
     public User getUserById(Long id) {
         return userMapper.findById(id)
                 .orElseThrow(() -> new RuntimeException("用户不存在"));
     }
 
+    /**
+     * 执行 follow 相关逻辑。
+     */
     @Override
     @Transactional
     public void follow(Long followerId, Long followingId) {
@@ -343,17 +391,26 @@ public class UserServiceImpl implements UserService {
                 "/artisan-dashboard?menu=followers"));
     }
 
+    /**
+     * 执行 unfollow 相关逻辑。
+     */
     @Override
     @Transactional
     public void unfollow(Long followerId, Long followingId) {
         followMapper.deleteByFollowerIdAndFollowingId(followerId, followingId);
     }
 
+    /**
+     * 判断条件是否成立。
+     */
     @Override
     public boolean isFollowing(Long followerId, Long followingId) {
         return followMapper.existsByFollowerIdAndFollowingId(followerId, followingId);
     }
 
+    /**
+     * 查询用户信息。
+     */
     @Override
     public List<User> getFollowers(Long userId) {
         List<Follow> follows = followMapper.findByFollowingId(userId);
@@ -363,6 +420,9 @@ public class UserServiceImpl implements UserService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 查询用户信息。
+     */
     @Override
     public List<User> getFollowings(Long userId) {
         List<Follow> follows = followMapper.findByFollowerId(userId);
@@ -372,6 +432,9 @@ public class UserServiceImpl implements UserService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 查询用户列表。
+     */
     @Override
     public List<User> listTopArtisans(int limit, Long excludeUserId) {
         int safeLimit = Math.min(Math.max(limit, 1), 20);
@@ -392,6 +455,9 @@ public class UserServiceImpl implements UserService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 查询用户信息。
+     */
     @Override
     public UserPublicProfile getPublicProfile(Long id) {
         User user = getUserById(id);

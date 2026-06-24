@@ -81,6 +81,13 @@ function removeItem(productId) {
   return items;
 }
 
+function removeItems(productIds) {
+  const idSet = new Set(productIds);
+  const items = loadItems().filter((item) => !idSet.has(item.productId));
+  persist(items);
+  return items;
+}
+
 function clear() {
   persist([]);
   return [];
@@ -93,5 +100,6 @@ module.exports = {
   addProduct,
   updateQuantity,
   removeItem,
+  removeItems,
   clear,
 };

@@ -10,7 +10,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
-@CrossOrigin(origins = "*")
+/**
+ * 钱包控制器。
+ * 处理造物币充值、提现及交易流水查询，对应用户钱包与支付模块。
+ */
 @RestController
 @RequestMapping("/wallet")
 public class WalletController {
@@ -18,6 +21,12 @@ public class WalletController {
     @Autowired
     private WalletService walletService;
 
+    /**
+     * 直接充值造物币（同步完成）。
+     *
+     * @param payload 含 userId、amount、channel 的请求体
+     * @return 充值操作结果及余额变动
+     */
     @PostMapping("/recharge")
     public Result<WalletOperationResult> recharge(@RequestBody Map<String, Object> payload) {
         try {
@@ -30,6 +39,12 @@ public class WalletController {
         }
     }
 
+    /**
+     * 创建充值预支付订单。
+     *
+     * @param payload 含 userId、amount、channel 的请求体
+     * @return 预支付交易记录（含 outTradeNo）
+     */
     @PostMapping("/recharge/prepay")
     public Result<WalletTransaction> rechargePrepay(@RequestBody Map<String, Object> payload) {
         try {
@@ -42,6 +57,12 @@ public class WalletController {
         }
     }
 
+    /**
+     * 确认充值支付完成，入账造物币。
+     *
+     * @param payload 含 userId、outTradeNo 的请求体
+     * @return 充值操作结果
+     */
     @PostMapping("/recharge/confirm")
     public Result<WalletOperationResult> rechargeConfirm(@RequestBody Map<String, Object> payload) {
         try {
@@ -53,6 +74,12 @@ public class WalletController {
         }
     }
 
+    /**
+     * 直接提现造物币（同步完成）。
+     *
+     * @param payload 含 userId、amount、channel 的请求体
+     * @return 提现操作结果及余额变动
+     */
     @PostMapping("/withdraw")
     public Result<WalletOperationResult> withdraw(@RequestBody Map<String, Object> payload) {
         try {
@@ -65,6 +92,12 @@ public class WalletController {
         }
     }
 
+    /**
+     * 创建提现预支付订单。
+     *
+     * @param payload 含 userId、amount、channel 的请求体
+     * @return 预支付交易记录
+     */
     @PostMapping("/withdraw/prepay")
     public Result<WalletTransaction> withdrawPrepay(@RequestBody Map<String, Object> payload) {
         try {
@@ -77,6 +110,12 @@ public class WalletController {
         }
     }
 
+    /**
+     * 确认提现处理完成。
+     *
+     * @param payload 含 userId、outTradeNo 的请求体
+     * @return 提现操作结果
+     */
     @PostMapping("/withdraw/confirm")
     public Result<WalletOperationResult> withdrawConfirm(@RequestBody Map<String, Object> payload) {
         try {
@@ -88,6 +127,14 @@ public class WalletController {
         }
     }
 
+    /**
+     * 分页查询用户钱包交易流水。
+     *
+     * @param userId 用户 ID
+     * @param page   页码，从 0 开始
+     * @param size   每页条数
+     * @return 交易流水分页数据
+     */
     @GetMapping("/transactions")
     public Result<Page<WalletTransaction>> getTransactions(
             @RequestParam Long userId,
